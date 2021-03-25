@@ -6,6 +6,7 @@ language: cpp
 addons:
   apt:
     packages:
+    - cmake
     - lcov
     - libboost-all-dev
     - libgtest-dev
