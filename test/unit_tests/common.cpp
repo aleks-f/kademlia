@@ -51,77 +51,12 @@ std::string get_capture_path( std::string const & capture_name )
 } // namespace kademlia
 
 
-/**
- *  When we are using boost as a shared (i.e. BOOST_TEST_DYN_LINK
- *  macro is defined), BOOST_TEST_ALTERNATIVE_INIT_API macro is
- *  automatically defined by boost unit-test config header.
- *  Hence don't bother searching this macro definition in
- *  this project build or source files.
- *
- *  That means with shared version of unit-test library, unit_test_main
- *  accepts a bool (*)() init function while it uses a
- *  test_suite * (*)(int, char *[]) when compiled as static.
- *
- *  See http://www.boost.org/doc/libs/1_55_0/libs/test/doc/html/utf/user-guide/test-runners.html
- */
-#ifdef BOOST_TEST_ALTERNATIVE_INIT_API
-
-bool
-init_unit_test
-    ( void )
-{ 
-    kademlia::detail::enable_log_for( "*" );
-    return true;
-}
-
-#else
-
-boost::unit_test::test_suite *
-init_unit_test_suite
-    ( int
-    , char* [] )
-{
-    kademlia::detail::enable_log_for( "*" );
-    return nullptr;
-}
-
-#endif
-
-/**
- *  When using shared version of boost unit-test library, main
- *  function is not defined, hence provide it.
- *
- *  We can assume that BOOST_TEST_ALTERNATIVE_INIT_API is defined
- *  as the documentation says so when using shared library.
- *  See http://www.boost.org/doc/libs/1_55_0/libs/test/doc/html/utf/user-guide/test-runners.html
- */
-#ifdef BOOST_TEST_DYN_LINK
-
-/*
-int main (int argc, char * argv[])
-{
-    //return boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
-}
-*/
-#endif
-
-
 #include "gtest/gtest.h"
 
-bool doBoost = false;
-bool doGTest = true;
 
 int main(int argc, char **argv)
 {
-    int ret = true;
-    if (doBoost)
-        ret = ret && boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
-
-    if (doGTest)
-    {
-        ::testing::InitGoogleTest(&argc, argv);
-        ret = ret && RUN_ALL_TESTS();
-    }
-    return ret;
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }
 

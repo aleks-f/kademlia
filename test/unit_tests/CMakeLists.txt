@@ -30,6 +30,7 @@ add_dependencies(check unit_tests)
 find_package(GTest REQUIRED)
 
 include_directories(BEFORE .)
+include_directories(${GTEST_INCLUDE_DIRS})
 
 add_library(test_helpers STATIC
     common.cpp

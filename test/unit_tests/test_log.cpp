@@ -95,7 +95,7 @@ TEST_F(LogTest, can_write_to_debug_log_using_macro)
 #ifdef KADEMLIA_ENABLE_DEBUG
     EXPECT_TRUE(out.str() == ("[debug] (test @ 345678) message\n"));
 #else
-    EXPECT_TRUE(out.is_equal(""));
+    EXPECT_TRUE(out.str().empty());
 #endif
 }
 

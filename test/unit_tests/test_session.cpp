@@ -97,9 +97,6 @@ TEST(SessionTest, session_throw_on_invalid_ipv4_address)
                        , std::exception);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(test_usage)
 
 TEST(SessionTest, first_session_run_can_be_aborted)
 {
