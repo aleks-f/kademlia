@@ -6,12 +6,12 @@ language: cpp
 addons:
   apt:
     packages:
-    - cmake
     - lcov
     - libboost-all-dev
-    - libgtest-dev
 
 before_script:
+    - sudo apt-get -y install libgtest-dev
+    - sudo apt-get -y install cmake
     - sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
     - gem install coveralls-lcov
     - mkdir build_cov && cd build_cov && cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON ..
