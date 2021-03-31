@@ -338,9 +338,9 @@ generate_incorrect_header(void)
 
 TEST(MessageTest, header_is_printable)
 {
-    boost::test_tools::output_test_stream out(k::test::get_capture_path("pattern_header.out")
-                                             , true);
+    std::string pattern(k::test::readFile(k::test::get_capture_path("pattern_header.out"), "\n"));
 
+    std::ostringstream out;
     out << kd::header{ kd::header::V1
                      , kd::header::PING_REQUEST }
         << std::endl;
@@ -369,10 +369,8 @@ TEST(MessageTest, header_is_printable)
                      , kd::header::FIND_VALUE_RESPONSE }
         << std::endl;
 
-    EXPECT_TRUE(out.match_pattern());
-
-    EXPECT_THROW(out << generate_incorrect_header()
-                       , std::exception);
+    EXPECT_EQ(pattern, out.str());
+    EXPECT_THROW(out << generate_incorrect_header(), std::exception);
 }
 
 }

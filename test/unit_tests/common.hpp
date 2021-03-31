@@ -30,8 +30,6 @@
 #   pragma clang diagnostic ignored "-Wunneeded-internal-declaration"
 #   pragma clang diagnostic ignored "-Wunused-variable"
 #endif
-#include <boost/test/unit_test.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #ifdef __clang__
 #   pragma clang diagnostic pop
 #endif
@@ -42,9 +40,8 @@
 namespace kademlia {
 namespace test {
 
-std::string
-get_capture_path
-    ( std::string const & capture_name );
+std::string get_capture_path(std::string const & capture_name);
+std::string readFile(const std::string& name, const std::string& eol = "");
 
 } // namespace test
 } // namespace kademlia

@@ -24,8 +24,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "network.hpp"
-
 #include <boost/asio/ip/udp.hpp>
+#include "gtest/gtest.h"
 
 namespace kademlia {
 namespace test {
@@ -37,7 +37,7 @@ check_listening
 {
     using boost::asio::ip::udp;
     auto udp_failure = create_socket< udp::socket >( ip, port );
-    BOOST_REQUIRE_EQUAL( boost::system::errc::address_in_use, udp_failure );
+    EXPECT_EQ( boost::system::errc::address_in_use, udp_failure );
 }
 
 std::uint16_t

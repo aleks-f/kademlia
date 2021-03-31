@@ -68,13 +68,13 @@ TEST_F(PeerTest, can_be_constructed)
 
 TEST_F(PeerTest, can_be_printed)
 {
-    boost::test_tools::output_test_stream out;
+    std::ostringstream out;
 
     out << kd::peer{ id_, ip_endpoint_ };
 
     std::ostringstream expected;
     expected << id_ << "@" << ip_endpoint_;
-    EXPECT_TRUE(out.is_equal(expected.str()));
+    EXPECT_EQ(out.str(), expected.str());
 }
 
 

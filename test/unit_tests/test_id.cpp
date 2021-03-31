@@ -231,14 +231,13 @@ TEST(IDTest, id_distance_can_be_evaluated)
     }
 }
 
+
 TEST(IDTest, id_is_printable)
 {
-    boost::test_tools::output_test_stream out(k::test::get_capture_path("pattern_id.out"), true);
+    std::ostringstream out;
+    out << kd::id{ "0123456789abcdef"};
 
-    out << kd::id{ "0123456789abcdef" };
-
-    EXPECT_TRUE(out.match_pattern());
+    EXPECT_EQ(k::test::readFile(k::test::get_capture_path("pattern_id.out")), out.str());
 }
 
 }
-

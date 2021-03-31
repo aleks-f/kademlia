@@ -24,7 +24,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-#include <boost/system/system_error.hpp>
 #include "kademlia/error.hpp"
 #include "kademlia/session.hpp"
 #include "common.hpp"
@@ -76,7 +75,7 @@ TEST(SessionTest, session_throw_on_invalid_ipv6_address)
     k::endpoint ipv6_endpoint{ "0.0.0.0", port2 };
 
     k::endpoint const initial_peer{ "127.0.0.1", 12345 };
-    BOOST_REQUIRE_THROW(k::session s(initial_peer
+    EXPECT_THROW(k::session s(initial_peer
                                      , ipv4_endpoint
                                      , ipv6_endpoint)
                        , std::exception);
@@ -91,7 +90,7 @@ TEST(SessionTest, session_throw_on_invalid_ipv4_address)
     k::endpoint ipv6_endpoint{ "::1", port2 };
 
     k::endpoint const initial_peer{ "127.0.0.1", 12345 };
-    BOOST_REQUIRE_THROW(k::session s(initial_peer
+    EXPECT_THROW(k::session s(initial_peer
                                      , ipv4_endpoint
                                      , ipv6_endpoint)
                        , std::exception);
@@ -107,7 +106,7 @@ TEST(SessionTest, first_session_run_can_be_aborted)
                             , &k::session::run, &s);
     s.abort();
 
-    BOOST_REQUIRE(result.get() == k::RUN_ABORTED);
+    EXPECT_TRUE(result.get() == k::RUN_ABORTED);
 }
 
 

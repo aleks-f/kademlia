@@ -70,9 +70,9 @@ TEST(IPEndpoint, can_be_compared)
 
 TEST(IPEndpoint, can_be_printed)
 {
-    boost::test_tools::output_test_stream out;
+    std::ostringstream out;
     out << kd::to_ip_endpoint( "192.168.0.1", 1234);
-    EXPECT_TRUE( out.is_equal( "192.168.0.1:1234"));
+    EXPECT_EQ( out.str(), "192.168.0.1:1234");
 }
 
 }

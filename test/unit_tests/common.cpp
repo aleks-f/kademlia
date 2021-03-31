@@ -31,7 +31,6 @@
 #include <boost/filesystem.hpp>
 
 namespace filesystem = boost::filesystem;
-namespace unit_test = boost::unit_test;
 
 namespace kademlia {
 namespace test {
@@ -45,6 +44,21 @@ filesystem::path const tests_directory_{ TESTS_DIR };
 std::string get_capture_path( std::string const & capture_name )
 {
     return ( tests_directory_ / "captures" / capture_name ).string();
+}
+
+std::string readFile(const std::string& name, const std::string& eol)
+{
+    std::string line;
+    std::string ret;
+    std::ifstream infile;
+    infile.open(name);
+    if (infile.is_open())
+    {
+        while (std::getline(infile, line))
+            ret.append(line).append(eol);
+        infile.close();
+    }
+    return ret;
 }
 
 } // namespace test
