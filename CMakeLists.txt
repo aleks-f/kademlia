@@ -31,7 +31,7 @@ project(kademlia)
 # C++11.
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     if (MSVC_VERSION LESS 1910) # 1910 -> VS 15.0
-        message(FATAL_ERROR "Current compiler does'nt support c++11 yet")
+        message(FATAL_ERROR "Current compiler doesn't support c++11 yet")
     endif()
     add_definitions(
         -D_WIN32_WINNT=_WIN32_WINNT_WIN7
@@ -48,9 +48,9 @@ else()
     include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag(-std=c++11 IS_CXX11_SUPPORTED)
     if(NOT IS_CXX11_SUPPORTED)
-        message(FATAL_ERROR "Current compiler does'nt support c++11 yet")
+        message(FATAL_ERROR "Current compiler doesn't support c++11 yet")
     endif()
-    set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -fvisibility=hidden ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -std=c++11 -fvisibility=hidden ${CMAKE_CXX_FLAGS}")
 endif()
 
 # Coverage
@@ -102,9 +102,13 @@ endif()
 
 # Setup includes directories.
 include_directories(BEFORE include src test)
-include_directories(${Boost_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
+include_directories(${Boost_INCLUDE_DIRS}
+        ${OPENSSL_INCLUDE_DIR}
+        poco/Foundation/include)
+
 
 # Build everything.
+add_subdirectory(poco)
 add_subdirectory(include)
 add_subdirectory(src)
 enable_testing()
