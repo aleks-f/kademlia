@@ -48,7 +48,7 @@ struct value_store_key_hasher
 
     result_type operator()(argument_type const& key) const
     {
-        return Poco::HashRange(key.begin(), key.end());
+        return Poco::hashRange(key.begin(), key.end());
     }
 };
 

@@ -46,7 +46,8 @@ add_library(test_helpers STATIC
 
 target_link_libraries(test_helpers
     ${Boost_FILESYSTEM_LIBRARY}
-    gtest)
+    gtest
+	Poco::Foundation)
 
 set_target_properties(test_helpers PROPERTIES
     COMPILE_DEFINITIONS TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
