@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Run all tests, timeouting if it takes more than 30 seconds.
+# Run all tests, timeout if it takes more than 30 seconds.
 add_custom_target(unit_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --timeout 30)
 add_dependencies(check unit_tests)
 add_subdirectory(${PROJECT_SOURCE_DIR}/googletest ${PROJECT_SOURCE_DIR}/googletest/cmake-build-debug/lib)
@@ -96,7 +96,8 @@ build_test(unit_tests_lib
         test_engine.cpp
         test_fake_socket.cpp
     LIBRARIES 
-        kademlia_static)
+        kademlia_static
+        Poco::Foundation)
 
 if(ENABLE_COVERAGE)
     if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")

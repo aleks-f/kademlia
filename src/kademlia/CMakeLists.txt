@@ -79,8 +79,6 @@ set_target_properties(kademlia
         MACOSX_RPATH ON
         COMPILE_DEFINITIONS "KADEMLIA_BUILDING_AS_SHARED;KADEMLIA_AS_SHARED")
 
-target_link_directories(kademlia PUBLIC ${CMAKE_BINARY_DIR}/lib)
-
 if (${CMAKE_BUILD_TYPE} MATCHES Debug)
     set(POCO_FOUNDATION_LIBRARY PocoFoundationd)
 else()
@@ -91,7 +89,7 @@ target_link_libraries(kademlia
     ${Boost_SYSTEM_LIBRARY}
     ${OPENSSL_CRYPTO_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${POCO_FOUNDATION_LIBRARY})
+    Poco::Foundation)
 
 # Kademlia static
 add_library(kademlia_static STATIC
@@ -103,7 +101,7 @@ target_link_libraries(kademlia_static
     ${Boost_SYSTEM_LIBRARY}
     ${OPENSSL_CRYPTO_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${POCO_FOUNDATION_LIBRARY})
+    Poco::Foundation)
 
 set_target_properties(kademlia_static
     PROPERTIES
