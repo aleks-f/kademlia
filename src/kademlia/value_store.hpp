@@ -34,7 +34,8 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
-#include <boost/functional/hash.hpp>
+#include "Poco/Hash.h"
+
 
 namespace kademlia {
 namespace detail {
@@ -45,11 +46,10 @@ struct value_store_key_hasher
     using argument_type = Container;
     using result_type = std::size_t;
 
-    result_type
-    operator()
-        ( argument_type const& key )
-        const
-    { return boost::hash_range( key.begin(), key.end() ); }
+    result_type operator()(argument_type const& key) const
+    {
+        return Poco::hashRange(key.begin(), key.end());
+    }
 };
 
 ///
