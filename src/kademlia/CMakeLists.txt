@@ -83,7 +83,8 @@ target_link_libraries(kademlia
     ${Boost_SYSTEM_LIBRARY}
     ${OPENSSL_CRYPTO_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
-    Poco::Foundation)
+    Poco::Foundation
+    Poco::Net)
 
 # Kademlia static
 add_library(kademlia_static STATIC
@@ -95,9 +96,9 @@ target_link_libraries(kademlia_static
     ${Boost_SYSTEM_LIBRARY}
     ${OPENSSL_CRYPTO_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
-    Poco::Foundation)
+    Poco::Foundation
+    Poco::Net)
 
 set_target_properties(kademlia_static
     PROPERTIES
         POSITION_INDEPENDENT_CODE ON)
-
