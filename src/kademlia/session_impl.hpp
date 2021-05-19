@@ -31,8 +31,6 @@
 #endif
 
 
-#include <kademlia/session_impl.hpp>
-
 #include <utility>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/udp.hpp>
