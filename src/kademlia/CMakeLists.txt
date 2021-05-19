@@ -24,51 +24,21 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 set(kademlia_sources
-    ${CMAKE_SOURCE_DIR}/include/kademlia/endpoint.hpp
-    ${CMAKE_SOURCE_DIR}/include/kademlia/error.hpp
-    ${CMAKE_SOURCE_DIR}/include/kademlia/session_base.hpp
-    ${CMAKE_SOURCE_DIR}/include/kademlia/first_session.hpp
-    ${CMAKE_SOURCE_DIR}/include/kademlia/session.hpp
-    session_impl.hpp
-    boost_to_std_error.hpp
-    buffer.hpp
-    concurrent_guard.hpp
     constants.cpp
-    constants.hpp
     endpoint.cpp
-    engine.hpp
     error.cpp
-    error_impl.hpp
     error_impl.cpp
-    find_value_task.hpp
     id.cpp
-    id.hpp
     ip_endpoint.cpp
-    ip_endpoint.hpp
     log.cpp
-    log.hpp
-    network.hpp
     message.cpp
-    message.hpp
     message_serializer.cpp
-    message_serializer.hpp
-    message_socket.hpp
     peer.cpp
-    peer.hpp
     response_callbacks.cpp
-    response_callbacks.hpp
-    response_router.hpp
-    routing_table.hpp
     session.cpp
     session_base.cpp
     first_session.cpp
-    store_value_task.hpp
-    discover_neighbors_task.hpp
-    timer.cpp
-    timer.hpp
-    tracker.hpp
-    value_store.hpp
-    lookup_task.hpp)
+    timer.cpp)
 
 # Kademlia shared
 add_library(kademlia SHARED
