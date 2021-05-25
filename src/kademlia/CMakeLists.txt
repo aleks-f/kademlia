@@ -25,18 +25,32 @@
 
 set(kademlia_sources
     constants.cpp
+    DiscoverNeighborsTask.cpp
     endpoint.cpp
+    Engine.cpp
     error.cpp
     error_impl.cpp
     id.cpp
     ip_endpoint.cpp
+    IPEndpoint.cpp
     log.cpp
+    LookupTask.cpp
     message.cpp
+    Message.cpp
     message_serializer.cpp
+    MessageSerializer.cpp
+    MessageSocket.cpp
+    Network.cpp
+    NotifyPeerTask.cpp
     peer.cpp
+    Peer.cpp
     response_callbacks.cpp
+    ResponseCallbacks.cpp
+    ResponseRouter.cpp
     session.cpp
+    SessionImpl.cpp
     session_base.cpp
+    Tracker.cpp
     first_session.cpp
     timer.cpp)
 

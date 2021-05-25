@@ -23,64 +23,46 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <kademlia/session.hpp>
+#ifndef KADEMLIA_PEER_H
+#define KADEMLIA_PEER_H
 
-#include "SessionImpl.h"
+#ifdef _MSC_VER
+#   pragma once
+#endif
+
+#include <iosfwd>
+
+#include "kademlia/id.hpp"
+#include "IPEndpoint.h"
 
 namespace kademlia {
+namespace detail {
 
-/**
- *
- */
-struct session::impl final
-        : detail::SessionImpl
+
+struct Peer final
 {
-    /**
-     *
-     */
-    impl
-        ( endpoint const& initial_peer
-        , endpoint const& listen_on_ipv4
-        , endpoint const& listen_on_ipv6 )
-            : SessionImpl{ initial_peer
-                          , listen_on_ipv4
-                          , listen_on_ipv6 }
-    { }
+    id id_;
+    IPEndpoint endpoint_;
 };
 
-session::session
-    ( endpoint const& initial_peer
-    , endpoint const& listen_on_ipv4
-    , endpoint const& listen_on_ipv6 )
-        : impl_{ new impl{ initial_peer, listen_on_ipv4, listen_on_ipv6 } }
-{ }
 
-session::~session
-    ( void )
-{ }
+std::ostream& operator << ( std::ostream & out, Peer const& p );
 
-void
-session::async_save
-    ( key_type const& key
-    , data_type const& data
-    , save_handler_type handler )
-{ impl_->async_save( key, data, std::move( handler ) ); }
 
-void
-session::async_load
-    ( key_type const& key
-    , load_handler_type handler )
-{ impl_->async_load( key, std::move( handler ) ); }
+inline bool operator == (const Peer & a, const Peer & b)
+{
+	return a.id_ == b.id_ && a.endpoint_ == b.endpoint_;
+}
 
-std::error_code
-session::run
-    ( void )
-{ return impl_->run(); }
 
-void
-session::abort
-        ( void )
-{ impl_->abort(); }
+inline bool operator != (Peer const& a, Peer const& b)
+{
+	return ! ( a == b );
+}
 
+
+} // namespace detail
 } // namespace kademlia
+
+#endif
 

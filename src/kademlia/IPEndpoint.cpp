@@ -23,64 +23,20 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <kademlia/session.hpp>
 
-#include "SessionImpl.h"
+#include "IPEndpoint.h"
+#include <iostream>
+
 
 namespace kademlia {
+namespace detail {
 
-/**
- *
- */
-struct session::impl final
-        : detail::SessionImpl
+
+std::ostream& operator << (std::ostream & out, IPEndpoint const& i)
 {
-    /**
-     *
-     */
-    impl
-        ( endpoint const& initial_peer
-        , endpoint const& listen_on_ipv4
-        , endpoint const& listen_on_ipv6 )
-            : SessionImpl{ initial_peer
-                          , listen_on_ipv4
-                          , listen_on_ipv6 }
-    { }
-};
+	return out << i.address_.toString() << ":" << i.port_;
+}
 
-session::session
-    ( endpoint const& initial_peer
-    , endpoint const& listen_on_ipv4
-    , endpoint const& listen_on_ipv6 )
-        : impl_{ new impl{ initial_peer, listen_on_ipv4, listen_on_ipv6 } }
-{ }
 
-session::~session
-    ( void )
-{ }
-
-void
-session::async_save
-    ( key_type const& key
-    , data_type const& data
-    , save_handler_type handler )
-{ impl_->async_save( key, data, std::move( handler ) ); }
-
-void
-session::async_load
-    ( key_type const& key
-    , load_handler_type handler )
-{ impl_->async_load( key, std::move( handler ) ); }
-
-std::error_code
-session::run
-    ( void )
-{ return impl_->run(); }
-
-void
-session::abort
-        ( void )
-{ impl_->abort(); }
-
+} // namespace detail
 } // namespace kademlia
-
