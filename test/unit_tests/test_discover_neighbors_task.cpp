@@ -40,7 +40,7 @@ namespace {
 
 using endpoints_type = std::vector< kd::ip_endpoint >;
 
-struct DiscoverNeighborsTaskTest : k::test::TaskFixture
+struct DiscoverNeighborsTaskTest : k::test::task_fixture
 {
     void
     operator()(std::error_code const& failure)

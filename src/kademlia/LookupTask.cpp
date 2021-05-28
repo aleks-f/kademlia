@@ -80,7 +80,7 @@ id const& LookupTask::get_key() const
 void LookupTask::add_candidate(Peer const& p)
 {
 	LOG_DEBUG(LookupTask, this)
-			<<"adding '" <<p <<"'." <<std::endl;
+		<< "adding '" <<p <<"'." << ", key:(" << key_ << ')' << std::endl;
 
 	auto const d = distance(p.id_, key_);
 	candidate const c{ p, candidate::STATE_UNKNOWN };

@@ -44,8 +44,7 @@ namespace detail {
 
 ///
 template< typename SaveHandlerType, typename TrackerType, typename DataType >
-class StoreValueTask final
-	: public LookupTask
+class StoreValueTask final : public LookupTask
 {
 public:
 	template< typename RoutingTableType >
@@ -165,7 +164,6 @@ private:
 			task->flag_candidate_as_valid(h.source_id_);
 			task->add_candidates(response.peers_);
 		}
-
 		try_to_store_value(task);
 	}
 

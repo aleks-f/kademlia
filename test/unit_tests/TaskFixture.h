@@ -23,87 +23,71 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef KADEMLIA_LOOKUP_TASK_H
-#define KADEMLIA_LOOKUP_TASK_H
+#ifndef KADEMLIA_TEST_HELPERS_TASK_FIXTURE_H
+#define KADEMLIA_TEST_HELPERS_TASK_FIXTURE_H
 
-#ifdef _MSC_VER
-#   pragma once
-#endif
+#include <cstdint>
+#include <system_error>
 
-#include <cassert>
-#include <map>
-#include <vector>
-
-#include "Peer.h"
-#include "kademlia/log.hpp"
+//#include <boost/asio/io_service.hpp>
+#include "Poco/Net/SocketReactor.h"
+#include "kademlia/Peer.h"
+#include "common.hpp"
+#include "TrackerMock.h"
+#include "RoutingTableMock.h"
+#include "gtest/gtest.h"
 
 namespace kademlia {
-namespace detail {
+namespace test {
 
 
-class LookupTask
+struct TaskFixture: public ::testing::Test
 {
-public:
-	void flag_candidate_as_valid(id const& candidate_id);
-
-	void flag_candidate_as_invalid(id const& candidate_id);
-
-	std::vector<Peer> select_new_closest_candidates(std::size_t max_count);
-
-	std::vector<Peer> select_closest_valid_candidates(std::size_t max_count);
-
-	template<typename Peers>
-	void add_candidates(Peers const& peers)
+	TaskFixture(): io_service_()
+			//, io_service_work_(io_service_)
+			, tracker_(io_service_)
+			, failure_()
+			, routing_table_()
+			, callback_call_count_()
 	{
-		for (auto const& p : peers)
-			add_candidate(p);
 	}
 
-	bool have_all_requests_completed() const;
+	detail::Peer create_peer(std::string const& ip, detail::id const& id)
+	{
+		auto e = detail::toIPEndpoint(ip, 5555);
+		return detail::Peer{ id, e };
+	}
 
-	id const& get_key() const;
+	detail::Peer create_and_add_peer(std::string const& ip, detail::id const& id)
+	{
+		auto p = create_peer(ip, id);
+		routing_table_.peers_.emplace_back(p.id_, p.endpoint_);
+		return p;
+	}
+
+	Poco::Net::SocketReactor io_service_;
+	//Poco::Net::SocketReactor::work io_service_work_;
+	TrackerMock tracker_;
+	std::error_code failure_;
+	RoutingTableMock routing_table_;
+	std::size_t callback_call_count_;
 
 protected:
-	~LookupTask() = default;
-
-	template<typename Iterator>
-	LookupTask(id const & key, Iterator i, Iterator e)
-        : key_{ key }
-        , in_flight_requests_count_{ 0 }
-        , candidates_{}
+	~TaskFixture() override
 	{
-		for (; i != e; ++i)
-			add_candidate(Peer{ i->first, i->second });
 	}
 
-private:
-	struct candidate final
+	void SetUp() override
 	{
-		Peer peer_;
-		enum
-		{
-			STATE_UNKNOWN,
-			STATE_CONTACTED,
-			STATE_RESPONDED,
-			STATE_TIMEOUTED,
-		} state_;
-	};
+	}
 
-	using candidates_type = std::map<id, candidate>;
-
-private:
-	void add_candidate(Peer const& p);
-
-	candidates_type::iterator find_candidate(id const& candidate_id);
-
-private:
-	id key_;
-	std::size_t in_flight_requests_count_;
-	candidates_type candidates_;
+	void TearDown() override
+	{
+	}
 };
 
 
-} // namespace detail
+} // namespace test
 } // namespace kademlia
 
 #endif

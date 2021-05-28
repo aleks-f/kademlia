@@ -41,9 +41,9 @@ namespace kademlia {
 namespace test {
 
 
-struct TaskFixture: public ::testing::Test
+struct task_fixture: public ::testing::Test
 {
-    TaskFixture
+    task_fixture
             ( void )
             : io_service_()
             , io_service_work_( io_service_ )
@@ -80,7 +80,7 @@ struct TaskFixture: public ::testing::Test
     std::size_t callback_call_count_;
 
 protected:
-    ~TaskFixture() override
+    ~task_fixture() override
     {
     }
 
@@ -93,7 +93,7 @@ protected:
     }
 };
 
-
+/*
 struct task_fixture
 
 {
@@ -133,7 +133,7 @@ struct task_fixture
     routing_table_mock routing_table_;
     std::size_t callback_call_count_;
 };
-
+*/
 } // namespace test
 } // namespace kademlia
 

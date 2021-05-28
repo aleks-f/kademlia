@@ -37,7 +37,7 @@ namespace kd = k::detail;
 
 using data_type = std::vector< std::uint8_t >;
 
-struct FindValueTaskTest : k::test::TaskFixture
+struct FindValueTaskTest : k::test::task_fixture
 {
     void operator()(std::error_code const& f, data_type const& d)
     {

@@ -154,54 +154,46 @@ inline void serialize(IPAddress const& address, buffer & b)
 	}
 }
 
-/*
-template<typename Address>
-inline std::error_code deserialize_address(buffer::const_iterator & i
-	, buffer::const_iterator e, Address & address )
+
+template<typename Address, typename BufType>
+inline std::error_code deserialize_address(buffer::const_iterator & i, buffer::const_iterator e, Address & address)
 {
-	typename Address::bytes_type buffer;
+	BufType buffer;
 	if (std::size_t(std::distance(i, e )) < buffer.size())
 		return make_error_code(TRUNCATED_ADDRESS);
 
 	std::copy_n( i, buffer.size(), buffer.begin() );
 	std::advance( i, buffer.size() );
 
-	address = Address{ buffer };
+	address = Address(&buffer[0], sizeof(BufType));
 	return std::error_code{};
 }
-*/
+
 
 inline std::error_code
 deserialize(buffer::const_iterator & i, buffer::const_iterator e, IPAddress& address )
 {
-/*
-	TODO: probably not needed - unlike boost, Poco has one IP address
+
 	if ( std::distance( i, e ) < 1 )
 		return make_error_code( TRUNCATED_ENDPOINT );
 
 	auto const protocol = *i++;
 	if ( protocol == KADEMLIA_ENDPOINT_SERIALIZATION_IPV4 )
 	{
-		boost::asio::ip::address_v4 a;
-		auto const failure = deserialize_address( i, e, a );
-		if ( failure )
-			return failure;
-
+		IPAddress a;
+		auto const failure = deserialize_address<IPAddress, IPAddress::RawIPv4>(i, e, a);
+		if ( failure ) return failure;
 		address = a;
 	}
 	else
 	{
-		assert( protocol == KADEMLIA_ENDPOINT_SERIALIZATION_IPV6
-			  && "unknown IP version");
-
-		boost::asio::ip::address_v6 a;
-		auto const failure = deserialize_address( i, e, a );
-		if ( failure )
-			return failure;
-
+		poco_assert( protocol == KADEMLIA_ENDPOINT_SERIALIZATION_IPV6 && "unknown IP version");
+		IPAddress a;
+		auto const failure = deserialize_address<IPAddress, IPAddress::RawIPv6>( i, e, a );
+		if ( failure ) return failure;
 		address = a;
 	}
-*/
+
 	return std::error_code{};
 }
 
@@ -302,7 +294,6 @@ std::error_code deserialize(buffer::const_iterator & i, buffer::const_iterator e
 		body.peers_.resize( body.peers_.size() + 1 );
 		failure = deserialize( i, e, body.peers_.back() );
 	}
-
 	return failure;
 }
 

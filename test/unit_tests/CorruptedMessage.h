@@ -23,23 +23,43 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef KADEMLIA_TEST_HELPERS_CORRUPTED_MESSAGE_MOCK_H
+#define KADEMLIA_TEST_HELPERS_CORRUPTED_MESSAGE_MOCK_H
 
-#include <kademlia/endpoint.hpp>
-#include "gtest/gtest.h"
+#include "kademlia/Message.h"
 
-namespace {
+namespace kademlia {
+namespace test {
 
-namespace k = kademlia;
+/**
+ *
+ */
+template< detail::Header::type Type >
+struct corrupted_message { };
 
-TEST (endpoint_test, can_be_constructed_with_service_as_string)
-{
-    k::endpoint{ "127.0.0.1", "1234" };
-}
+/**
+ *
+ */
+template< detail::Header::type Type >
+void
+serialize
+    ( corrupted_message< Type > const& body
+    , detail::buffer & b )
+{ }
 
-TEST (endpoint_test, can_be_constructed_with_service_as_integer)
-{
-    k::endpoint{ "127.0.0.1", 1234 };
-}
+} // namespace test
 
-}
+namespace detail {
+
+/**
+ *
+ */
+template< detail::Header::type Type >
+struct message_traits< test::corrupted_message< Type > >
+{ static CXX11_CONSTEXPR Header::type TYPE_ID = Type; };
+
+} // namespace detail
+} // namespace kademlia
+
+#endif // KADEMLIA_TEST_HELPERS_CORRUPTED_MESSAGE_MOCK_HPP
 

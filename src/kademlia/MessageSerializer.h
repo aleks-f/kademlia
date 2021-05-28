@@ -52,7 +52,6 @@ public:
 		buffer b;
 		detail::serialize(header, b);
 		detail::serialize(message, b);
-
 		return b;
 	}
 

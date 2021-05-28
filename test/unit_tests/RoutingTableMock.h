@@ -23,87 +23,61 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef KADEMLIA_LOOKUP_TASK_H
-#define KADEMLIA_LOOKUP_TASK_H
+#ifndef KADEMLIA_TEST_HELPERS_ROUTING_TABLE_MOCK_H
+#define KADEMLIA_TEST_HELPERS_ROUTING_TABLE_MOCK_H
 
-#ifdef _MSC_VER
-#   pragma once
-#endif
-
-#include <cassert>
-#include <map>
 #include <vector>
+#include <deque>
+#include <utility>
+#include <stdexcept>
 
-#include "Peer.h"
-#include "kademlia/log.hpp"
+#include "kademlia/Message.h"
+#include "kademlia/IPEndpoint.h"
+#include "kademlia/Peer.h"
 
 namespace kademlia {
-namespace detail {
+namespace test {
 
-
-class LookupTask
+struct RoutingTableMock
 {
-public:
-	void flag_candidate_as_valid(id const& candidate_id);
+	using peer_type = std::pair< detail::id, detail::IPEndpoint >;
+	using peers_type = std::vector< peer_type >;
+	using expected_ids_type = std::deque< detail::id >;
 
-	void flag_candidate_as_invalid(id const& candidate_id);
+	using iterator_type = peers_type::iterator;
 
-	std::vector<Peer> select_new_closest_candidates(std::size_t max_count);
+	RoutingTableMock(): expected_ids_(),
+		peers_(),
+		find_call_count_()
+	{ }
 
-	std::vector<Peer> select_closest_valid_candidates(std::size_t max_count);
-
-	template<typename Peers>
-	void add_candidates(Peers const& peers)
+	iterator_type find(detail::id const& id)
 	{
-		for (auto const& p : peers)
-			add_candidate(p);
+		if (expected_ids_.empty() || id != expected_ids_.front())
+			throw std::runtime_error("Unexpected searched id.");
+
+		expected_ids_.pop_front();
+		++ find_call_count_;
+		return peers_.begin();
 	}
 
-	bool have_all_requests_completed() const;
-
-	id const& get_key() const;
-
-protected:
-	~LookupTask() = default;
-
-	template<typename Iterator>
-	LookupTask(id const & key, Iterator i, Iterator e)
-        : key_{ key }
-        , in_flight_requests_count_{ 0 }
-        , candidates_{}
+	void push(detail::id const& id, detail::IPEndpoint const& endpoint)
 	{
-		for (; i != e; ++i)
-			add_candidate(Peer{ i->first, i->second });
+		peers_.emplace_back(id, endpoint);
 	}
 
-private:
-	struct candidate final
+	iterator_type end()
 	{
-		Peer peer_;
-		enum
-		{
-			STATE_UNKNOWN,
-			STATE_CONTACTED,
-			STATE_RESPONDED,
-			STATE_TIMEOUTED,
-		} state_;
-	};
+		return peers_.end();
+	}
 
-	using candidates_type = std::map<id, candidate>;
-
-private:
-	void add_candidate(Peer const& p);
-
-	candidates_type::iterator find_candidate(id const& candidate_id);
-
-private:
-	id key_;
-	std::size_t in_flight_requests_count_;
-	candidates_type candidates_;
+	expected_ids_type expected_ids_;
+	peers_type peers_;
+	uint64_t find_call_count_;
 };
 
-
-} // namespace detail
+} // namespace test
 } // namespace kademlia
 
-#endif
+#endif // KADEMLIA_TEST_HELPERS_ROUTING_TABLE_MOCK_HPP
+

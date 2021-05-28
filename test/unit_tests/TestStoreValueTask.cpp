@@ -24,13 +24,14 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-#include "tracker_mock.hpp"
-#include "corrupted_message.hpp"
-#include "task_fixture.hpp"
+#include "TrackerMock.h"
+#include "CorruptedMessage.h"
+#include "TaskFixture.h"
 #include "kademlia/id.hpp"
-#include "kademlia/peer.hpp"
-#include "kademlia/ip_endpoint.hpp"
-#include "kademlia/store_value_task.hpp"
+#include "kademlia/Peer.h"
+#include "kademlia/IPEndpoint.h"
+#include "kademlia/StoreValueTask.h"
+#include "Poco/Thread.h"
 #include "gtest/gtest.h"
 #include <vector>
 
@@ -40,33 +41,27 @@ namespace {
 namespace k = kademlia;
 namespace kd = k::detail;
 
-using data_type = std::vector< std::uint8_t >;
+using data_type = std::vector<std::uint8_t>;
 
-struct store_value_task_test : k::test::task_fixture
+struct StoreValueTaskTest : k::test::TaskFixture
 {
     void operator()(std::error_code const& f)
     {
         ++ callback_call_count_;
         failure_ = f;
-    }
+   }
 };
 
 
-TEST_F(store_value_task_test, can_notify_error_when_routing_table_is_empty)
+TEST_F(StoreValueTaskTest, CanNotifyErrorWhenRoutingTableIsEmpty)
 {
-    kd::id const chosen_key{ "a" };
-    kd::buffer const data{ 1, 2, 3, 4 };
+    kd::id const chosen_key{"a"};
+    kd::buffer const data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     EXPECT_EQ(0, routing_table_.find_call_count_);
 
-    kd::start_store_value_task< data_type >(chosen_key
-                                           , data
-                                           , tracker_
-                                           , routing_table_
-                                           , std::ref(*this));
-
-    io_service_.poll();
+    kd::start_store_value_task<data_type>(chosen_key, data, tracker_, routing_table_, std::ref(*this));
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
@@ -79,27 +74,22 @@ TEST_F(store_value_task_test, can_notify_error_when_routing_table_is_empty)
     EXPECT_EQ(1, callback_call_count_);
 }
 
-TEST_F(store_value_task_test, can_notify_error_when_unique_peer_fails_to_respond)
+TEST_F(StoreValueTaskTest, CanNotifyErrorWhenUniquePeerFailsToRespond)
 {
-    kd::id const chosen_key{ "a" };
-    kd::buffer const data{ 1, 2, 3, 4 };
+    kd::id const chosen_key{"a"};
+    kd::buffer const data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
-    auto p1 = create_and_add_peer("192.168.1.1", kd::id{ "b" });
+    auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
 
-    kd::start_store_value_task< data_type >(chosen_key
-                                           , data
-                                           , tracker_
-                                           , routing_table_
-                                           , std::ref(*this));
+    kd::start_store_value_task<data_type>(chosen_key, data, tracker_, routing_table_, std::ref(*this));
+    io_service_.poll();
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
-    io_service_.poll();
-
     // Task asked p1 for a closer peer.
-    kd::find_peer_request_body const fv{ chosen_key };
+    kd::FindPeerRequestBody const fv{chosen_key};
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
 
     // Task didn't send any more message.
@@ -110,16 +100,16 @@ TEST_F(store_value_task_test, can_notify_error_when_unique_peer_fails_to_respond
     EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
 }
 
-TEST_F(store_value_task_test, can_notify_error_when_all_peers_fail_to_respond)
+TEST_F(StoreValueTaskTest, CanNotifyErrorWhenAllPeersFailToRespond)
 {
-    kd::id const chosen_key{ "a" };
-    kd::buffer const data{ 1, 2, 3, 4 };
+    kd::id const chosen_key{"a"};
+    kd::buffer const data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
-    auto p1 = create_and_add_peer("192.168.1.1", kd::id{ "b" });
-    auto p2 = create_and_add_peer("192.168.1.2", kd::id{ "c" });
+    auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
+    auto p2 = create_and_add_peer("192.168.1.2", kd::id{"c"});
 
-    kd::start_store_value_task< data_type >(chosen_key
+    kd::start_store_value_task<data_type>(chosen_key
                                            , data
                                            , tracker_
                                            , routing_table_
@@ -130,7 +120,7 @@ TEST_F(store_value_task_test, can_notify_error_when_all_peers_fail_to_respond)
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 & p2 for a closer peer.
-    kd::find_peer_request_body const fv{ chosen_key };
+    kd::FindPeerRequestBody const fv{chosen_key};
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
     EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
 
@@ -142,16 +132,16 @@ TEST_F(store_value_task_test, can_notify_error_when_all_peers_fail_to_respond)
     EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
 }
 
-TEST_F(store_value_task_test, can_store_value_when_already_known_peer_is_the_target)
+TEST_F(StoreValueTaskTest, CanStoreValueWhenAlreadyKnownPeerIsTheTarget)
 {
-    kd::id const chosen_key{ "a" };
-    kd::buffer const data{ 1, 2, 3, 4 };
+    kd::id const chosen_key{"a"};
+    kd::buffer const data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
-    auto p1 = create_and_add_peer("192.168.1.1", kd::id{ "b" });
-    kd::find_peer_response_body const b1{};
+    auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
+    kd::FindPeerResponseBody const b1{};
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, b1);
-    kd::start_store_value_task< data_type >(chosen_key
+    kd::start_store_value_task<data_type>(chosen_key
                                            , data
                                            , tracker_
                                            , routing_table_
@@ -162,12 +152,12 @@ TEST_F(store_value_task_test, can_store_value_when_already_known_peer_is_the_tar
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 for a closer peer.
-    kd::find_peer_request_body const fv{ chosen_key };
+    kd::FindPeerRequestBody const fv{chosen_key};
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
 
     // Task decided that p1 was the closest
     // hence it asked to store data on it.
-    kd::store_value_request_body const sv{ chosen_key, data };
+    kd::StoreValueRequestBody const sv{chosen_key, data};
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, sv));
 
     // Task didn't send any more message.
@@ -178,29 +168,29 @@ TEST_F(store_value_task_test, can_store_value_when_already_known_peer_is_the_tar
     EXPECT_TRUE(! failure_);
 }
 
-TEST_F(store_value_task_test, can_store_value_when_discovered_peer_is_the_target)
+TEST_F(StoreValueTaskTest, CanStoreValueWhenDiscoveredPeerIsTheTarget)
 {
-    kd::id const chosen_key{ "a" };
-    kd::buffer const data{ 1, 2, 3, 4 };
+    kd::id const chosen_key{"a"};
+    kd::buffer const data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     // p1 is the only known peer atm.
-    auto p1 = create_and_add_peer("192.168.1.1", kd::id{ "b" });
+    auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
 
     // p2 is unknown atm.
-    auto i2 = kd::id{ chosen_key };
-    auto e2 = kd::to_ip_endpoint("192.168.1.2", 5555);
-    kd::peer const p2{ i2, e2 };
+    auto i2 = kd::id{chosen_key};
+    auto e2 = kd::toIPEndpoint("192.168.1.2", 5555);
+    kd::Peer const p2{i2, e2};
 
     // p1 knows p2.
-    kd::find_peer_response_body const fp1{ { p2 } };
+    kd::FindPeerResponseBody const fp1{{p2}};
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, fp1);
 
     // And p2 doesn't know closer peer.
-    kd::find_peer_response_body const fp2{};
+    kd::FindPeerResponseBody const fp2{};
     tracker_.add_message_to_receive(e2, i2, fp2);
 
-    kd::start_store_value_task< data_type >(chosen_key
+    kd::start_store_value_task<data_type>(chosen_key
                                            , data
                                            , tracker_
                                            , routing_table_
@@ -211,20 +201,30 @@ TEST_F(store_value_task_test, can_store_value_when_discovered_peer_is_the_target
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 for a closer peer.
-    kd::find_peer_request_body const fv{ chosen_key };
+    kd::FindPeerRequestBody const fv{chosen_key};
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
 
     // Task then asked p2 for a closer peer.
+    //std::cout << "has_sent_message(e2, fv)" << std::endl;
+    //std::cout << "===============" << std::endl;
     EXPECT_TRUE(tracker_.has_sent_message(e2, fv));
+    //std::cout << "===============" << std::endl;
 
     // Task decided that p2 was the closest
     // hence it asked to store data on it.
-    kd::store_value_request_body const sv{ chosen_key, data };
+    kd::StoreValueRequestBody const sv{chosen_key, data};
+    //std::cout << "has_sent_message(e2, sv)" << std::endl;
+    //std::cout << "===============" << std::endl;
     EXPECT_TRUE(tracker_.has_sent_message(e2, sv));
+    //std::cout << "===============" << std::endl;
 
     // Task is also required to store data 
     // on close peers for redundancy purpose.
+    //std::cout << "===============" << std::endl;
+    //std::cout << "has_sent_message(p1.endpoint_, fv)" << std::endl;
+    //std::cout << "===============" << std::endl;
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, sv));
+    //std::cout << "===============" << std::endl;
 
     // Task didn't send any more message.
     EXPECT_TRUE(! tracker_.has_sent_message());
@@ -234,16 +234,16 @@ TEST_F(store_value_task_test, can_store_value_when_discovered_peer_is_the_target
     EXPECT_TRUE(! failure_);
 }
 
-TEST_F(store_value_task_test, can_skip_wrong_response)
+TEST_F(StoreValueTaskTest, CanSkipWrongResponse)
 {
-    kd::id const chosen_key{ "a" };
-    kd::buffer const data{ 1, 2, 3, 4 };
+    kd::id const chosen_key{"a"};
+    kd::buffer const data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     // p1 is the only known peer.
-    auto p1 = create_and_add_peer("192.168.1.1", kd::id{ "b" });
+    auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
 
-    kd::find_value_response_body const req{};
+    kd::FindValueResponseBody const req{};
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, req);
 
     kd::start_store_value_task(chosen_key
@@ -259,16 +259,16 @@ TEST_F(store_value_task_test, can_skip_wrong_response)
     EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
 }
 
-TEST_F(store_value_task_test, can_skip_corrupted_response)
+TEST_F(StoreValueTaskTest, CanSkipCorruptedResponse)
 {
-    kd::id const chosen_key{ "a" };
-    kd::buffer const data{ 1, 2, 3, 4 };
+    kd::id const chosen_key{"a"};
+    kd::buffer const data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     // p1 is the only known peer.
-    auto p1 = create_and_add_peer("192.168.1.1", kd::id{ "b" });
+    auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
 
-    k::test::corrupted_message< kd::header::FIND_PEER_RESPONSE > const req{};
+    k::test::corrupted_message<kd::Header::FIND_PEER_RESPONSE> const req{};
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, req);
 
     kd::start_store_value_task(chosen_key
@@ -283,6 +283,5 @@ TEST_F(store_value_task_test, can_skip_corrupted_response)
     EXPECT_EQ(1, callback_call_count_);
     EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
 }
-
 
 }

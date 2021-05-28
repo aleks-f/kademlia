@@ -31,12 +31,12 @@ namespace {
 
 namespace k = kademlia;
 
-TEST (endpoint_test, can_be_constructed_with_service_as_string)
+TEST (EndpointTest, can_be_constructed_with_service_as_string)
 {
     k::endpoint{ "127.0.0.1", "1234" };
 }
 
-TEST (endpoint_test, can_be_constructed_with_service_as_integer)
+TEST (EndpointTest, can_be_constructed_with_service_as_integer)
 {
     k::endpoint{ "127.0.0.1", 1234 };
 }

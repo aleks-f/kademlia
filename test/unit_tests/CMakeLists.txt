@@ -47,7 +47,8 @@ add_library(test_helpers STATIC
 target_link_libraries(test_helpers
     ${Boost_FILESYSTEM_LIBRARY}
     gtest
-	Poco::Foundation)
+    Poco::Foundation
+    Poco::Net)
 
 set_target_properties(test_helpers PROPERTIES
     COMPILE_DEFINITIONS TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -72,11 +73,14 @@ build_test(unit_tests_lib
     SOURCES
         test_id.cpp
         test_endpoint.cpp
+        TestEndpoint.cpp
         test_boost_to_std_error.cpp
         test_message.cpp
+        TestMessage.cpp
         test_message_serializer.cpp
         test_lookup_task.cpp
         test_store_value_task.cpp
+        TestStoreValueTask.cpp
         test_find_value_task.cpp
         test_ip_endpoint.cpp
         test_peer.cpp
@@ -98,7 +102,8 @@ build_test(unit_tests_lib
         test_fake_socket.cpp
     LIBRARIES 
         kademlia_static
-        Poco::Foundation)
+        Poco::Foundation
+        Poco::Net)
 
 if(ENABLE_COVERAGE)
     if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")

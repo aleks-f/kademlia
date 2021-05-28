@@ -35,7 +35,7 @@ namespace {
 namespace k = kademlia;
 namespace kd = k::detail;
 
-using NotifyPeerTaskTest = k::test::TaskFixture;
+using NotifyPeerTaskTest = k::test::task_fixture;
 
 
 TEST_F(NotifyPeerTaskTest, can_query_known_peer_for_specific_id)
