@@ -79,6 +79,7 @@ is_log_enabled
  *  my_module is enabled. Because the call to is_log_enabled()
  *  can be costly, its result is cached in a static variable.
  */
+#define KADEMLIA_ENABLE_DEBUG 1
 #ifdef KADEMLIA_ENABLE_DEBUG
 #   define LOG_DEBUG( module, thiz )                                           \
     for ( bool used = false; ! used; used = true )                             \

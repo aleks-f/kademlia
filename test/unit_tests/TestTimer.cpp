@@ -25,7 +25,8 @@
 
 #include "common.hpp"
 #include "kademlia/error_impl.hpp"
-#include "kademlia/timer.hpp"
+#include "kademlia/Timer.h"
+#include "kademlia/log.hpp"
 #include "gtest/gtest.h"
 #include <vector>
 
@@ -35,29 +36,27 @@ namespace k = kademlia;
 namespace kd = k::detail;
 
 
-TEST(timer_construct_test, can_be_constructed_using_a_reactor)
+TEST(TimerConstructTest, can_be_constructed_using_a_reactor)
 {
-    boost::asio::io_service io_service;
-    EXPECT_NO_THROW(kd::timer{ io_service });
+    Poco::Net::SocketReactor io_service;
+    EXPECT_NO_THROW(kd::Timer{ io_service });
 }
 
 
-struct timer_test: public ::testing::Test
+struct TimerTest: public ::testing::Test
 {
-    timer_test()
+    TimerTest()
         : io_service_{}
-        , work_{ io_service_ }
         , manager_{ io_service_ }
         , timeouts_received_{}
     { }
 
-    boost::asio::io_service io_service_;
-    boost::asio::io_service::work work_;
-    kd::timer manager_;
+    Poco::Net::SocketReactor io_service_;
+    kd::Timer manager_;
     std::size_t timeouts_received_;
 
 protected:
-    ~timer_test() override
+    ~TimerTest() override
     {
     }
 
@@ -71,30 +70,38 @@ protected:
 };
 
 
-TEST_F(timer_test, multiple_associations_can_be_added)
+TEST_F(TimerTest, multiple_associations_can_be_added)
 {
+	//kademlia::detail::enable_log_for("Timer");
+	//kademlia::detail::enable_log_for("TimerTest");
     EXPECT_EQ(0, io_service_.poll());
     EXPECT_EQ(0, timeouts_received_);
 
     // Create the association.
     auto on_expiration = [ this ] (void)
-    { ++ timeouts_received_; };
+    {
+    	++ timeouts_received_;
+    	LOG_DEBUG(TimerTest, this) << "timeouts_received_=" << timeouts_received_ << std::endl;
+    };
 
     auto const infinite = std::chrono::hours(1);
     manager_.expires_from_now(infinite, on_expiration);
+    LOG_DEBUG(TimerTest, this) << "poll(infinite)" << std::endl;
     EXPECT_EQ(0, io_service_.poll());
     EXPECT_EQ(0, timeouts_received_);
 
     // This new expiration should trigger a cancel of the current
     // timeout (infinite), hence one task execution.
-    auto const immediate = kd::timer::duration::zero();
+    auto const immediate = kd::Timer::duration::zero();
     manager_.expires_from_now(immediate, on_expiration);
-    EXPECT_EQ(1, io_service_.run_one());
+    LOG_DEBUG(TimerTest, this) << "runOne()" << std::endl;
+    EXPECT_EQ(1, io_service_.runOne());
     EXPECT_EQ(0, timeouts_received_);
 
     // Then the task execution of the new timeout (immediate)
     // and the call of its associated callback.
-    EXPECT_EQ(1, io_service_.run_one());
+    LOG_DEBUG(TimerTest, this) << "runOne()" << std::endl;
+    EXPECT_EQ(1, io_service_.runOne());
     EXPECT_EQ(1, timeouts_received_);
 
     EXPECT_EQ(0, io_service_.poll());

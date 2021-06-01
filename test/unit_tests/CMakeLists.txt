@@ -90,6 +90,7 @@ build_test(unit_tests_lib
         test_response_router.cpp
         test_response_callbacks.cpp
         test_timer.cpp
+        TestTimer.cpp
         test_network.cpp
         test_message_socket.cpp
         test_log.cpp

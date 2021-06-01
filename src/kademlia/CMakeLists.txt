@@ -52,7 +52,8 @@ set(kademlia_sources
     session_base.cpp
     Tracker.cpp
     first_session.cpp
-    timer.cpp)
+    timer.cpp
+    Timer.cpp)
 
 # Kademlia shared
 add_library(kademlia SHARED
