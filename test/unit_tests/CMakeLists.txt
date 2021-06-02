@@ -86,6 +86,7 @@ build_test(unit_tests_lib
         test_peer.cpp
         test_error.cpp
         test_discover_neighbors_task.cpp
+        TestDiscoverNeighborsTask.cpp
         test_notify_peer_task.cpp
         test_response_router.cpp
         test_response_callbacks.cpp

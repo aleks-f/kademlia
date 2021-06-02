@@ -268,7 +268,7 @@ TEST_F(StoreValueTaskTest, CanSkipCorruptedResponse)
     // p1 is the only known peer.
     auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
 
-    k::test::corrupted_message<kd::Header::FIND_PEER_RESPONSE> const req{};
+    k::test::CorruptedMessage<kd::Header::FIND_PEER_RESPONSE> const req{};
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, req);
 
     kd::start_store_value_task(chosen_key

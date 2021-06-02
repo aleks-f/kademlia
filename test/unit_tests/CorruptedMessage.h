@@ -35,7 +35,7 @@ namespace test {
  *
  */
 template< detail::Header::type Type >
-struct corrupted_message { };
+struct CorruptedMessage { };
 
 /**
  *
@@ -43,7 +43,7 @@ struct corrupted_message { };
 template< detail::Header::type Type >
 void
 serialize
-    ( corrupted_message< Type > const& body
+    ( CorruptedMessage< Type > const& body
     , detail::buffer & b )
 { }
 
@@ -55,7 +55,7 @@ namespace detail {
  *
  */
 template< detail::Header::type Type >
-struct message_traits< test::corrupted_message< Type > >
+struct message_traits< test::CorruptedMessage< Type > >
 { static CXX11_CONSTEXPR Header::type TYPE_ID = Type; };
 
 } // namespace detail
