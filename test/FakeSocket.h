@@ -39,13 +39,14 @@
 
 #include <boost/asio/buffer.hpp>
 //#include <boost/asio/ip/udp.hpp>
+#include <boost/system/error_code.hpp>
 #include "Poco/Net/IPAddress.h"
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/SocketReactor.h"
 
 #include "kademlia/log.hpp"
 #include "kademlia/error_impl.hpp"
-#include "Message.h"
+#include "kademlia/Message.h"
 
 namespace kademlia {
 namespace test {
@@ -109,7 +110,7 @@ public:
 			return make_error_code(boost::system::errc::invalid_argument);
 
 		// Generate our local address.
-		if (e.address().isV4())
+		if (e.host().isV4())
 			local_endpoint(generate_unique_ipv4_endpoint(e.port()));
 		else
 			local_endpoint(generate_unique_ipv6_endpoint(e.port()));
@@ -234,10 +235,7 @@ private:
 		socket_ptr &
 		operator [] (endpoint_type const& e)
 		{
-			if (e.address().is_v4())
-				return get_socket_from(ipv4_sockets_, e.address().to_v4());
-
-			return get_socket_from(ipv6_sockets_, e.address().to_v6());
+			return get_socket_from(ipv4_sockets_, e.host());
 		}
 
 	private:
@@ -290,13 +288,13 @@ private:
 	template<typename IpAddress>
 	static IpAddress& increment_address(IpAddress & address)
 	{
-		auto bytes = address.to_bytes();
+		auto bytes = address.toBytes();
 
 		// While current byte overflows on increment, increment next byte.
 		auto i = bytes.rbegin(), e = bytes.rend();
 		for (; i != e && (++ *i) == 0; ++i) continue;
 		assert(i != e /* all ip address have been allocated */);
-		return address = IpAddress{ bytes };
+		return address = IpAddress(&bytes[0], bytes.size());
 	}
 
 	/**
@@ -375,7 +373,7 @@ private:
 			target->pending_reads_.pop_front();
 		};
 
-		io_service_.post(perform_write);
+		io_service_.addCompletionHandler(std::move(perform_write));
 	}
 
 	template<typename Callback>
@@ -401,7 +399,7 @@ private:
 			pending_writes_.pop_front();
 		};
 
-		io_service_.post(perform_read);
+		io_service_.addCompletionHandler(std::move(perform_read));
 	}
 
 private:

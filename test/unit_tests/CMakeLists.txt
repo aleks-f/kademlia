@@ -102,6 +102,7 @@ build_test(unit_tests_lib
         test_concurrent_guard.cpp
         test_engine.cpp
         test_fake_socket.cpp
+        TestFakeSocket.cpp
     LIBRARIES 
         kademlia_static
         Poco::Foundation
