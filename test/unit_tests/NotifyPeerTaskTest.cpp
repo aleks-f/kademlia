@@ -24,10 +24,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-#include "routing_table_mock.hpp"
-#include "task_fixture.hpp"
+#include "RoutingTableMock.h"
+#include "TaskFixture.h"
 #include "kademlia/id.hpp"
-#include "kademlia/notify_peer_task.hpp"
+#include "kademlia/NotifyPeerTask.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -35,10 +35,10 @@ namespace {
 namespace k = kademlia;
 namespace kd = k::detail;
 
-using notify_peer_task_test = k::test::task_fixture;
+using NotifyPeerTaskTest = k::test::TaskFixture;
 
 
-TEST_F(notify_peer_task_test, can_query_known_peer_for_specific_id)
+TEST_F(NotifyPeerTaskTest, can_query_known_peer_for_specific_id)
 {
     kd::id const my_id{ "a" };
     routing_table_.expected_ids_.emplace_back(my_id);
@@ -49,17 +49,17 @@ TEST_F(notify_peer_task_test, can_query_known_peer_for_specific_id)
     // p1 doesn't know closer peer.
     tracker_.add_message_to_receive(p1.endpoint_
                                    , p1.id_
-                                   , kd::find_peer_response_body{});
+                                   , kd::FindPeerResponseBody{});
 
     // p2 doesn't know closer peer.
     tracker_.add_message_to_receive(p2.endpoint_
                                    , p2.id_
-                                   , kd::find_peer_response_body{});
+                                   , kd::FindPeerResponseBody{});
 
     // p3 doesn't know closer peer.
     tracker_.add_message_to_receive(p3.endpoint_
                                    , p3.id_
-                                   , kd::find_peer_response_body{});
+                                   , kd::FindPeerResponseBody{});
 
 
 
@@ -71,7 +71,7 @@ TEST_F(notify_peer_task_test, can_query_known_peer_for_specific_id)
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1, p2 & p3 for a closer peer or the value.
-    kd::find_peer_request_body const fv{ my_id };
+    kd::FindPeerRequestBody const fv{ my_id };
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
     EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
     EXPECT_TRUE(tracker_.has_sent_message(p3.endpoint_, fv));

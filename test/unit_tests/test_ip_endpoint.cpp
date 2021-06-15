@@ -35,7 +35,7 @@ namespace kd = k::detail;
 namespace ba = boost::asio;
 
 
-TEST(IPEndpoint, can_be_default_constructed)
+TEST(ip_endpoint_test, can_be_default_constructed)
 {
     EXPECT_NO_THROW(
         kd::ip_endpoint const e{};
@@ -43,7 +43,7 @@ TEST(IPEndpoint, can_be_default_constructed)
    );
 }
 
-TEST(IPEndpoint, can_be_constructed_with_ip_and_port)
+TEST(ip_endpoint_test, can_be_constructed_with_ip_and_port)
 {
     EXPECT_NO_THROW(
         auto const e = kd::to_ip_endpoint( "192.168.0.1", 1234); 
@@ -52,7 +52,7 @@ TEST(IPEndpoint, can_be_constructed_with_ip_and_port)
 }
 
 
-TEST(IPEndpoint, can_be_compared)
+TEST(ip_endpoint_test, can_be_compared)
 {
     {
         auto a = kd::to_ip_endpoint( "192.168.0.1", 1234);
@@ -68,7 +68,7 @@ TEST(IPEndpoint, can_be_compared)
 }
 
 
-TEST(IPEndpoint, can_be_printed)
+TEST(ip_endpoint_test, can_be_printed)
 {
     std::ostringstream out;
     out << kd::to_ip_endpoint( "192.168.0.1", 1234);

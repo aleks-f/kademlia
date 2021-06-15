@@ -37,7 +37,7 @@ namespace kd = kademlia::detail;
 using message_socket_type = kd::message_socket< boost::asio::ip::udp::socket >;
 
 
-TEST(MessageSocketTest, faulty_address_are_detected)
+TEST(message_socket_test, faulty_address_are_detected)
 {
     boost::asio::io_service io_service;
 
@@ -50,7 +50,7 @@ TEST(MessageSocketTest, faulty_address_are_detected)
     }
 }
 
-TEST(MessageSocketTest, dns_can_be_resolved)
+TEST(message_socket_test, dns_can_be_resolved)
 {
     boost::asio::io_service io_service;
 
@@ -59,10 +59,10 @@ TEST(MessageSocketTest, dns_can_be_resolved)
 
     auto const e = message_socket_type::resolve_endpoint(io_service, endpoint);
 
-    EXPECT_LE(1, e.size());
+	EXPECT_LE(1, e.size());
 }
 
-TEST(MessageSocketTest, ipv4_address_can_be_resolved)
+TEST(message_socket_test, ipv4_address_can_be_resolved)
 {
     boost::asio::io_service io_service;
 
@@ -74,7 +74,7 @@ TEST(MessageSocketTest, ipv4_address_can_be_resolved)
     EXPECT_EQ(1, e.size());
 }
 
-TEST(MessageSocketTest, ipv6_address_can_be_resolved)
+TEST(message_socket_test, ipv6_address_can_be_resolved)
 {
     boost::asio::io_service io_service;
 
@@ -82,11 +82,12 @@ TEST(MessageSocketTest, ipv6_address_can_be_resolved)
                               , "27980" };
 
     auto e = message_socket_type::resolve_endpoint(io_service, endpoint);
+    std::cout << e.size() << std::endl;
     EXPECT_EQ(1, e.size());
 }
 
 
-TEST(MessageSocketTest, ipv4_socket_can_be_created)
+TEST(message_socket_test, ipv4_socket_can_be_created)
 {
     boost::asio::io_service io_service;
 
@@ -96,7 +97,7 @@ TEST(MessageSocketTest, ipv4_socket_can_be_created)
     EXPECT_NO_THROW(message_socket_type::ipv4(io_service, endpoint););
 }
 
-TEST(MessageSocketTest, ipv6_socket_can_be_created)
+TEST(message_socket_test, ipv6_socket_can_be_created)
 {
     boost::asio::io_service io_service;
 

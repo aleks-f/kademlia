@@ -24,17 +24,12 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
-
-//#include <boost/asio/io_service.hpp>
 #include "Poco/Net/SocketReactor.h"
-
 #include <kademlia/session_base.hpp>
 #include <kademlia/endpoint.hpp>
-
 #include "kademlia/log.hpp"
 #include "kademlia/buffer.hpp"
 #include "kademlia/Engine.h"
-
 #include "FakeSocket.h"
 
 namespace kademlia {
@@ -44,18 +39,16 @@ class TestEngine final
 {
 public:
 	TestEngine(Poco::Net::SocketReactor& service,endpoint const & ipv4,endpoint const & ipv6,
-		detail::id const& new_id): work_(service),
-			engine_(service, ipv4, ipv6, new_id),
+		detail::id const& new_id): engine_(service, ipv4, ipv6, new_id),
 			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), session_base::DEFAULT_PORT),
 			listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), session_base::DEFAULT_PORT)
 	{ }
 
 	TestEngine(Poco::Net::SocketReactor& service, endpoint const & initial_peer
 		, endpoint const & ipv4, endpoint const & ipv6, detail::id const& new_id)
-			: work_(service)
-			, engine_(service, initial_peer, ipv4, ipv6, new_id)
-			, listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), session_base::DEFAULT_PORT)
-			, listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), session_base::DEFAULT_PORT)
+			: engine_(service, initial_peer, ipv4, ipv6, new_id),
+			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), session_base::DEFAULT_PORT),
+			listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), session_base::DEFAULT_PORT)
 	{ }
 
 	template< typename Callable >
@@ -81,20 +74,19 @@ public:
 	endpoint
 	ipv4() const
 	{
-		return endpoint(listen_ipv4_.address().to_string(), listen_ipv4_.port());
+		return endpoint(listen_ipv4_.host().toString(), listen_ipv4_.port());
 	}
 
 	endpoint
 	ipv6() const
 	{
-		return endpoint(listen_ipv6_.address().to_string(), listen_ipv6_.port());
+		return endpoint(listen_ipv6_.host().toString(), listen_ipv6_.port());
 	}
 
 private:
-	using impl = detail::engine<FakeSocket>;
+	using impl = detail::Engine<FakeSocket>;
 
 private:
-	boost::asio::io_service::work work_;
 	impl engine_;
 	FakeSocket::endpoint_type listen_ipv4_;
 	FakeSocket::endpoint_type listen_ipv6_;
@@ -103,7 +95,7 @@ private:
 class packet final
 {
 public:
-	packet(endpoint const& from, endpoint const& to, detail::header::type const& type): from_(from),
+	packet(endpoint const& from, endpoint const& to, detail::Header::type const& type): from_(from),
 		to_(to), type_(type)
 	{
 	}
@@ -118,7 +110,7 @@ public:
 		return to_;
 	}
 
-	detail::header::type const& type() const
+	detail::Header::type const& type() const
 	{
 		return type_;
 	}
@@ -126,12 +118,12 @@ public:
 private:
 	endpoint from_;
 	endpoint to_;
-	detail::header::type type_;
+	detail::Header::type type_;
 };
 
-inline detail::header extract_kademlia_header(FakeSocket::packet const& p)
+inline detail::Header extract_kademlia_header(FakeSocket::packet const& p)
 {
-	detail::header h;
+	detail::Header h;
 	auto i = p.data_.begin(), e = p.data_.end();
 	deserialize(i, e, h);
 	return h;
@@ -146,8 +138,8 @@ inline packet pop_packet()
 
 	auto const& p = packets.front();
 
-	packet const r{endpoint{ p.from_.address().to_string(), std::to_string(p.from_.port()) },
-					endpoint{ p.to_.address().to_string(), std::to_string(p.to_.port()) },
+	packet const r{endpoint{ p.from_.host().toString(), std::to_string(p.from_.port()) },
+					endpoint{ p.to_.host().toString(), std::to_string(p.to_.port()) },
 					extract_kademlia_header(p).type_};
 	packets.pop();
 	return r;

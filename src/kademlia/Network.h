@@ -55,7 +55,8 @@ public:
 		message_socket_type&& socket_ipv6,
 		on_message_received_type on_message_received): io_service_(io_service),
 			socket_ipv4_(std::move(socket_ipv4)),
-			socket_ipv6_(std::move(socket_ipv6))
+			socket_ipv6_(std::move(socket_ipv6)),
+			on_message_received_( on_message_received )
 	{
 		start_message_reception(on_message_received);
 		LOG_DEBUG(Network, this) << "created at '" << socket_ipv4_.local_endpoint()
@@ -81,8 +82,8 @@ public:
 private:
 	void start_message_reception(on_message_received_type on_message_received)
 	{
-		socket_ipv4_.setRecvCallbackType(on_message_received);
-		socket_ipv6_.setRecvCallbackType(on_message_received);
+		schedule_receive_on_socket(socket_ipv4_);
+        schedule_receive_on_socket(socket_ipv6_);
 	}
 
 	message_socket_type& get_socket_for(endpoint_type const& e)
@@ -92,9 +93,31 @@ private:
 	}
 
 private:
+	void
+    schedule_receive_on_socket
+        ( message_socket_type & current_subnet )
+    {
+        auto on_new_message = [ this, &current_subnet ]
+            ( std::error_code const& failure
+            , endpoint_type const& sender
+            , buffer::const_iterator i
+            , buffer::const_iterator e )
+        {
+            // Reception failure are fatal.
+            if ( failure )
+                throw std::system_error{ failure };
+
+            on_message_received_( sender, i, e );
+            schedule_receive_on_socket( current_subnet );
+        };
+
+        current_subnet.async_receive( on_new_message );
+    }
+
 	Poco::Net::SocketReactor& io_service_;
 	message_socket_type socket_ipv4_;
 	message_socket_type socket_ipv6_;
+	on_message_received_type on_message_received_;
 };
 
 } // namespace detail

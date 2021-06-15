@@ -26,6 +26,7 @@
 #include "kademlia/response_callbacks.hpp"
 
 #include <cassert>
+#include <iostream>
 
 #include "kademlia/error_impl.hpp"
 
@@ -38,6 +39,7 @@ response_callbacks::push_callback
     , callback const& on_message_received )
 {
     auto i = callbacks_.emplace( message_id, on_message_received );
+	std::cout << "push_callback: message_id=[" << message_id << ']' << std::endl;
     (void)i;
     assert( i.second && "an id can't be registered twice" );
 }
@@ -45,7 +47,10 @@ response_callbacks::push_callback
 bool
 response_callbacks::remove_callback
     ( id const& message_id )
-{ return callbacks_.erase( message_id ) > 0; }
+{
+	std::cout << "remove_callback: message_id=[" << message_id << ']' << std::endl;
+	return callbacks_.erase( message_id ) > 0;
+}
 
 std::error_code
 response_callbacks::dispatch_response
@@ -54,13 +59,18 @@ response_callbacks::dispatch_response
     , buffer::const_iterator i
     , buffer::const_iterator e )
 {
+	std::cout << "looking for:" << h.random_token_ << std::endl;
     auto callback = callbacks_.find( h.random_token_ );
     if ( callback == callbacks_.end() )
-        return make_error_code( UNASSOCIATED_MESSAGE_ID );
+    {
+    	std::cout << "UNASSOCIATED_MESSAGE_ID:" << h.random_token_ << std::endl;
+		return make_error_code(UNASSOCIATED_MESSAGE_ID);
+	}
 
+	std::cout << "calling:" << h.random_token_ << std::endl;
     callback->second( sender, h, i, e );
     callbacks_.erase( callback );
-
+	std::cout << "erased:" << h.random_token_ << std::endl;
     return std::error_code{};
 }
 

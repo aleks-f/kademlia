@@ -33,14 +33,14 @@ namespace {
 namespace k = kademlia;
 namespace kd = k::detail;
 
-struct MessageSerializerTest: public ::testing::Test
+struct message_serializer_test: public ::testing::Test
 {
-    MessageSerializerTest(): id_{"abcd"}
+    message_serializer_test(): id_{"abcd"}
     {}
 
     kd::id id_;
 protected:
-    ~MessageSerializerTest() override
+    ~message_serializer_test() override
     {
     }
 
@@ -54,13 +54,13 @@ protected:
 };
 
 
-TEST_F(MessageSerializerTest, can_be_constructed)
+TEST_F(message_serializer_test, can_be_constructed)
 {
     kd::message_serializer s{ id_ };
     (void)s;
 }
 
-TEST_F(MessageSerializerTest, can_serialize_a_message_with_a_body)
+TEST_F(message_serializer_test, can_serialize_a_message_with_a_body)
 {
     kd::message_serializer s{ id_ };
     kd::id const searched_id{ "1234" };
@@ -84,7 +84,7 @@ TEST_F(MessageSerializerTest, can_serialize_a_message_with_a_body)
     EXPECT_TRUE(i == e);
 }
 
-TEST_F(MessageSerializerTest, can_serialize_a_message_without_body)
+TEST_F(message_serializer_test, can_serialize_a_message_without_body)
 {
     kd::message_serializer s{ id_ };
     kd::id const searched_id{ "1234" };

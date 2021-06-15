@@ -46,11 +46,11 @@ else()
     endif()
 
     include(CheckCXXCompilerFlag)
-    check_cxx_compiler_flag(-std=c++11 IS_CXX11_SUPPORTED)
-    if(NOT IS_CXX11_SUPPORTED)
-        message(FATAL_ERROR "Current compiler doesn't support c++11 yet")
+    check_cxx_compiler_flag(-std=c++14 IS_CXX14_SUPPORTED)
+    if(NOT IS_CXX14_SUPPORTED)
+        message(FATAL_ERROR "Current compiler doesn't support c++14 yet")
     endif()
-    set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -std=c++11 -fvisibility=hidden ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wno-sign-compare -std=c++14 -fvisibility=hidden ${CMAKE_CXX_FLAGS}")
 endif()
 
 # Coverage

@@ -36,6 +36,7 @@
 #include <queue>
 #include <vector>
 #include <cstdint>
+#include <iostream>
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -101,7 +102,10 @@ public:
             , local_endpoint_( o.local_endpoint_ )
             , pending_reads_( std::move( o.pending_reads_ ) )
             , pending_writes_( std::move( o.pending_writes_ ) )
-    { add_route_to_socket( local_endpoint(), this ); }
+    {
+        kademlia::detail::enable_log_for("fake_socket");
+        add_route_to_socket( local_endpoint(), this );
+    }
 
     /**
      *
@@ -196,7 +200,7 @@ public:
         if ( pending_writes_.empty() )
         {
             LOG_DEBUG( fake_socket, this )
-                << "saving pending read." << std::endl;
+                << "saving pending read from " << from.address().to_string() << std::endl;
 
             // No packet are waiting, hence register that
             // the current socket is waiting for packet.
@@ -448,7 +452,9 @@ private:
 
         assert( i != e /* all ip address have been allocated */ );
 
-        return address = IpAddress{ bytes };
+        address = IpAddress{ bytes };
+		std::cout << address.to_string() << std::endl;
+		return address;
     }
 
     /**

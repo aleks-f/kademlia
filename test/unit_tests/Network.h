@@ -23,64 +23,57 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef KADEMLIA_SESSION_IMPL_H
-#define KADEMLIA_SESSION_IMPL_H
+#ifndef KADEMLIA_TEST_HELPERS_NETWORK_H
+#define KADEMLIA_TEST_HELPERS_NETWORK_H
 
-#ifdef _MSC_VER
-#   pragma once
-#endif
-
-
-#include <utility>
-#include "SocketAdapter.h"
-#include "Poco/Net/DatagramSocket.h"
+#include <cstdint>
+/*
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/udp.hpp>
+#include <boost/asio/ip/v6_only.hpp>
+#include <boost/system/system_error.hpp>
+*/
 #include "Poco/Net/SocketReactor.h"
-#include "MessageSocket.h"
-#include "kademlia/endpoint.hpp"
-#include "Engine.h"
-#include "kademlia/concurrent_guard.hpp"
-
+#include "kademlia/SocketAdapter.h"
+#include "common.hpp"
 
 namespace kademlia {
-namespace detail {
+namespace test {
 
-
-class SessionImpl
+template< typename Socket >
+boost::system::error_code
+createSocket
+	( std::string const& ip
+	, std::uint16_t port )
 {
-public:
-	using DataType = std::vector<std::uint8_t>;
-	using KeyType = std::vector<std::uint8_t>;
-	using SocketType = SocketAdapter<Poco::Net::DatagramSocket>;
-	using EngineType = detail::Engine<SocketType>;
+	//auto const a = boost::asio::ip::address::from_string( ip );
+	Poco::Net::SocketReactor io_service;
 
-public:
-	SessionImpl(endpoint const& listen_on_ipv4, endpoint const& listen_on_ipv6);
+	// Try to create a socket.
+	//typename Socket::endpoint_type endpoint( a, port );
+	//Socket socket( io_service, endpoint.family() );
+	Poco::Net::SocketAddress sa(Poco::Net::SocketAddress::IPv4, port);
+	Poco::Net::DatagramSocket socket(sa);
 
-	SessionImpl(endpoint const& initial_peer, endpoint const& listen_on_ipv4, endpoint const& listen_on_ipv6);
+	//if ( endpoint.address().is_v6() )
+	//	socket.set_option( boost::asio::ip::v6_only{ true } );
 
-	template<typename HandlerType>
-	void async_save(KeyType const& key, DataType const& data, HandlerType && handler)
-	{
-		_engine.async_save(key, data, std::forward<HandlerType>(handler));
-	}
+	boost::system::error_code failure;
+	socket.bind( sa/*, failure*/ );
 
-	template<typename HandlerType>
-	void async_load(KeyType const& key, HandlerType && handler)
-	{
-		_engine.async_load(key, std::forward<HandlerType>(handler));
-	}
+	return failure;
+}
 
-	std::error_code run();
+void
+checkListening
+	( std::string const& ip
+	, std::uint16_t port );
 
-	void abort();
+std::uint16_t
+getTemporaryListeningPort
+	( std::uint16_t port = 1234 );
 
-private:
-	Poco::Net::SocketReactor _ioService;
-	EngineType _engine;
-	detail::concurrent_guard _concurrentGuard;
-};
-
-} // namespace detail
+} // namespace test
 } // namespace kademlia
 
 #endif

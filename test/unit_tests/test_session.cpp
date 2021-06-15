@@ -32,7 +32,6 @@
 #include <cstdint>
 #include <future>
 
-
 namespace {
 
 namespace k = kademlia;
@@ -41,12 +40,12 @@ namespace bo = boost::asio;
 
 TEST(SessionTest, session_opens_sockets_on_all_interfaces_by_default)
 {
-    k::endpoint initial_peer{ "127.0.0.1", 12345 };
+	k::endpoint initial_peer{"127.0.0.1", 12345};
 
-    k::session s{ initial_peer };
+	k::session s{initial_peer};
 
-    k::test::check_listening("0.0.0.0", k::session::DEFAULT_PORT);
-    k::test::check_listening("::", k::session::DEFAULT_PORT);
+	k::test::check_listening("0.0.0.0", k::session::DEFAULT_PORT);
+	k::test::check_listening("::", k::session::DEFAULT_PORT);
 }
 
 TEST(SessionTest, session_opens_both_ipv4_ipv6_sockets)

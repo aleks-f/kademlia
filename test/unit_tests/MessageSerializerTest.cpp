@@ -1,4 +1,3 @@
-
 // Copyright (c) 2013-2014, David Keller
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without
@@ -24,29 +23,24 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 #include "common.hpp"
-#include "kademlia/peer.hpp"
+#include "kademlia/MessageSerializer.h"
+#include "kademlia/Message.h"
 #include "gtest/gtest.h"
-#include <sstream>
-
 
 namespace {
 
-namespace kd = kademlia::detail;
+namespace k = kademlia;
+namespace kd = k::detail;
 
-struct peer_test: public ::testing::Test
+struct MessageSerializerTest: public ::testing::Test
 {
-    peer_test()
-            : id_{}
-            , ip_endpoint_(kd::to_ip_endpoint("127.0.0.1", 1234))
-    { }
+    MessageSerializerTest(): id_{"abcd"}
+    {}
 
     kd::id id_;
-    kd::ip_endpoint ip_endpoint_;
-
 protected:
-    ~peer_test() override
+    ~MessageSerializerTest() override
     {
     }
 
@@ -60,23 +54,54 @@ protected:
 };
 
 
-TEST_F(peer_test, can_be_constructed)
+TEST_F(MessageSerializerTest, can_be_constructed)
 {
-    kd::peer const p{ id_, ip_endpoint_ };
-    (void)p;
+    kd::MessageSerializer s{ id_ };
+    (void)s;
 }
 
-TEST_F(peer_test, can_be_printed)
+TEST_F(MessageSerializerTest, can_serialize_a_message_with_a_body)
 {
-    std::ostringstream out;
+    kd::MessageSerializer s{ id_ };
+    kd::id const searched_id{ "1234" };
+    kd::id const token{ "ABCD" };
 
-    out << kd::peer{ id_, ip_endpoint_ };
+    kd::FindPeerRequestBody const expected{ searched_id };
+    auto const b = s.serialize(expected, token);
 
-    std::ostringstream expected;
-    expected << id_ << "@" << ip_endpoint_;
-    EXPECT_EQ(out.str(), expected.str());
+    auto i = std::begin(b), e = std::end(b);
+    kd::Header h;
+    EXPECT_TRUE(! kd::deserialize(i, e, h));
+    EXPECT_EQ(kd::Header::V1, h.version_);
+    EXPECT_EQ(kd::Header::FIND_PEER_REQUEST, h.type_);
+    EXPECT_EQ(id_, h.source_id_);
+    EXPECT_EQ(token, h.random_token_);
+
+    kd::FindPeerRequestBody actual;
+    EXPECT_TRUE(! kd::deserialize(i, e, actual));
+    EXPECT_TRUE(expected.peer_to_find_id_ == actual.peer_to_find_id_);
+
+    EXPECT_TRUE(i == e);
 }
 
+TEST_F(MessageSerializerTest, can_serialize_a_message_without_body)
+{
+    kd::MessageSerializer s{ id_ };
+    kd::id const searched_id{ "1234" };
+    kd::id const token{ "ABCD" };
+
+    auto const b = s.serialize(kd::Header::PING_REQUEST, token);
+
+    auto i = std::begin(b), e = std::end(b);
+    kd::Header h;
+    EXPECT_TRUE(! kd::deserialize(i, e, h));
+    EXPECT_EQ(kd::Header::V1, h.version_);
+    EXPECT_EQ(kd::Header::PING_REQUEST, h.type_);
+    EXPECT_EQ(id_, h.source_id_);
+    EXPECT_EQ(token, h.random_token_);
+
+    EXPECT_TRUE(i == e);
+}
 
 }
 

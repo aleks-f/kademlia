@@ -23,10 +23,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "task_fixture.hpp"
+#include "TaskFixture.h"
 #include "kademlia/id.hpp"
-#include "kademlia/ip_endpoint.hpp"
-#include "kademlia/find_value_task.hpp"
+#include "kademlia/IPEndpoint.h"
+#include "kademlia/FindValueTask.h"
 #include "gtest/gtest.h"
 #include <vector>
 
@@ -37,7 +37,7 @@ namespace kd = k::detail;
 
 using data_type = std::vector< std::uint8_t >;
 
-struct find_value_task_test : k::test::task_fixture
+struct FindValueTaskTest : k::test::TaskFixture
 {
     void operator()(std::error_code const& f, data_type const& d)
     {
@@ -49,7 +49,7 @@ struct find_value_task_test : k::test::task_fixture
 };
 
 
-TEST_F(find_value_task_test, can_notify_error_when_routing_table_is_empty)
+TEST_F(FindValueTaskTest, can_notify_error_when_routing_table_is_empty)
 {
     kd::id const searched_key{ "a" };
     routing_table_.expected_ids_.emplace_back(searched_key);
@@ -74,7 +74,7 @@ TEST_F(find_value_task_test, can_notify_error_when_routing_table_is_empty)
     EXPECT_TRUE(failure_ == k::VALUE_NOT_FOUND);
 }
 
-TEST_F(find_value_task_test, can_notify_error_when_unique_peer_fails_to_respond)
+TEST_F(FindValueTaskTest, can_notify_error_when_unique_peer_fails_to_respond)
 {
     kd::id const searched_key{ "a" };
     routing_table_.expected_ids_.emplace_back(searched_key);
@@ -91,7 +91,7 @@ TEST_F(find_value_task_test, can_notify_error_when_unique_peer_fails_to_respond)
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 for a closer peer or the value.
-    kd::find_value_request_body const fv{ searched_key };
+    kd::FindValueRequestBody const fv{ searched_key };
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
 
     // Task didn't send any more message.
@@ -102,7 +102,7 @@ TEST_F(find_value_task_test, can_notify_error_when_unique_peer_fails_to_respond)
     EXPECT_TRUE(failure_ == k::VALUE_NOT_FOUND);
 }
 
-TEST_F(find_value_task_test, can_notify_error_when_all_peers_fail_to_respond)
+TEST_F(FindValueTaskTest, can_notify_error_when_all_peers_fail_to_respond)
 {
     kd::id const searched_key{ "a" };
     routing_table_.expected_ids_.emplace_back(searched_key);
@@ -120,7 +120,7 @@ TEST_F(find_value_task_test, can_notify_error_when_all_peers_fail_to_respond)
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 & p2 for a closer peer or the value.
-    kd::find_value_request_body const fv{ searched_key };
+    kd::FindValueRequestBody const fv{ searched_key };
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
     EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
 
@@ -132,7 +132,7 @@ TEST_F(find_value_task_test, can_notify_error_when_all_peers_fail_to_respond)
     EXPECT_TRUE(failure_ == k::VALUE_NOT_FOUND);
 }
 
-TEST_F(find_value_task_test, can_notify_error_when_no_already_known_peer_has_the_value)
+TEST_F(FindValueTaskTest, can_notify_error_when_no_already_known_peer_has_the_value)
 {
     kd::id const searched_key{ "a" };
     routing_table_.expected_ids_.emplace_back(searched_key);
@@ -143,12 +143,12 @@ TEST_F(find_value_task_test, can_notify_error_when_no_already_known_peer_has_the
     // p1 doesn't know closer peer.
     tracker_.add_message_to_receive(p1.endpoint_
             , p1.id_
-            , kd::find_peer_response_body{});
+            , kd::FindPeerResponseBody{});
 
     // p2 doesn't know closer peer.
     tracker_.add_message_to_receive(p2.endpoint_
             , p2.id_
-            , kd::find_peer_response_body{});
+            , kd::FindPeerResponseBody{});
 
     kd::start_find_value_task< data_type >(searched_key
             , tracker_
@@ -160,7 +160,7 @@ TEST_F(find_value_task_test, can_notify_error_when_no_already_known_peer_has_the
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 & p2 for a closer peer or the value.
-    kd::find_value_request_body const fv{ searched_key };
+    kd::FindValueRequestBody const fv{ searched_key };
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
     EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
 
@@ -172,7 +172,7 @@ TEST_F(find_value_task_test, can_notify_error_when_no_already_known_peer_has_the
     EXPECT_TRUE(failure_ == k::VALUE_NOT_FOUND);
 }
 
-TEST_F(find_value_task_test, can_notify_error_when_no_discovered_peer_has_the_value)
+TEST_F(FindValueTaskTest, can_notify_error_when_no_discovered_peer_has_the_value)
 {
     kd::id const searched_key{ "a" };
     routing_table_.expected_ids_.emplace_back(searched_key);
@@ -184,13 +184,13 @@ TEST_F(find_value_task_test, can_notify_error_when_no_discovered_peer_has_the_va
     auto p2 = create_peer("192.168.1.2", kd::id{ searched_key });
 
     // p1 knows p2.
-    kd::find_peer_response_body const fp1{ { p2 } };
+    kd::FindPeerResponseBody const fp1{ { p2 } };
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, fp1);
 
     // p2 does'nt known closer peer nor has the value.
     tracker_.add_message_to_receive(p2.endpoint_
             , p2.id_
-            , kd::find_peer_response_body{});
+            , kd::FindPeerResponseBody{});
 
     kd::start_find_value_task< data_type >(searched_key
             , tracker_
@@ -202,7 +202,7 @@ TEST_F(find_value_task_test, can_notify_error_when_no_discovered_peer_has_the_va
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 & p2 for a closer peer or the value.
-    kd::find_value_request_body const fv{ searched_key };
+    kd::FindValueRequestBody const fv{ searched_key };
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
     EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
 
@@ -214,13 +214,13 @@ TEST_F(find_value_task_test, can_notify_error_when_no_discovered_peer_has_the_va
     EXPECT_TRUE(failure_ == k::VALUE_NOT_FOUND);
 }
 
-TEST_F(find_value_task_test, can_return_value_when_already_known_peer_has_the_value)
+TEST_F(FindValueTaskTest, can_return_value_when_already_known_peer_has_the_value)
 {
     kd::id const searched_key{ "a" };
     routing_table_.expected_ids_.emplace_back(searched_key);
 
     auto p1 = create_and_add_peer("192.168.1.1", kd::id{ "b" });
-    kd::find_value_response_body const b1{ { 1, 2, 3, 4 } };
+    kd::FindValueResponseBody const b1{ { 1, 2, 3, 4 } };
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, b1);
     kd::start_find_value_task< data_type >(searched_key
             , tracker_
@@ -232,7 +232,7 @@ TEST_F(find_value_task_test, can_return_value_when_already_known_peer_has_the_va
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 for a closer peer or the value.
-    kd::find_value_request_body const fv{ searched_key };
+    kd::FindValueRequestBody const fv{ searched_key };
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
     EXPECT_TRUE(! tracker_.has_sent_message());
 
@@ -242,7 +242,7 @@ TEST_F(find_value_task_test, can_return_value_when_already_known_peer_has_the_va
     EXPECT_EQ(b1.data_, data_);
 }
 
-TEST_F(find_value_task_test, can_return_value_when_discovered_peer_has_the_value)
+TEST_F(FindValueTaskTest, can_return_value_when_discovered_peer_has_the_value)
 {
     kd::id const searched_key{ "a" };
     routing_table_.expected_ids_.emplace_back(searched_key);
@@ -254,11 +254,11 @@ TEST_F(find_value_task_test, can_return_value_when_discovered_peer_has_the_value
     auto p2 = create_peer("192.168.1.2", kd::id{ searched_key });
 
     // p1 knows p2.
-    kd::find_peer_response_body const fp1{ { p2 } };
+    kd::FindPeerResponseBody const fp1{ { p2 } };
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, fp1);
 
     // And p2 knows the value.
-    kd::find_value_response_body const fv2{ { 1, 2, 3, 4 } };
+    kd::FindValueResponseBody const fv2{ { 1, 2, 3, 4 } };
     tracker_.add_message_to_receive(p2.endpoint_, p2.id_, fv2);
     kd::start_find_value_task< data_type >(searched_key
             , tracker_
@@ -270,7 +270,7 @@ TEST_F(find_value_task_test, can_return_value_when_discovered_peer_has_the_value
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 for a closer peer or the value.
-    kd::find_value_request_body const fv{ searched_key };
+    kd::FindValueRequestBody const fv{ searched_key };
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
     EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
 

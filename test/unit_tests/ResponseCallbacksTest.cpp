@@ -26,7 +26,7 @@
 
 #include "common.hpp"
 #include "kademlia/error_impl.hpp"
-#include "kademlia/response_callbacks.hpp"
+#include "kademlia/ResponseCallbacks.h"
 #include "gtest/gtest.h"
 #include <vector>
 
@@ -39,17 +39,17 @@ namespace kd = k::detail;
 
 TEST(ResponseCallbackTest, can_be_constructed_using_a_reactor)
 {
-    EXPECT_NO_THROW(kd::response_callbacks{});
+    EXPECT_NO_THROW(kd::ResponseCallbacks{});
 }
 
 
-struct response_callbacks_test: public ::testing::Test
+struct ResponseCallbacksTest: public ::testing::Test
 {
-    kd::response_callbacks callbacks_;
+    kd::ResponseCallbacks callbacks_;
     std::vector< kd::id > messages_received_;
 
 protected:
-    ~response_callbacks_test() override
+    ~ResponseCallbacksTest() override
     {
     }
 
@@ -63,28 +63,28 @@ protected:
 };
 
 
-TEST_F(response_callbacks_test, unknown_message_are_dropped)
+TEST_F(ResponseCallbacksTest, unknown_message_are_dropped)
 {
-    kd::response_callbacks::endpoint_type const s{};
-    kd::header const h{ kd::header::V1, kd::header::PING_REQUEST };
+    kd::ResponseCallbacks::endpoint_type const s{};
+    kd::Header const h{ kd::Header::V1, kd::Header::PING_REQUEST };
     kd::buffer const b;
     auto result = callbacks_.dispatch_response(s, h, b.begin(), b.end());
     EXPECT_TRUE(k::UNASSOCIATED_MESSAGE_ID == result);
 }
 
-TEST_F(response_callbacks_test, known_messages_are_forwarded)
+TEST_F(ResponseCallbacksTest, known_messages_are_forwarded)
 {
-    kd::header const h1{ kd::header::V1, kd::header::PING_REQUEST
+    kd::Header const h1{ kd::Header::V1, kd::Header::PING_REQUEST
                        , kd::id{}, kd::id{ "1" } };
-    kd::header const h2{ kd::header::V1, kd::header::PING_REQUEST };
+    kd::Header const h2{ kd::Header::V1, kd::Header::PING_REQUEST };
     kd::buffer const b;
 
     EXPECT_EQ(0, messages_received_.size());
 
     // Create the callback.
     auto on_message_received = [ this ]
-            (kd::response_callbacks::endpoint_type const& s
-            , kd::header const& h
+            (kd::ResponseCallbacks::endpoint_type const& s
+            , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator)
     { messages_received_.push_back(h.random_token_); };
@@ -92,7 +92,7 @@ TEST_F(response_callbacks_test, known_messages_are_forwarded)
                                 , on_message_received);
     EXPECT_EQ(0, messages_received_.size());
 
-    kd::response_callbacks::endpoint_type const s{};
+    kd::ResponseCallbacks::endpoint_type const s{};
 
     // Send an unexpected message.
     auto result = callbacks_.dispatch_response(s, h2, b.begin(), b.end());
@@ -111,19 +111,19 @@ TEST_F(response_callbacks_test, known_messages_are_forwarded)
     EXPECT_EQ(1, messages_received_.size());
 }
 
-TEST_F(response_callbacks_test, multiple_callbacks_can_be_added)
+TEST_F(ResponseCallbacksTest, multiple_callbacks_can_be_added)
 {
-    kd::header const h1{ kd::header::V1, kd::header::PING_REQUEST
+    kd::Header const h1{ kd::Header::V1, kd::Header::PING_REQUEST
                        , kd::id{}, kd::id{ "1" } };
-    kd::header const h2{ kd::header::V1, kd::header::PING_REQUEST
+    kd::Header const h2{ kd::Header::V1, kd::Header::PING_REQUEST
                        , kd::id{}, kd::id{ "2" } };
     kd::buffer const b;
 
     EXPECT_EQ(0, messages_received_.size());
     // Create the callback.
     auto on_message_received = [ this ]
-            (kd::response_callbacks::endpoint_type const& s
-            , kd::header const& h
+            (kd::ResponseCallbacks::endpoint_type const& s
+            , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator)
     {
@@ -134,7 +134,7 @@ TEST_F(response_callbacks_test, multiple_callbacks_can_be_added)
     callbacks_.push_callback(h2.random_token_
                             , on_message_received);
 
-    kd::response_callbacks::endpoint_type const s{};
+    kd::ResponseCallbacks::endpoint_type const s{};
     auto result = callbacks_.dispatch_response(s, h1, b.begin(), b.end());
     EXPECT_TRUE(! result);
     EXPECT_EQ(1, messages_received_.size());

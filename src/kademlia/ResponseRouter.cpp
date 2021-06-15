@@ -8,9 +8,8 @@ namespace kademlia {
 namespace detail {
 
 
-	ResponseRouter::ResponseRouter(SocketReactor &io_service)//: timer_(io_service)
+	ResponseRouter::ResponseRouter(SocketReactor &io_service): timer_(io_service)
 	{
-		//TODO: register timeout handler with SocketReactor
 	}
 
 

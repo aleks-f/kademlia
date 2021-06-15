@@ -38,7 +38,6 @@
 #include <cstdint>
 
 #include <boost/asio/buffer.hpp>
-//#include <boost/asio/ip/udp.hpp>
 #include <boost/system/error_code.hpp>
 #include "Poco/Net/IPAddress.h"
 #include "Poco/Net/SocketAddress.h"
@@ -47,6 +46,7 @@
 #include "kademlia/log.hpp"
 #include "kademlia/error_impl.hpp"
 #include "kademlia/Message.h"
+#include "kademlia/buffer.hpp"
 
 namespace kademlia {
 namespace test {
@@ -55,8 +55,8 @@ namespace test {
 class FakeSocket
 {
 public:
-	using protocol_type = Poco::Net::SocketAddress::Family;//boost::asio::ip::udp;
-	using endpoint_type = Poco::Net::SocketAddress;//protocol_type::endpoint;
+	using protocol_type = Poco::Net::SocketAddress::Family;
+	using endpoint_type = Poco::Net::SocketAddress;
 
 	enum { FIXED_PORT = 27980 };
 
@@ -70,19 +70,40 @@ public:
 	using packets = std::queue<packet>;
 
 public:
-	FakeSocket(Poco::Net::SocketReactor& io_service, protocol_type const&):
-			io_service_(io_service), local_endpoint_(), pending_reads_()
+	FakeSocket(Poco::Net::SocketReactor* io_service,
+		const Poco::Net::SocketAddress& address, bool reuseAddress = true, bool ipV6Only = true):
+		io_service_(io_service), local_endpoint_(), pending_reads_()
 	{
+		kademlia::detail::enable_log_for("FakeSocket");
+		bind(address);
 	}
 
-	FakeSocket(FakeSocket const& o) = delete;
+	FakeSocket(Poco::Net::SocketReactor* io_service):
+			io_service_(io_service), local_endpoint_(), pending_reads_()
+	{
+		kademlia::detail::enable_log_for("FakeSocket");
+	}
 
-	FakeSocket(FakeSocket && o): io_service_(o.io_service_),
-		local_endpoint_(o.local_endpoint_),
+	FakeSocket(const FakeSocket& o)=delete;
+
+	FakeSocket(FakeSocket && o):
+		io_service_(o.io_service_),
+		local_endpoint_(std::move(o.local_endpoint_)),
 		pending_reads_(std::move(o.pending_reads_)),
 		pending_writes_(std::move(o.pending_writes_))
 	{
+		//kademlia::detail::enable_log_for("FakeSocket");
 		add_route_to_socket(local_endpoint(), this);
+	}
+
+	FakeSocket& operator = (FakeSocket&& o)
+	{
+		io_service_ = o.io_service_;
+		local_endpoint_ = std::move(o.local_endpoint_);
+		pending_reads_ = std::move(o.pending_reads_);
+		pending_writes_ = std::move(o.pending_writes_);
+		add_route_to_socket(local_endpoint(), this);
+		return *this;
 	}
 
 	FakeSocket& operator = (FakeSocket const& o) = delete;
@@ -93,12 +114,17 @@ public:
 		close(ignored);
 	}
 
+	const endpoint_type& address() const
+	{
+		return local_endpoint_;
+	}
+
 	template<typename Option>
 	void set_option(Option const&)
 	{
 	}
 
-	endpoint_type local_endpoint() const
+	const endpoint_type& local_endpoint() const
 	{
 		return local_endpoint_;
 	}
@@ -121,27 +147,34 @@ public:
 
 	boost::system::error_code close(boost::system::error_code& failure)
 	{
-		// This socket no longer reads messages.
-		if (get_socket(local_endpoint()) == this)
+		try
 		{
-			add_route_to_socket(local_endpoint(), nullptr);
-			failure.clear();
-		}
-		else
-			failure = make_error_code(boost::system::errc::not_connected);
+			// This socket no longer reads messages.
+			if (get_socket(local_endpoint_) == this)
+			{
+				add_route_to_socket(local_endpoint(), nullptr);
+				failure.clear();
+			}
+			else
+				failure = make_error_code(boost::system::errc::not_connected);
 
-		pending_reads_.clear();
-		pending_writes_.clear();
+			pending_reads_.clear();
+			pending_writes_.clear();
+		}
+		catch(Poco::NullPointerException&)
+		{
+			failure = make_error_code(boost::system::errc::not_connected);
+		}
 		return failure;
 	}
 
 	template<typename Callback>
-	void async_receive_from(boost::asio::mutable_buffer const& buffer, endpoint_type & from, Callback && callback)
+	void asyncReceiveFrom(boost::asio::mutable_buffer const& buffer, endpoint_type & from, Callback && callback)
 	{
 		// Check if there is packets waiting.
 		if (pending_writes_.empty())
 		{
-			LOG_DEBUG(FakeSocket, this) << "saving pending read." << std::endl;
+			LOG_DEBUG(FakeSocket, this) << "saving pending read from " << from.toString() << std::endl;
 
 			// No packet are waiting, hence register that
 			// the current socket is waiting for packet.
@@ -157,12 +190,16 @@ public:
 	}
 
 	template<typename Callback>
-	void async_send_to(boost::asio::const_buffer const& buffer, endpoint_type const& to, Callback && callback)
+	void asyncSendTo(boost::asio::const_buffer const& buffer, endpoint_type const& to, Callback && callback)
 	{
+		LOG_DEBUG(FakeSocket, this) << "asyncSendTo()" << std::endl;
 		// Ensure the destination socket is listening.
 		auto target = get_socket(to);
 		if (! target)
+		{
+			LOG_DEBUG(FakeSocket, this) << "network unreachable." << std::endl;
 			callback(make_error_code(boost::system::errc::network_unreachable), 0ULL);
+		}
 		// Check if it's not waiting for any packet.
 		else if (target->pending_reads_.empty())
 		{
@@ -251,7 +288,7 @@ private:
 			// mark the address as private (e.g. 10.x.x.x or fc00::).
 			for (std::size_t i = 1, e = bytes.size(); i != e; ++ i)
 			{
-				assert(index>> 56 == 0 /* no bytes are lost by next shift */);
+				poco_assert(index>> 56 == 0 /* no bytes are lost by next shift */);
 				index <<= 8;
 				index |= bytes[ i ];
 			}
@@ -293,8 +330,9 @@ private:
 		// While current byte overflows on increment, increment next byte.
 		auto i = bytes.rbegin(), e = bytes.rend();
 		for (; i != e && (++ *i) == 0; ++i) continue;
-		assert(i != e /* all ip address have been allocated */);
-		return address = IpAddress(&bytes[0], bytes.size());
+		poco_assert(i != e /* all ip address have been allocated */);
+		address = IpAddress(&bytes[0], bytes.size());
+		return address;
 	}
 
 	/**
@@ -338,7 +376,7 @@ private:
 		, boost::asio::mutable_buffer const& to)
 	{
 		auto const source_size = boost::asio::buffer_size(from);
-		assert(source_size <= boost::asio::buffer_size(to)
+		poco_assert(source_size <= boost::asio::buffer_size(to)
 			  && "can't store message into target buffer");
 
 		auto source_data = boost::asio::buffer_cast<uint8_t const *>(from);
@@ -357,7 +395,7 @@ private:
 		auto perform_write = [ this, target, buffer, callback ] ()
 		{
 			// Retrieve the read task of the packet.
-			assert(! target->pending_reads_.empty());
+			poco_assert(! target->pending_reads_.empty());
 			pending_read & p = target->pending_reads_.front();
 
 			// Fill the read task buffer and endpoint.
@@ -373,7 +411,7 @@ private:
 			target->pending_reads_.pop_front();
 		};
 
-		io_service_.addCompletionHandler(std::move(perform_write));
+		io_service_->addCompletionHandler(std::move(perform_write), 0);
 	}
 
 	template<typename Callback>
@@ -382,7 +420,7 @@ private:
 		auto perform_read = [ this, buffer, &from, callback ] ()
 		{
 			// Retrieve the write task of the packet.
-			assert(! pending_writes_.empty());
+			poco_assert(! pending_writes_.empty());
 			pending_write & w = pending_writes_.front();
 
 			// Fill the provided buffer and endpoint.
@@ -392,18 +430,18 @@ private:
 			// Now inform the writeer that data has been sent.
 			w.callback_(boost::system::error_code(), copied_bytes_count);
 
-			// Inform the reader that data has been readd.
+			// Inform the reader that data has been read.
 			callback(boost::system::error_code(), copied_bytes_count);
 
 			// The current task has been consumed.
 			pending_writes_.pop_front();
 		};
 
-		io_service_.addCompletionHandler(std::move(perform_read));
+		io_service_->addCompletionHandler(std::move(perform_read), 0);
 	}
 
 private:
-	Poco::Net::SocketReactor& io_service_;
+	Poco::Net::SocketReactor* io_service_;
 	endpoint_type local_endpoint_;
 	std::deque<pending_read> pending_reads_;
 	std::deque<pending_write> pending_writes_;

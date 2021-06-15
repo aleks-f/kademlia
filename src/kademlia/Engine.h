@@ -87,7 +87,8 @@ public:
 			is_connected_(),
 			pending_tasks_()
 	{
-		LOG_DEBUG(Engine, this) << "Engine created." << std::endl;
+		//kademlia::detail::enable_log_for("Engine");
+		LOG_DEBUG(Engine, this) << "Peerless Engine created." << std::endl;
 	}
 
 	Engine(Poco::Net::SocketReactor& io_service, endpoint const& initial_peer,

@@ -23,47 +23,67 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <kademlia/first_session.hpp>
-#include "SessionImpl.h"
+#include "kademlia/Network.h"
+#include "kademlia/endpoint.hpp"
+#include "kademlia/MessageSocket.h"
+#include "SocketMock.h"
+#include "Poco/Net/SocketReactor.h"
+#include "gtest/gtest.h"
 
-namespace kademlia {
+namespace {
 
-/**
- *
- */
-struct first_session::impl final
-        : detail::SessionImpl
+namespace k = kademlia;
+namespace kd = k::detail;
+namespace kt = k::test;
+
+using socket_type = kd::MessageSocket< kt::SocketMock >;
+using network_type = kd::Network< socket_type >;
+
+struct NetworkTest: public ::testing::Test
 {
-    /**
-     *
-     */
-    impl
-        ( endpoint const& listen_on_ipv4
-        , endpoint const& listen_on_ipv6 )
-            : SessionImpl{ listen_on_ipv4
-                          , listen_on_ipv6 }
+    NetworkTest
+        (void)
+            : io_service_()
+            , ipv4_("172.0.0.1", 1234)
+            , ipv6_("::1", 1234)
     { }
+
+    void
+    on_message_received
+        (network_type::endpoint_type const&
+        , kd::buffer::const_iterator
+        , kd::buffer::const_iterator)
+    { };
+
+    Poco::Net::SocketReactor io_service_;
+    k::endpoint ipv4_;
+    k::endpoint ipv6_;
+    
+protected:
+    ~NetworkTest() override
+    {
+    }
+
+    void SetUp() override
+    {
+    }
+
+    void TearDown() override
+    {
+    }
 };
 
-first_session::first_session
-    ( endpoint const& listen_on_ipv4
-    , endpoint const& listen_on_ipv6 )
-        : impl_{ new impl{ listen_on_ipv4, listen_on_ipv6 } }
-{ }
 
-first_session::~first_session
-    ( void )
-{ }
+TEST_F(NetworkTest, schedule_receive_on_construction)
+{
+    using namespace std::placeholders;
+    network_type m{ io_service_
+                  , socket_type::ipv4(io_service_, ipv4_)
+                  , socket_type::ipv6(io_service_, ipv6_)
+                  , std::bind(&NetworkTest::on_message_received
+                             , this
+                             , _1, _2, _3) };
+    (void)m;
+}
 
-std::error_code
-first_session::run
-    ( void )
-{ return impl_->run(); }
-
-void
-first_session::abort
-        ( void )
-{ impl_->abort(); }
-
-} // namespace kademlia
-
+}

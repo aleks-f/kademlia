@@ -53,7 +53,7 @@ create_test_engine( boost::asio::io_service & io_service
 }
 
 
-TEST(EngineTest, isolated_bootstrap_engine_cannot_save )
+TEST(engine_test, isolated_bootstrap_engine_cannot_save )
 {
     boost::asio::io_service io_service;
 
@@ -66,13 +66,15 @@ TEST(EngineTest, isolated_bootstrap_engine_cannot_save )
 
     bool save_executed = false;
     auto on_save = [ &save_executed ]( std::error_code const& failure )
-    { save_executed = true; };
+    {
+    	save_executed = true;
+    };
     e1->async_save( "key", "data", on_save );
 
     EXPECT_EQ( 0, io_service.poll() );
 
     EXPECT_TRUE( ! save_executed );
-
+std::cout << "===============================" << std::endl;
     auto e2 = create_test_engine( io_service
                                 , d::id{ "1" }
                                 , e1->ipv4() );
@@ -81,7 +83,7 @@ TEST(EngineTest, isolated_bootstrap_engine_cannot_save )
     EXPECT_TRUE( save_executed );
 }
 
-TEST(EngineTest, isolated_bootstrap_engine_cannot_load )
+TEST(engine_test, isolated_bootstrap_engine_cannot_load )
 {
     boost::asio::io_service io_service;
 
@@ -107,7 +109,7 @@ TEST(EngineTest, isolated_bootstrap_engine_cannot_load )
     EXPECT_TRUE( load_executed );
 }
 
-TEST(EngineTest, isolated_engine_cannot_be_constructed )
+TEST(engine_test, isolated_engine_cannot_be_constructed )
 {
     boost::asio::io_service io_service;
 
@@ -119,7 +121,7 @@ TEST(EngineTest, isolated_engine_cannot_be_constructed )
                        , std::exception );
 }
 
-TEST(EngineTest, two_engines_can_find_themselves )
+TEST(engine_test, two_engines_can_find_themselves )
 {
     boost::asio::io_service io_service;
 
@@ -134,7 +136,7 @@ TEST(EngineTest, two_engines_can_find_themselves )
     EXPECT_GT( io_service.poll(), 0 );
 }
 
-TEST(EngineTest, two_engines_can_save_and_load )
+TEST(engine_test, two_engines_can_save_and_load )
 {
     boost::asio::io_service io_service;
 

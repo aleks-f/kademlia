@@ -31,6 +31,7 @@
 #include "kademlia/message.hpp"
 #include "kademlia/message_serializer.hpp"
 #include <queue>
+#include <iostream>
 
 namespace kademlia {
 namespace test {
@@ -64,6 +65,7 @@ public:
         , detail::id const& source_id
         , MessageType const& message )
     {
+    	std::cout << "ADD [" << endpoint.address_ << ':' << endpoint.port_ << ']' << std::endl;
         message_to_receive m{ endpoint
                             , detail::message_traits< MessageType >::TYPE_ID
                             , source_id };
@@ -129,9 +131,11 @@ public:
             detail::header h{ detail::header::V1
                             , r.message_type
                             , r.source_id };
+			std::cout << "SEND [" << r.endpoint.address_ << ':' << r.endpoint.port_ << "](" << r.message_type << ')' << std::endl;
 
             auto forwarder = [ on_message_received, h, r ]
             {
+            	std::cout << "FWD [" << r.endpoint.address_ << ':' << r.endpoint.port_ << "](" << r.message_type << ')' << std::endl;
                 on_message_received( r.endpoint
                                    , h
                                    , r.body.begin()
@@ -195,6 +199,11 @@ private:
                       , message_serializer_.serialize( request
                                                      , detail::id{} ) };
         sent_messages_.push( m );
+        std::cout << "SAVE SENT [" << endpoint.address_ << ':' << endpoint.port_ << ']' << std::endl;
+		/*for (int i = 0; i < m.message.size(); ++i)
+		{
+			std::cout << "c.message[" << i << '=' << m.message[i] << ']' << std::endl;
+		}*/
     }
 
 private:

@@ -23,47 +23,56 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <kademlia/first_session.hpp>
-#include "SessionImpl.h"
+#include "common.hpp"
+#include "kademlia/IPEndpoint.h"
+#include "gtest/gtest.h"
+#include <system_error>
 
-namespace kademlia {
+namespace {
 
-/**
- *
- */
-struct first_session::impl final
-        : detail::SessionImpl
+namespace k = kademlia;
+namespace kd = k::detail;
+
+
+TEST(IPEndpointTest, can_be_default_constructed)
 {
-    /**
-     *
-     */
-    impl
-        ( endpoint const& listen_on_ipv4
-        , endpoint const& listen_on_ipv6 )
-            : SessionImpl{ listen_on_ipv4
-                          , listen_on_ipv6 }
-    { }
-};
+    EXPECT_NO_THROW(
+        kd::IPEndpoint const e{};
+        (void)e;
+   );
+}
 
-first_session::first_session
-    ( endpoint const& listen_on_ipv4
-    , endpoint const& listen_on_ipv6 )
-        : impl_{ new impl{ listen_on_ipv4, listen_on_ipv6 } }
-{ }
+TEST(IPEndpointTest, can_be_constructed_with_ip_and_port)
+{
+    EXPECT_NO_THROW(
+        auto const e = kd::toIPEndpoint( "192.168.0.1", 1234); 
+        (void)e;
+   );
+}
 
-first_session::~first_session
-    ( void )
-{ }
 
-std::error_code
-first_session::run
-    ( void )
-{ return impl_->run(); }
+TEST(IPEndpointTest, can_be_compared)
+{
+    {
+        auto a = kd::toIPEndpoint( "192.168.0.1", 1234);
+        auto b = a;
+        EXPECT_EQ(a, b);
+    }
 
-void
-first_session::abort
-        ( void )
-{ impl_->abort(); }
+    {
+        auto a = kd::toIPEndpoint( "192.168.0.1", 1234);
+        auto b = kd::toIPEndpoint( "192.168.0.2", 1234);
+        EXPECT_NE(a, b);
+    }
+}
 
-} // namespace kademlia
+
+TEST(IPEndpointTest, can_be_printed)
+{
+    std::ostringstream out;
+    out << kd::toIPEndpoint( "192.168.0.1", 1234);
+    EXPECT_EQ( out.str(), "192.168.0.1:1234");
+}
+
+}
 

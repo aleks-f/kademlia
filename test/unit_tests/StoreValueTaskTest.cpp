@@ -205,26 +205,16 @@ TEST_F(StoreValueTaskTest, CanStoreValueWhenDiscoveredPeerIsTheTarget)
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
 
     // Task then asked p2 for a closer peer.
-    //std::cout << "has_sent_message(e2, fv)" << std::endl;
-    //std::cout << "===============" << std::endl;
     EXPECT_TRUE(tracker_.has_sent_message(e2, fv));
-    //std::cout << "===============" << std::endl;
 
     // Task decided that p2 was the closest
     // hence it asked to store data on it.
     kd::StoreValueRequestBody const sv{chosen_key, data};
-    //std::cout << "has_sent_message(e2, sv)" << std::endl;
-    //std::cout << "===============" << std::endl;
     EXPECT_TRUE(tracker_.has_sent_message(e2, sv));
-    //std::cout << "===============" << std::endl;
 
     // Task is also required to store data 
     // on close peers for redundancy purpose.
-    //std::cout << "===============" << std::endl;
-    //std::cout << "has_sent_message(p1.endpoint_, fv)" << std::endl;
-    //std::cout << "===============" << std::endl;
     EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, sv));
-    //std::cout << "===============" << std::endl;
 
     // Task didn't send any more message.
     EXPECT_TRUE(! tracker_.has_sent_message());

@@ -31,13 +31,8 @@
 #include "kademlia/error.hpp"
 #include "IPEndpoint.h"
 #include "ResponseCallbacks.h"
-#include "kademlia/timer.hpp"
+#include "kademlia/Timer.h"
 #include "kademlia/log.hpp"
-
-
-#ifdef _MSC_VER
-#   pragma once
-#endif
 
 
 namespace kademlia {
@@ -59,7 +54,7 @@ public:
 		buffer::const_iterator i, buffer::const_iterator e );
 
 	template< typename OnResponseReceived, typename OnError >
-	void register_temporary_callback(id const& response_id, timer::duration const& callback_ttl
+	void register_temporary_callback(id const& response_id, Timer::duration const& callback_ttl
 		, OnResponseReceived const& on_response_received, OnError const& on_error )
 	{
 		auto on_timeout = [ this, on_error, response_id ] ()
@@ -67,19 +62,19 @@ public:
 			// If a callback has been removed, that means
 			// the message has never been received
 			// hence report the timeout to the client.
-			if (response_callbacks_.remove_callback( response_id ))
+            if (response_callbacks_.remove_callback( response_id ))
 				on_error(make_error_code(std::errc::timed_out));
 		};
 
 		// Associate the response id with the
 		// on_response_received callback.
-		response_callbacks_.push_callback( response_id, on_response_received );
-		//timer_.expires_from_now(callback_ttl, on_timeout);
+		response_callbacks_.push_callback(response_id, on_response_received);
+		timer_.expires_from_now(callback_ttl, on_timeout);
 	}
 
 private:
 	ResponseCallbacks response_callbacks_;
-	//timer timer_;
+	Timer timer_;
 };
 
 } // namespace detail

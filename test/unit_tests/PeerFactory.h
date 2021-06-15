@@ -23,47 +23,33 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <kademlia/first_session.hpp>
-#include "SessionImpl.h"
+#ifndef KADEMLIA_TEST_HELPERS_PEER_FACTORY_H
+#define KADEMLIA_TEST_HELPERS_PEER_FACTORY_H
 
-namespace kademlia {
+#include <cstdlib>
 
-/**
- *
- */
-struct first_session::impl final
-        : detail::SessionImpl
+#include "kademlia/id.hpp"
+#include "kademlia/IPEndpoint.h"
+#include "kademlia/Peer.h"
+
+inline kademlia::detail::IPEndpoint
+createEndpoint
+    ( std::string const& ip = std::string{ "127.0.0.1" }
+    , std::uint16_t const& service = 12345 )
 {
-    /**
-     *
-     */
-    impl
-        ( endpoint const& listen_on_ipv4
-        , endpoint const& listen_on_ipv6 )
-            : SessionImpl{ listen_on_ipv4
-                          , listen_on_ipv6 }
-    { }
-};
+    using endpoint_type = kademlia::detail::IPEndpoint;
 
-first_session::first_session
-    ( endpoint const& listen_on_ipv4
-    , endpoint const& listen_on_ipv6 )
-        : impl_{ new impl{ listen_on_ipv4, listen_on_ipv6 } }
-{ }
+    return endpoint_type{ Poco::Net::IPAddress(ip), service };
+}
 
-first_session::~first_session
-    ( void )
-{ }
+inline kademlia::detail::Peer
+createPeer
+    ( kademlia::detail::id const& id = kademlia::detail::id()
+    , kademlia::detail::IPEndpoint const& endpoint = createEndpoint() )
+{
+    using peer_type = kademlia::detail::Peer;
 
-std::error_code
-first_session::run
-    ( void )
-{ return impl_->run(); }
+    return peer_type{ id, endpoint };
+}
 
-void
-first_session::abort
-        ( void )
-{ impl_->abort(); }
-
-} // namespace kademlia
-
+#endif // KADEMLIA_TEST_HELPERS_PEER_FACTORY_H

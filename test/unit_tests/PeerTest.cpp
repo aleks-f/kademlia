@@ -1,3 +1,4 @@
+
 // Copyright (c) 2013-2014, David Keller
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without
@@ -23,47 +24,59 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <kademlia/first_session.hpp>
-#include "SessionImpl.h"
 
-namespace kademlia {
+#include "common.hpp"
+#include "kademlia/Peer.h"
+#include "gtest/gtest.h"
+#include <sstream>
 
-/**
- *
- */
-struct first_session::impl final
-        : detail::SessionImpl
+
+namespace {
+
+namespace kd = kademlia::detail;
+
+struct PeerTest: public ::testing::Test
 {
-    /**
-     *
-     */
-    impl
-        ( endpoint const& listen_on_ipv4
-        , endpoint const& listen_on_ipv6 )
-            : SessionImpl{ listen_on_ipv4
-                          , listen_on_ipv6 }
+    PeerTest()
+            : id_{}
+            , ip_endpoint_(kd::toIPEndpoint("127.0.0.1", 1234))
     { }
+
+    kd::id id_;
+    kd::IPEndpoint ip_endpoint_;
+
+protected:
+    ~PeerTest() override
+    {
+    }
+
+    void SetUp() override
+    {
+    }
+
+    void TearDown() override
+    {
+    }
 };
 
-first_session::first_session
-    ( endpoint const& listen_on_ipv4
-    , endpoint const& listen_on_ipv6 )
-        : impl_{ new impl{ listen_on_ipv4, listen_on_ipv6 } }
-{ }
 
-first_session::~first_session
-    ( void )
-{ }
+TEST_F(PeerTest, can_be_constructed)
+{
+    kd::Peer const p{ id_, ip_endpoint_ };
+    (void)p;
+}
 
-std::error_code
-first_session::run
-    ( void )
-{ return impl_->run(); }
+TEST_F(PeerTest, can_be_printed)
+{
+    std::ostringstream out;
 
-void
-first_session::abort
-        ( void )
-{ impl_->abort(); }
+    out << kd::Peer{ id_, ip_endpoint_ };
 
-} // namespace kademlia
+    std::ostringstream expected;
+    expected << id_ << "@" << ip_endpoint_;
+    EXPECT_EQ(out.str(), expected.str());
+}
+
+
+}
 

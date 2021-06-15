@@ -24,9 +24,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "common.hpp"
-#include "peer_factory.hpp"
+#include "PeerFactory.h"
 #include "kademlia/id.hpp"
-#include "kademlia/lookup_task.hpp"
+#include "kademlia/LookupTask.h"
 #include "gtest/gtest.h"
 #include <vector>
 #include <utility>
@@ -36,19 +36,19 @@ namespace {
 namespace k = kademlia;
 namespace kd = k::detail;
 
-struct test_task : kd::lookup_task {
+struct test_task : kd::LookupTask {
     template< typename Iterator >
     test_task
         (kd::id const& key
         , Iterator i, Iterator e)
-        : lookup_task{ key, i, e }
+        : LookupTask{ key, i, e }
     { }
 };
 
 using routing_table_peer = std::pair< kd::id
-                                    , kd::ip_endpoint >;
+                                    , kd::IPEndpoint >;
 
-TEST(lookup_task_test, can_be_constructed_without_candidates)
+TEST(LookupTaskTest, can_be_constructed_without_candidates)
 {
     std::vector< routing_table_peer > candidates;
     kd::id const key{};
@@ -61,19 +61,19 @@ TEST(lookup_task_test, can_be_constructed_without_candidates)
     EXPECT_EQ(key, c.get_key());
 }
 
-TEST(lookup_task_test, can_be_constructed_with_candidates)
+TEST(LookupTaskTest, can_be_constructed_with_candidates)
 {
     std::vector< routing_table_peer > candidates;
-    kd::ip_endpoint const default_address{};
+    kd::IPEndpoint const default_address{};
     candidates.emplace_back(kd::id{ "1" }, default_address);
     kd::id const key{};
     test_task c{ key, candidates.begin(), candidates.end() };
 }
 
-TEST(lookup_task_test, can_select_candidates)
+TEST(LookupTaskTest, can_select_candidates)
 {
     std::vector< routing_table_peer > candidates;
-    kd::ip_endpoint const default_address{};
+    kd::IPEndpoint const default_address{};
     candidates.emplace_back(kd::id{ "7" }, default_address);
     candidates.emplace_back(kd::id{ "3" }, default_address);
     candidates.emplace_back(kd::id{ "6" }, default_address);
@@ -109,10 +109,10 @@ TEST(lookup_task_test, can_select_candidates)
     EXPECT_EQ(kd::id{ "6" }, closest_candidates[ 1 ].id_);
 }
 
-TEST(lookup_task_test, can_add_candidates)
+TEST(LookupTaskTest, can_add_candidates)
 {
     std::vector< routing_table_peer > candidates;
-    kd::ip_endpoint const default_address{};
+    kd::IPEndpoint const default_address{};
     candidates.emplace_back(kd::id{ "7" }, default_address);
 
     kd::id const our_id{};
@@ -120,19 +120,19 @@ TEST(lookup_task_test, can_add_candidates)
 
     EXPECT_EQ(1, c.select_new_closest_candidates(20).size());
 
-    std::vector< kd::peer > new_candidates;
+    std::vector< kd::Peer > new_candidates;
 
-    new_candidates.emplace_back(create_peer(kd::id{ "7" }));
+    new_candidates.emplace_back(createPeer(kd::id{ "7" }));
     c.add_candidates(new_candidates);
     EXPECT_EQ(0, c.select_new_closest_candidates(20).size());
 
-    new_candidates.emplace_back(create_peer(kd::id{ "6" }));
-    new_candidates.emplace_back(create_peer(kd::id{ "8" }));
+    new_candidates.emplace_back(createPeer(kd::id{ "6" }));
+    new_candidates.emplace_back(createPeer(kd::id{ "8" }));
     c.add_candidates(new_candidates);
     EXPECT_EQ(2, c.select_new_closest_candidates(20).size());
 
     candidates.clear();
-    new_candidates.emplace_back(create_peer(kd::id{ "9" }));
+    new_candidates.emplace_back(createPeer(kd::id{ "9" }));
     c.add_candidates(new_candidates);
     EXPECT_EQ(1, c.select_new_closest_candidates(20).size());
 }

@@ -35,18 +35,24 @@
 #include <algorithm>
 #include <memory>
 #include <mutex>
+#include <type_traits>
 #include "Poco/Error.h"
 #include "Poco/NumberParser.h"
 #include "Poco/Net/SocketReactor.h"
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/SocketNotification.h"
+#include "SocketAdapter.h"
 #include "Poco/Net/NetException.h"
 #include "kademlia/error_impl.hpp"
 #include <kademlia/detail/cxx11_macros.hpp>
 #include "kademlia/buffer.hpp"
 #include "Message.h"
 #include "kademlia/boost_to_std_error.hpp"
+#include <boost/asio/buffer.hpp>
 #include "IPEndpoint.h"
+#include "kademlia/log.hpp"
+#include "Poco/Net/DNS.h"
+#include "Poco/Net/HostEntry.h"
 
 namespace kademlia {
 namespace detail {
@@ -60,37 +66,32 @@ public:
 	static CXX11_CONSTEXPR std::size_t INPUT_BUFFER_SIZE = UINT16_MAX;
 	using endpoint_type = IPEndpoint;
 	using resolved_endpoints = std::vector<endpoint_type>;
-	using RecvCallbackType = std::function<void (endpoint_type const&, buffer::const_iterator, buffer::const_iterator)>;
-	using underlying_endpoint_type = SocketType;
+	using underlying_socket_type = SocketType;
+	using underlying_endpoint_type = Poco::Net::SocketAddress;
 	using SendPacket = std::pair<Poco::Net::SocketAddress, buffer>;
-
-	void setRecvCallbackType(RecvCallbackType onRecvCallback)
-	{
-		_onRecvCallback = onRecvCallback;
-	}
  
 	template<typename EndpointType>
 	static resolved_endpoints resolve_endpoint(Poco::Net::SocketReactor& io_service, EndpointType const& e)
 	{
-	/*
-		using protocol_type = typename SocketType::protocol_type;
+		resolved_endpoints re;
+		try
+		{
+			Poco::Net::HostEntry he = Poco::Net::DNS::resolve(e.address());
 
-		typename protocol_type::resolver r{ io_service };
-		// Resolve addresses even if not reachable.
-		typename protocol_type::resolver::query::flags const f{};
-		typename protocol_type::resolver::query q{ e.address(), e.service(), f };
-		// One raw endpoint (e.g. localhost) can be resolved to
-		// multiple endpoints (e.g. IPv4 / IPv6 address).
-		resolved_endpoints endpoints;
-		auto i = r.resolve(q);
-		for (decltype(i) end; i != end; ++i)
-			// Convert from underlying_endpoint_type to endpoint_type.
-			endpoints.push_back(convert_endpoint(*i));
-		return endpoints;
-	 */
-	 // TODO: resolve using Poco::DNS
-	 return resolved_endpoints{ toIPEndpoint(e.address(),
-	 	static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))) };
+			re.reserve(he.addresses().size());
+			for (const auto& addr : he.addresses())
+			{
+				re.emplace_back(toIPEndpoint(addr.toString(),
+						static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
+			}
+		}
+		catch (Poco::Net::HostNotFoundException&)
+		{
+			// TODO: why/how does asio resolve 0.0.0.0 and we do not?
+			re.emplace_back(toIPEndpoint(e.address(),
+				static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
+		}
+		return re;
 	}
 
 	template<typename EndpointType>
@@ -101,7 +102,7 @@ public:
 		{
 			try
 			{
-				if (i.address_.isV4()) return MessageSocket{io_service, i};
+				if (i.address_.isV4()) return MessageSocket(io_service, i);
 			}
 			catch (Poco::Net::NetException& ex)
 			{
@@ -119,7 +120,8 @@ public:
 		{
 			try
 			{
-				if (i.address_.isV6()) return MessageSocket{io_service, i};
+				if (i.address_.isV6())
+					return MessageSocket(io_service, i);
 			}
 			catch (Poco::Net::NetException& ex)
 			{
@@ -129,16 +131,25 @@ public:
 		throw std::system_error{ make_error_code(INVALID_IPV6_ADDRESS) };
 	}
 
-	MessageSocket(MessageSocket&& o) = default;
+	MessageSocket(MessageSocket&& o): reception_buffer_(std::move(o.reception_buffer_)),
+		current_message_sender_(std::move(o.current_message_sender_)),
+		_socket(&o._ioService, Poco::Net::SocketAddress(), true, true),
+		_messageQueue(std::move(o._messageQueue)),
+		_ioService(o._ioService),
+		_pMutex(std::move(o._pMutex))
+	{
+		_socket = std::move(o._socket);
+	}
+
+	MessageSocket& operator = (MessageSocket&& o) = delete;
 
 	~MessageSocket()
 	{
 	}
 
 	explicit MessageSocket(MessageSocket const& o) = delete;
-
 	MessageSocket& operator = (MessageSocket const& o) = delete;
-/*
+
 	template<typename ReceiveCallback>
 	void async_receive(ReceiveCallback const& callback)
 	{
@@ -160,9 +171,10 @@ public:
 			callback(boost_to_std_error(failure), convert_endpoint(current_message_sender_), i, e);
 		};
 		assert(reception_buffer_.size() == INPUT_BUFFER_SIZE);
-		_socket.async_receive_from(boost::asio::buffer(reception_buffer_), current_message_sender_, std::move(on_completion));
+
+		_socket.asyncReceiveFrom(boost::asio::buffer(reception_buffer_), current_message_sender_, std::move(on_completion));
 	}
-*/
+
 	template<typename SendCallback>
 	void async_send(buffer const& message, endpoint_type const& to, SendCallback const& callback)
 	{
@@ -173,7 +185,7 @@ public:
 			// TODO: make buffer rvalue so it can be moved
 			std::unique_lock<std::mutex> l(*_pMutex);
 			_messageQueue.push_back(std::make_pair(Poco::Net::SocketAddress(to.address_, to.port_), message));
-#if 0
+
 			// Copy the buffer as it has to live past the end of this call.
 			auto message_copy = std::make_shared<buffer>(message);
 			auto on_completion = [ this, callback, message_copy ]
@@ -181,80 +193,51 @@ public:
 			{
 				callback(boost_to_std_error(failure));
 			};
-
-			_socket.async_send_to(boost::asio::buffer(*message_copy), convert_endpoint(to), std::move(on_completion));
-#endif
+			_socket.asyncSendTo(boost::asio::buffer(*message_copy), convert_endpoint(to), std::move(on_completion));
 		}
 	}
 
 	endpoint_type local_endpoint() const
 	{
-		return endpoint_type{ _socket.address().host(), _socket.address().port() };
-	}
-
-	void onReadable(Poco::Net::ReadableNotification* pNf)
-	{
-		pNf->release();
-		char buffer[INPUT_BUFFER_SIZE];
-		auto i = reception_buffer_.begin(), e = i;
-		int n = _socket.receiveFrom(buffer, sizeof(buffer), current_message_sender_);
-		if (n > 0) std::advance(e, n);
-		//TODO: add onError handler
-		//std::error_code err = std::make_error_code(std::errc(Poco::Error::last()));
-		_onRecvCallback(convert_endpoint(current_message_sender_), i, e);
-	}
-
-	void onWritable(Poco::Net::WritableNotification* pNf)
-	{
-		pNf->release();
-		std::unique_lock<std::mutex> l(*_pMutex);
-		if (_messageQueue.size())
-		{
-			SendPacket &sp = _messageQueue.front();
-			_socket.sendTo(&sp.second[0], sp.second.size(), sp.first);
-			_messageQueue.pop_front();
-		}
+		return { _socket.address().host(), _socket.address().port() };
 	}
 
 private:
 	MessageSocket(Poco::Net::SocketReactor& io_service, endpoint_type const& e):
 			reception_buffer_(INPUT_BUFFER_SIZE),
 			current_message_sender_(),
-			_readHandler(*this, &MessageSocket<SocketType>::onReadable),
-			_writeHandler(*this, &MessageSocket<SocketType>::onWritable),
-			_socket(convert_endpoint(e)),
+			_socket(&io_service, convert_endpoint(e), true, true),
+			_ioService(io_service),
 			_pMutex(new std::mutex())
 	{
-		io_service.addEventHandler(_socket, _readHandler);
-		io_service.addEventHandler(_socket, _writeHandler);
+		kademlia::detail::enable_log_for("MessageSocket");
 	}
 
-	static SocketType create_underlying_socket(Poco::Net::SocketReactor& io_service, endpoint_type const& endpoint)
+	static underlying_socket_type create_underlying_socket(Poco::Net::SocketReactor& io_service, endpoint_type const& endpoint)
 	{
 
 		auto const e = convert_endpoint(endpoint);
-		SocketType new_socket(e);
+		underlying_socket_type new_socket(e.family());
+		new_socket.bind();
 		return new_socket;
 	}
 
 	static endpoint_type convert_endpoint(underlying_endpoint_type const& e)
 	{
-		return endpoint_type{ e.address().host(), e.address().port() };
+		return endpoint_type{ e.host(), e.port() };
 	}
 
 	static underlying_endpoint_type convert_endpoint(endpoint_type const& e)
 	{
-		return underlying_endpoint_type(Poco::Net::SocketAddress(e.address_, e.port_), false, true);
+		return underlying_endpoint_type(e.address_, e.port_);
 	}
 
 	buffer reception_buffer_;
 	Poco::Net::SocketAddress current_message_sender_;
-	Poco::Observer<MessageSocket, Poco::Net::ReadableNotification> _readHandler;
-	Poco::Observer<MessageSocket, Poco::Net::WritableNotification> _writeHandler;
-	SocketType _socket;
-	RecvCallbackType _onRecvCallback;
-	std::unique_ptr<std::mutex> _pMutex = nullptr;
+	underlying_socket_type _socket;
 	std::deque<SendPacket> _messageQueue;
+	Poco::Net::SocketReactor& _ioService;
+	std::unique_ptr<std::mutex> _pMutex = nullptr;
 };
 
 

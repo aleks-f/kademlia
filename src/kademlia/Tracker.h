@@ -66,7 +66,7 @@ public:
 	Tracker& operator = (Tracker const&) = delete;
 
 	template< typename Request, typename OnResponseReceived, typename OnError >
-	void send_request(Request const& request, endpoint_type const& e, timer::duration const& timeout
+	void send_request(Request const& request, endpoint_type const& e, Timer::duration const& timeout
 		, OnResponseReceived const& on_response_received, OnError const& on_error)
 	{
 		id const response_id(random_engine_);

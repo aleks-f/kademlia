@@ -57,11 +57,13 @@ public:
 		// beginning of the handlers queue)
 		auto on_next_run = [this] ()
 		{
-			_ioService.removeScheduledCompletionHandlers(_ioService.scheduledCompletionHandlers()-1);
+			int schedComplHandlerCnt = _ioService.scheduledCompletionHandlers();
+			if (schedComplHandlerCnt > 0)
+				_ioService.removeScheduledCompletionHandlers(schedComplHandlerCnt-1);
 			_ioService.removePermanentCompletionHandlers(1);
 		};
 
-		// If the current expiration time will be the sooner to expires
+		// If the current expiration time will be the sooner to expire
 		// then cancel any pending wait and schedule this one instead.
 		if (timeouts_.empty() || expiration_time < timeouts_.begin()->first)
 		{

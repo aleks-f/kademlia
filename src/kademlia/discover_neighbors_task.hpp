@@ -98,6 +98,7 @@ private:
             , endpoints_to_query_( endpoints_to_query )
             , on_complete_( on_complete )
     {
+        kademlia::detail::enable_log_for("discover_neighbors_task");
         LOG_DEBUG( discover_neighbors_task, this )
                 << "create discover neighbors task." << std::endl;
     }

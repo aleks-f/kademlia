@@ -37,9 +37,9 @@ namespace kt = k::test;
 using socket_type = kd::message_socket< kt::socket_mock >;
 using network_type = kd::network< socket_type >;
 
-struct NetworkTest: public ::testing::Test
+struct network_test: public ::testing::Test
 {
-    NetworkTest
+    network_test
         (void)
             : io_service_()
             , ipv4_("172.0.0.1", 1234)
@@ -58,7 +58,7 @@ struct NetworkTest: public ::testing::Test
     k::endpoint ipv6_;
     
 protected:
-    ~NetworkTest() override
+    ~network_test() override
     {
     }
 
@@ -72,13 +72,13 @@ protected:
 };
 
 
-TEST_F(NetworkTest, schedule_receive_on_construction)
+TEST_F(network_test, schedule_receive_on_construction)
 {
     using namespace std::placeholders;
     network_type m{ io_service_
                   , socket_type::ipv4(io_service_, ipv4_)
                   , socket_type::ipv6(io_service_, ipv6_)
-                  , std::bind(&NetworkTest::on_message_received
+                  , std::bind(&network_test::on_message_received
                              , this
                              , _1, _2, _3) };
     (void)m;

@@ -24,8 +24,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "common.hpp"
-#include "boost/asio/io_service.hpp"
-#include "kademlia/response_router.hpp"
+#include "Poco/Net/SocketReactor.h"
+#include "kademlia/ResponseRouter.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -34,29 +34,29 @@ namespace k = kademlia;
 namespace kd = k::detail;
 
 
-TEST(response_router_no_throw_test, can_be_constructed_using_a_reactor)
+TEST(ResponseRouterNoThrowTest, can_be_constructed_using_a_reactor)
 {
-    boost::asio::io_service io_service;
-    EXPECT_NO_THROW( kd::response_router{ io_service } );
+    Poco::Net::SocketReactor io_service;
+    EXPECT_NO_THROW( kd::ResponseRouter{ io_service } );
 }
 
 
-struct response_router_test: public ::testing::Test
+struct ResponseRouterTest: public ::testing::Test
 {
-    response_router_test()
+    ResponseRouterTest()
         : io_service_{}
         , router_{ io_service_ }
         , messages_received_count_{}
         , error_count_{}
     { }
 
-    boost::asio::io_service io_service_;
-    kd::response_router router_;
+    Poco::Net::SocketReactor io_service_;
+    kd::ResponseRouter router_;
     std::size_t messages_received_count_;
     std::size_t error_count_;
 
 protected:
-    ~response_router_test() override
+    ~ResponseRouterTest() override
     {
     }
 
@@ -70,12 +70,12 @@ protected:
 };
 
 
-TEST_F(response_router_test, known_messages_are_forwarded)
+TEST_F(ResponseRouterTest, known_messages_are_forwarded)
 {
     // Create the callbacks.
     auto on_message_received = [ this ]
-            ( kd::response_callbacks::endpoint_type const& s
-            , kd::header const& h
+            ( kd::ResponseCallbacks::endpoint_type const& s
+            , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator )
     { ++ messages_received_count_; };
@@ -84,7 +84,7 @@ TEST_F(response_router_test, known_messages_are_forwarded)
         ( std::error_code const& failure )
     { ++ error_count_; };
 
-    kd::header const h1{ kd::header::V1, kd::header::PING_REQUEST
+    kd::Header const h1{ kd::Header::V1, kd::Header::PING_REQUEST
                        , kd::id{}, kd::id{ "1" } };
 
     router_.register_temporary_callback( h1.random_token_
@@ -96,7 +96,7 @@ TEST_F(response_router_test, known_messages_are_forwarded)
     EXPECT_EQ(0ULL, messages_received_count_ );
     EXPECT_EQ(0ULL, error_count_ );
 
-    kd::response_callbacks::endpoint_type const s{};
+    kd::ResponseCallbacks::endpoint_type const s{};
     kd::buffer const b;
 
     // Send the expected message.
@@ -107,12 +107,12 @@ TEST_F(response_router_test, known_messages_are_forwarded)
     EXPECT_EQ(0ULL, error_count_ );
 }
 
-TEST_F(response_router_test, known_messages_are_not_forwarded_when_late)
+TEST_F(ResponseRouterTest, known_messages_are_not_forwarded_when_late)
 {
     // Create the callbacks.
     auto on_message_received = [ this ]
-            ( kd::response_callbacks::endpoint_type const& s
-            , kd::header const& h
+            ( kd::ResponseCallbacks::endpoint_type const& s
+            , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator )
     { ++ messages_received_count_; };
@@ -121,7 +121,7 @@ TEST_F(response_router_test, known_messages_are_not_forwarded_when_late)
         ( std::error_code const& failure )
     { ++ error_count_; };
 
-    kd::header const h1{ kd::header::V1, kd::header::PING_REQUEST
+    kd::Header const h1{ kd::Header::V1, kd::Header::PING_REQUEST
                        , kd::id{}, kd::id{ "1" } };
 
     router_.register_temporary_callback( h1.random_token_
@@ -133,7 +133,7 @@ TEST_F(response_router_test, known_messages_are_not_forwarded_when_late)
     EXPECT_EQ(0ULL, messages_received_count_ );
     EXPECT_EQ(1ULL, error_count_ );
 
-    kd::response_callbacks::endpoint_type const s{};
+    kd::ResponseCallbacks::endpoint_type const s{};
     kd::buffer const b;
 
     // Send the expected message.

@@ -46,7 +46,6 @@ std::error_code SessionImpl::run()
 	// Protect against concurrent invocation of this method.
 	detail::concurrent_guard::sentry s{ _concurrentGuard };
 	if (!s) return make_error_code(ALREADY_RUNNING);
-
 	_ioService.run();
 	return make_error_code(RUN_ABORTED);
 }

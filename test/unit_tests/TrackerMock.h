@@ -26,7 +26,7 @@
 #ifndef KADEMLIA_TEST_HELPERS_TRACKER_MOCK_H
 #define KADEMLIA_TEST_HELPERS_TRACKER_MOCK_H
 
-//#include "boost/asio/io_service.hpp"
+
 #include "Poco/Net/SocketReactor.h"
 #include "kademlia/error_impl.hpp"
 #include "kademlia/Message.h"
@@ -65,21 +65,7 @@ public:
 		auto const c = sent_messages_.front();
 		sent_messages_.pop();
 		auto const m  = message_serializer_.serialize(message, detail::id{});
-/*
-		if ((c.endpoint.address_ != endpoint.address_) || (c.endpoint.port_ != endpoint.port_))
-		{
-			std::cout << "c.endpoint=" << c.endpoint.address_ << ':' << c.endpoint.port_ << std::endl;
-			std::cout << "  endpoint=" << endpoint.address_ << ':' << endpoint.port_ << std::endl;
-		}
-		for (int i = 0; i < c.message.size(); ++i)
-		{
-			if (c.message[i] != m[i])
-			{
-				std::cout << "c.message[" << i << '=' << c.message[i] << ']' << std::endl;
-				std::cout << "        m[" << i << '=' << m[i] << ']' << std::endl;
-			}
-		}
-		*/
+
 		return c.endpoint == endpoint && c.message == m;
 	}
 
@@ -100,7 +86,7 @@ public:
 
 		if (responses_to_receive_.empty() || responses_to_receive_.front().endpoint != endpoint)
 		{
-			io_service_.addCompletionHandler([on_error](){ on_error(detail::make_error_code(UNIMPLEMENTED)); });
+			io_service_.addCompletionHandler([on_error](){ on_error(detail::make_error_code(UNIMPLEMENTED)); }, 0);
 		}
 		else
 		{
@@ -111,7 +97,7 @@ public:
 			{
 				on_message_received(r.endpoint, h, r.body.begin(), r.body.end());
 			};
-			io_service_.addCompletionHandler(std::move(forwarder));
+			io_service_.addCompletionHandler(std::move(forwarder), 0);
 		}
 	}
 

@@ -61,7 +61,7 @@ TEST(FakeSocketTest, does_not_invoke_receive_callback_until_data_is_received)
         , std::size_t)
     { FAIL() << "unexpected call"; };
 
-    s.async_receive_from(boost::asio::buffer(buffer)
+    s.asyncReceiveFrom(boost::asio::buffer(buffer)
                         , endpoint
                         , on_receive);
 
@@ -86,7 +86,7 @@ TEST(FakeSocketTest, invokes_send_callback_when_host_is_unreachable)
         EXPECT_EQ(0, bytes_count);
     };
 
-    s.async_send_to(boost::asio::buffer(buffer)
+    s.asyncSendTo(boost::asio::buffer(buffer)
                    , endpoint
                    , on_send);
 
@@ -120,7 +120,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
         EXPECT_EQ(sent.size(), bytes_count);
     };
 
-    receiver.async_receive_from(boost::asio::buffer(received)
+    receiver.asyncReceiveFrom(boost::asio::buffer(received)
                                , endpoint
                                , on_receive);
 
@@ -134,12 +134,11 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
         received.resize(bytes_count);
     };
 
-    sender.async_send_to(boost::asio::buffer(sent)
+    sender.asyncSendTo(boost::asio::buffer(sent)
                         , receiver.local_endpoint()
                         , on_send);
 
-	//TODO: reactor poll() returns number of sockets signalled, see if that really matters
-    /*EXPECT_LT(0ULL,*/ io_service.poll()/*)*/;
+	EXPECT_LT(0ULL, io_service.poll());
     EXPECT_TRUE(receive_callback_called);
     EXPECT_EQ(sent, received);
 }
@@ -169,7 +168,7 @@ TEST(FakeSocketTest, can_detect_invalid_address)
 
     //endpoint.address(boost::asio::ip::address_v4::any());
 	endpoint = a::SocketAddress("0.0.0.0", k::test::FakeSocket::FIXED_PORT);
-    s.async_send_to(boost::asio::buffer(sent), endpoint, on_send);
+    s.asyncSendTo(boost::asio::buffer(sent), endpoint, on_send);
 
     EXPECT_LE(0ULL, io_service.poll());
     EXPECT_TRUE(send_callback_called);
@@ -196,7 +195,7 @@ TEST(FakeSocketTest, can_detect_closed_socket)
         , std::size_t)
     { };
 
-    receiver.async_receive_from(boost::asio::buffer(received)
+    receiver.asyncReceiveFrom(boost::asio::buffer(received)
                                , endpoint
                                , on_receive);
 
@@ -213,7 +212,7 @@ TEST(FakeSocketTest, can_detect_closed_socket)
     receiver.close(failure);
     EXPECT_FALSE(failure);
 
-    sender.async_send_to(boost::asio::buffer(sent)
+    sender.asyncSendTo(boost::asio::buffer(sent)
                         , receiver.local_endpoint()
                         , on_send);
 
@@ -243,7 +242,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
         EXPECT_EQ(sent.size(), bytes_count);
     };
 
-    sender.async_receive_from(boost::asio::buffer(received)
+    sender.asyncReceiveFrom(boost::asio::buffer(received)
                              , endpoint
                              , on_receive);
 
@@ -257,11 +256,10 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
         received.resize(bytes_count);
     };
 
-    sender.async_send_to(boost::asio::buffer(sent)
+    sender.asyncSendTo(boost::asio::buffer(sent)
                         , sender.local_endpoint()
                         , on_send);
-	//TODO: reactor poll() returns number of sockets signalled, see if that really matters
-    /*EXPECT_LT(0ULL,*/ io_service.poll()/*)*/;
+	EXPECT_LT(0ULL, io_service.poll());
     EXPECT_TRUE(receive_callback_called);
     EXPECT_EQ(sent, received);
 }

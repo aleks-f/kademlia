@@ -47,7 +47,7 @@ std::error_code ResponseCallbacks::dispatch_response(endpoint_type const& sender
 {
 	auto callback = callbacks_.find( h.random_token_ );
 	if ( callback == callbacks_.end() )
-		return make_error_code( UNASSOCIATED_MESSAGE_ID );
+		return make_error_code(UNASSOCIATED_MESSAGE_ID);
 
 	callback->second( sender, h, i, e );
 	callbacks_.erase( callback );
