@@ -40,8 +40,8 @@ namespace a = Poco::Net;
 TEST(FakeSocketTest, can_be_created)
 {
     a::SocketReactor io_service;
-    k::test::FakeSocket s(io_service
-                           , a::SocketAddress().family());
+    k::test::FakeSocket s(&io_service
+                           /*, a::SocketAddress().family()*/);
 
     EXPECT_EQ(0ULL, io_service.poll());
 }
@@ -50,7 +50,7 @@ TEST(FakeSocketTest, does_not_invoke_receive_callback_until_data_is_received)
 {
     a::SocketReactor io_service;
     a::SocketAddress endpoint;
-    k::test::FakeSocket s(io_service, endpoint.family());
+    k::test::FakeSocket s(&io_service/*, endpoint.family()*/);
 
     EXPECT_EQ(0ULL, io_service.poll());
 
@@ -72,7 +72,7 @@ TEST(FakeSocketTest, invokes_send_callback_when_host_is_unreachable)
 {
     a::SocketReactor io_service;
     a::SocketAddress endpoint;
-    k::test::FakeSocket s(io_service, endpoint.family());
+    k::test::FakeSocket s(&io_service/*, endpoint.family()*/);
 
     EXPECT_EQ(0ULL, io_service.poll());
 
@@ -99,10 +99,10 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
     //a::SocketReactor::work work(io_service);
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
-    k::test::FakeSocket receiver(io_service, endpoint.family());
+    k::test::FakeSocket receiver(&io_service/*, endpoint.family()*/);
     EXPECT_FALSE(receiver.bind(endpoint));
 
-    k::test::FakeSocket sender(io_service, endpoint.family());
+    k::test::FakeSocket sender(&io_service/*, endpoint.family()*/);
     EXPECT_FALSE(sender.bind(endpoint));
 
     EXPECT_EQ(0ULL, io_service.poll());
@@ -149,7 +149,7 @@ TEST(FakeSocketTest, can_detect_invalid_address)
     a::SocketReactor io_service;
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
-    k::test::FakeSocket s(io_service, endpoint.family());
+    k::test::FakeSocket s(&io_service/*, endpoint.family()*/);
     EXPECT_FALSE(s.bind(endpoint));
 
     EXPECT_EQ(0ULL, io_service.poll());
@@ -180,10 +180,10 @@ TEST(FakeSocketTest, can_detect_closed_socket)
     a::SocketReactor io_service;
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
-    k::test::FakeSocket receiver(io_service, endpoint.family());
+    k::test::FakeSocket receiver(&io_service/*, endpoint.family()*/);
     EXPECT_FALSE(receiver.bind(endpoint));
 
-    k::test::FakeSocket sender(io_service, endpoint.family());
+    k::test::FakeSocket sender(&io_service/*, endpoint.family()*/);
     EXPECT_FALSE(sender.bind(endpoint));
 
     EXPECT_EQ(0ULL, io_service.poll());
@@ -225,7 +225,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
     a::SocketReactor io_service;
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
-    k::test::FakeSocket sender(io_service, endpoint.family());
+    k::test::FakeSocket sender(&io_service/*, endpoint.family()*/);
     EXPECT_FALSE(sender.bind(endpoint));
 
     EXPECT_EQ(0ULL, io_service.poll());
