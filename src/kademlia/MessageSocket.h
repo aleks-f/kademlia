@@ -30,6 +30,7 @@
 #   pragma once
 #endif
 
+#include <assert.h>
 #include <vector>
 #include <deque>
 #include <algorithm>
