@@ -1,3 +1,4 @@
+  
 # Copyright (c) 2013, David Keller
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
@@ -25,8 +26,6 @@
 cmake_minimum_required(VERSION 3.5)
 
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-
-
 
 project(kademlia)
 
@@ -72,7 +71,6 @@ endif()
 # Threads
 find_package(Threads REQUIRED)
 
-
 # Boost
 if(WIN32)
     set(Boost_USE_STATIC_LIBS ON)
@@ -82,15 +80,13 @@ find_package(Boost REQUIRED COMPONENTS
     filesystem
     unit_test_framework)
 
- 
 # Crypto
 find_package(OpenSSL REQUIRED)
 
 # Setup C++ definitions.
 add_definitions(-DPACKAGE_VERSION="0.0.0")
 add_definitions(-DPACKAGE_BUGREPORT="david.keller@litchis.fr")
-add_definitions(
-    -DBOOST_ALL_NO_LIB
+add_definitions(-DBOOST_ALL_NO_LIB
     -DBOOST_ASIO_HAS_MOVE
     -DBOOST_ASIO_HAS_VARIADIC_TEMPLATES
     -DBOOST_ASIO_HAS_STD_SYSTEM_ERROR
@@ -110,25 +106,11 @@ include_directories(BEFORE include src test)
 include_directories(${Boost_INCLUDE_DIRS}
         ${OPENSSL_INCLUDE_DIR})
 
-
-if(WIN32)
-else()
-    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/src/kademlia"
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-            COMPONENT library
-            FILES_MATCHING PATTERN "libkademlia*")
-endif()
-
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/kademlia"
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include
-        COMPONENT headers)
-
-
 # Build everything.
 include(Poco)
 add_poco()
 add_subdirectory(include)
 add_subdirectory(src)
-
+enable_testing()
 add_subdirectory(test)
 add_subdirectory(examples)
