@@ -28,6 +28,8 @@ list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(kademlia)
 
+SET(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel" CACHE STRING "Configs" FORCE)
+
 # C++11.
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     if (MSVC_VERSION LESS 1910) # 1910 -> VS 15.0

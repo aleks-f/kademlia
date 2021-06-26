@@ -42,6 +42,11 @@ using endpoints_type = std::vector< kd::IPEndpoint >;
 
 struct DiscoverNeighborsTaskTest : k::test::TaskFixture
 {
+	DiscoverNeighborsTaskTest(): k::test::TaskFixture()
+	{
+		//kademlia::detail::enable_log_for("DiscoverNeighborsTaskTest");
+		LOG_DEBUG(DiscoverNeighborsTaskTest, this) << "create DiscoverNeighborsTaskTest." << std::endl;
+	}
     void
     operator()(std::error_code const& failure)
     {
@@ -64,7 +69,10 @@ TEST_F(DiscoverNeighborsTaskTest, can_notify_error_when_initial_endpoints_fail_t
             , endpoints
             , std::ref(*this));
 
-    io_service_.poll();
+    while (!callback_call_count_)
+	{
+		io_service_.poll();
+	}
 
     // As neither of theses addresses responded, the task throws.
     EXPECT_EQ(1, callback_call_count_);
@@ -94,7 +102,12 @@ TEST_F(DiscoverNeighborsTaskTest, can_contact_endpoints_until_one_respond)
             , endpoints
             , std::ref(*this));
 
-    io_service_.poll();
+    while (!callback_call_count_)
+	{
+		LOG_DEBUG(DiscoverNeighborsTaskTest, this) << "DiscoverNeighborsTask, polling ..." << std::endl;
+		io_service_.poll();
+	}
+	LOG_DEBUG(DiscoverNeighborsTaskTest, this) << "DiscoverNeighborsTask, polling done." << std::endl;
 
     kd::FindPeerRequestBody const fp{ my_id };
     // Task queried e3 but it didn't respond.
@@ -112,6 +125,8 @@ TEST_F(DiscoverNeighborsTaskTest, can_contact_endpoints_until_one_respond)
     EXPECT_TRUE(! failure_);
 
     // Ensure e2 response listed peer p1 has been added.
+    LOG_DEBUG(DiscoverNeighborsTaskTest, this) << "req.peers=" << req.peers_.size() << ", "
+		"routing_table_.peers=" << routing_table_.peers_.size() << std::endl;
     EXPECT_EQ(req.peers_.size(), routing_table_.peers_.size());
 }
 
@@ -132,7 +147,7 @@ TEST_F(DiscoverNeighborsTaskTest, can_skip_wrong_response)
             , endpoints
             , std::ref(*this));
 
-    io_service_.poll();
+    while (0 == io_service_.poll());
 
     // the callback has been called.
     EXPECT_EQ(1, callback_call_count_);
@@ -156,7 +171,7 @@ TEST_F(DiscoverNeighborsTaskTest, can_skip_corrupted_response)
             , endpoints
             , std::ref(*this));
 
-    io_service_.poll();
+    while (0 == io_service_.poll());
 
     // the callback has been called.
     EXPECT_EQ(1, callback_call_count_);

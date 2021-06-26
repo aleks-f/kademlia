@@ -138,7 +138,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
                         , receiver.local_endpoint()
                         , on_send);
 
-	EXPECT_LT(0ULL, io_service.poll());
+	EXPECT_LT(0ULL, io_service.runOne());
     EXPECT_TRUE(receive_callback_called);
     EXPECT_EQ(sent, received);
 }
@@ -259,7 +259,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
     sender.asyncSendTo(boost::asio::buffer(sent)
                         , sender.local_endpoint()
                         , on_send);
-	EXPECT_LT(0ULL, io_service.poll());
+	EXPECT_LT(0ULL, io_service.runOne());
     EXPECT_TRUE(receive_callback_called);
     EXPECT_EQ(sent, received);
 }

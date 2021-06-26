@@ -31,6 +31,7 @@
 #include "kademlia/error_impl.hpp"
 #include "kademlia/Message.h"
 #include "kademlia/MessageSerializer.h"
+#include "kademlia/log.hpp"
 #include <queue>
 
 namespace kademlia {
@@ -47,7 +48,10 @@ public:
 		message_serializer_(id_),
 		responses_to_receive_(),
 		sent_messages_()
-	{ }
+	{
+		kademlia::detail::enable_log_for("TrackerMock");
+		LOG_DEBUG(TrackerMock, this) << "create TrackerMock." << std::endl;
+	}
 
 	template<typename MessageType>
 	void add_message_to_receive(endpoint_type const& endpoint,
@@ -86,6 +90,7 @@ public:
 
 		if (responses_to_receive_.empty() || responses_to_receive_.front().endpoint != endpoint)
 		{
+			LOG_DEBUG(TrackerMock, this) << "add on_error." << std::endl;
 			io_service_.addCompletionHandler([on_error](){ on_error(detail::make_error_code(UNIMPLEMENTED)); }, 0);
 		}
 		else
@@ -97,6 +102,7 @@ public:
 			{
 				on_message_received(r.endpoint, h, r.body.begin(), r.body.end());
 			};
+			LOG_DEBUG(TrackerMock, this) << "add on_message_received." << std::endl;
 			io_service_.addCompletionHandler(std::move(forwarder), 0);
 		}
 	}

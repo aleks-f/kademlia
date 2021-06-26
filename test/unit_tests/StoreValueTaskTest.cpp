@@ -146,7 +146,7 @@ TEST_F(StoreValueTaskTest, CanStoreValueWhenAlreadyKnownPeerIsTheTarget)
                                            , tracker_
                                            , routing_table_
                                            , std::ref(*this));
-    io_service_.poll();
+    while (0 == io_service_.poll());
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
@@ -195,7 +195,10 @@ TEST_F(StoreValueTaskTest, CanStoreValueWhenDiscoveredPeerIsTheTarget)
                                            , tracker_
                                            , routing_table_
                                            , std::ref(*this));
-    io_service_.poll();
+    while (!callback_call_count_)
+	{
+    	io_service_.poll();
+	}
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
@@ -242,7 +245,7 @@ TEST_F(StoreValueTaskTest, CanSkipWrongResponse)
                               , routing_table_
                               , std::ref(*this));
 
-    io_service_.poll();
+    while (0 == io_service_.poll());
 
     // the callback has been called.
     EXPECT_EQ(1, callback_call_count_);
@@ -267,7 +270,7 @@ TEST_F(StoreValueTaskTest, CanSkipCorruptedResponse)
                               , routing_table_
                               , std::ref(*this));
 
-    io_service_.poll();
+    while (0 == io_service_.poll());
 
     // the callback has been called.
     EXPECT_EQ(1, callback_call_count_);

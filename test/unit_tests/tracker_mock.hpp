@@ -30,6 +30,7 @@
 #include "kademlia/error_impl.hpp"
 #include "kademlia/message.hpp"
 #include "kademlia/message_serializer.hpp"
+#include "kademlia/log.hpp"
 #include <queue>
 #include <iostream>
 
@@ -53,7 +54,10 @@ public:
             , message_serializer_( id_ )
             , responses_to_receive_()
             , sent_messages_()
-    { }
+    {
+    	kademlia::detail::enable_log_for("tracker_mock");
+		LOG_DEBUG(tracker_mock, this) << "create tracker_mock." << std::endl;
+    }
 
     /**
      *
@@ -65,7 +69,7 @@ public:
         , detail::id const& source_id
         , MessageType const& message )
     {
-    	std::cout << "ADD [" << endpoint.address_ << ':' << endpoint.port_ << ']' << std::endl;
+    	//std::cout << "ADD [" << endpoint.address_ << ':' << endpoint.port_ << ']' << std::endl;
         message_to_receive m{ endpoint
                             , detail::message_traits< MessageType >::TYPE_ID
                             , source_id };
@@ -123,26 +127,30 @@ public:
 
         if ( responses_to_receive_.empty() 
            || responses_to_receive_.front().endpoint != endpoint )
-            io_service_.post( [ on_error ]( void )
-                    { on_error( detail::make_error_code( UNIMPLEMENTED ) ); } );
+        {
+        	LOG_DEBUG(tracker_mock, this) << "add on_error." << std::endl;
+			io_service_.post([on_error](void)
+							 { on_error(detail::make_error_code(UNIMPLEMENTED)); });
+		}
         else {
             auto const r = responses_to_receive_.front();
             responses_to_receive_.pop();
             detail::header h{ detail::header::V1
                             , r.message_type
                             , r.source_id };
-			std::cout << "SEND [" << r.endpoint.address_ << ':' << r.endpoint.port_ << "](" << r.message_type << ')' << std::endl;
+			//std::cout << "SEND [" << r.endpoint.address_ << ':' << r.endpoint.port_ << "](" << r.message_type << ')' << std::endl;
 
             auto forwarder = [ on_message_received, h, r ]
             {
-            	std::cout << "FWD [" << r.endpoint.address_ << ':' << r.endpoint.port_ << "](" << r.message_type << ')' << std::endl;
+            	//std::cout << "FWD [" << r.endpoint.address_ << ':' << r.endpoint.port_ << "](" << r.message_type << ')' << std::endl;
                 on_message_received( r.endpoint
                                    , h
                                    , r.body.begin()
                                    , r.body.end() );
             };
 
-            io_service_.post( forwarder );
+            LOG_DEBUG(tracker_mock, this) << "add on_message_received." << std::endl;
+			io_service_.post( forwarder );
         }
     }
 
@@ -199,7 +207,7 @@ private:
                       , message_serializer_.serialize( request
                                                      , detail::id{} ) };
         sent_messages_.push( m );
-        std::cout << "SAVE SENT [" << endpoint.address_ << ':' << endpoint.port_ << ']' << std::endl;
+        //std::cout << "SAVE SENT [" << endpoint.address_ << ':' << endpoint.port_ << ']' << std::endl;
 		/*for (int i = 0; i < m.message.size(); ++i)
 		{
 			std::cout << "c.message[" << i << '=' << m.message[i] << ']' << std::endl;

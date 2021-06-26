@@ -42,6 +42,12 @@ using endpoints_type = std::vector< kd::ip_endpoint >;
 
 struct discover_neighbors_task_test : k::test::task_fixture
 {
+	discover_neighbors_task_test(): k::test::task_fixture()
+	{
+		//kademlia::detail::enable_log_for("discover_neighbors_task_test");
+		LOG_DEBUG(discover_neighbors_task_test, this) << "create discover_neighbors_task_test." << std::endl;
+	}
+
     void
     operator()(std::error_code const& failure)
     {
@@ -94,7 +100,7 @@ TEST_F(discover_neighbors_task_test, can_contact_endpoints_until_one_respond)
             , endpoints
             , std::ref(*this));
 
-    io_service_.poll();
+	io_service_.poll();
 
     kd::find_peer_request_body const fp{ my_id };
     // Task queried e3 but it didn't respond.
@@ -112,6 +118,8 @@ TEST_F(discover_neighbors_task_test, can_contact_endpoints_until_one_respond)
     EXPECT_TRUE(! failure_);
 
     // Ensure e2 response listed peer p1 has been added.
+    LOG_DEBUG(discover_neighbors_task_test, this) << "req.peers=" << req.peers_.size() << ", "
+		"routing_table_.peers=" << routing_table_.peers_.size() << std::endl;
     EXPECT_EQ(req.peers_.size(), routing_table_.peers_.size());
 }
 

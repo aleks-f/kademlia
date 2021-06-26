@@ -85,7 +85,7 @@ TEST_F(FindValueTaskTest, can_notify_error_when_unique_peer_fails_to_respond)
             , tracker_
             , routing_table_
             , std::ref(*this));
-    io_service_.poll();
+    while (0 == io_service_.poll());
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
@@ -196,7 +196,10 @@ TEST_F(FindValueTaskTest, can_notify_error_when_no_discovered_peer_has_the_value
             , tracker_
             , routing_table_
             , std::ref(*this));
-    io_service_.poll();
+    while (!callback_call_count_)
+	{
+    	io_service_.poll();
+	}
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
@@ -226,7 +229,7 @@ TEST_F(FindValueTaskTest, can_return_value_when_already_known_peer_has_the_value
             , tracker_
             , routing_table_
             , std::ref(*this));
-    io_service_.poll();
+    while (0 == io_service_.poll());
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
@@ -264,7 +267,10 @@ TEST_F(FindValueTaskTest, can_return_value_when_discovered_peer_has_the_value)
             , tracker_
             , routing_table_
             , std::ref(*this));
-    io_service_.poll();
+    while (!callback_call_count_)
+	{
+    	io_service_.poll();
+	}
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
