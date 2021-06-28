@@ -103,7 +103,7 @@ public:
             , pending_reads_( std::move( o.pending_reads_ ) )
             , pending_writes_( std::move( o.pending_writes_ ) )
     {
-        kademlia::detail::enable_log_for("fake_socket");
+        //kademlia::detail::enable_log_for("fake_socket");
         add_route_to_socket( local_endpoint(), this );
     }
 
@@ -453,7 +453,7 @@ private:
         assert( i != e /* all ip address have been allocated */ );
 
         address = IpAddress{ bytes };
-		std::cout << address.to_string() << std::endl;
+		//std::cout << address.to_string() << std::endl;
 		return address;
     }
 

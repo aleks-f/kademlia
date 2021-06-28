@@ -129,7 +129,7 @@ TEST_F(response_router_test, known_messages_are_not_forwarded_when_late)
                                        , on_message_received
                                        , on_error );
 
-    io_service_.poll();
+    while(!error_count_) io_service_.poll();
     EXPECT_EQ(0ULL, messages_received_count_ );
     EXPECT_EQ(1ULL, error_count_ );
 

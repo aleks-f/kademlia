@@ -74,7 +74,7 @@ TEST(engine_test, isolated_bootstrap_engine_cannot_save )
     EXPECT_EQ( 0, io_service.poll() );
 
     EXPECT_TRUE( ! save_executed );
-std::cout << "===============================" << std::endl;
+    //std::cout << "===============================" << std::endl;
     auto e2 = create_test_engine( io_service
                                 , d::id{ "1" }
                                 , e1->ipv4() );

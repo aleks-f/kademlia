@@ -39,7 +39,7 @@ response_callbacks::push_callback
     , callback const& on_message_received )
 {
     auto i = callbacks_.emplace( message_id, on_message_received );
-	std::cout << "push_callback: message_id=[" << message_id << ']' << std::endl;
+    //std::cout << "push_callback: message_id=[" << message_id << ']' << std::endl;
     (void)i;
     assert( i.second && "an id can't be registered twice" );
 }
@@ -48,7 +48,7 @@ bool
 response_callbacks::remove_callback
     ( id const& message_id )
 {
-	std::cout << "remove_callback: message_id=[" << message_id << ']' << std::endl;
+	//std::cout << "remove_callback: message_id=[" << message_id << ']' << std::endl;
 	return callbacks_.erase( message_id ) > 0;
 }
 
@@ -59,18 +59,18 @@ response_callbacks::dispatch_response
     , buffer::const_iterator i
     , buffer::const_iterator e )
 {
-	std::cout << "looking for:" << h.random_token_ << std::endl;
+	//std::cout << "looking for:" << h.random_token_ << std::endl;
     auto callback = callbacks_.find( h.random_token_ );
     if ( callback == callbacks_.end() )
     {
-    	std::cout << "UNASSOCIATED_MESSAGE_ID:" << h.random_token_ << std::endl;
+    	//std::cout << "UNASSOCIATED_MESSAGE_ID:" << h.random_token_ << std::endl;
 		return make_error_code(UNASSOCIATED_MESSAGE_ID);
 	}
 
-	std::cout << "calling:" << h.random_token_ << std::endl;
+	//std::cout << "calling:" << h.random_token_ << std::endl;
     callback->second( sender, h, i, e );
     callbacks_.erase( callback );
-	std::cout << "erased:" << h.random_token_ << std::endl;
+	//std::cout << "erased:" << h.random_token_ << std::endl;
     return std::error_code{};
 }
 
