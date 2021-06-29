@@ -1,3 +1,4 @@
+  
 # Copyright (c) 2013, David Keller
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
@@ -114,4 +115,4 @@ add_subdirectory(include)
 add_subdirectory(src)
 enable_testing()
 add_subdirectory(test)
-
+add_subdirectory(examples)
