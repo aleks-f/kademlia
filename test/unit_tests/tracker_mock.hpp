@@ -55,7 +55,7 @@ public:
             , responses_to_receive_()
             , sent_messages_()
     {
-    	kademlia::detail::enable_log_for("tracker_mock");
+    	//kademlia::detail::enable_log_for("tracker_mock");
 		LOG_DEBUG(tracker_mock, this) << "create tracker_mock." << std::endl;
     }
 

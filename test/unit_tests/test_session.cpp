@@ -27,7 +27,7 @@
 #include "kademlia/error.hpp"
 #include "kademlia/session.hpp"
 #include "common.hpp"
-#include "network.hpp"
+#include "Network.h"
 #include "gtest/gtest.h"
 #include <cstdint>
 #include <future>
@@ -36,6 +36,7 @@ namespace {
 
 namespace k = kademlia;
 namespace bo = boost::asio;
+using namespace Poco::Net;
 
 
 TEST(SessionTest, session_opens_sockets_on_all_interfaces_by_default)
@@ -44,47 +45,42 @@ TEST(SessionTest, session_opens_sockets_on_all_interfaces_by_default)
 
 	k::session s{initial_peer};
 
-	k::test::check_listening("0.0.0.0", k::session::DEFAULT_PORT);
-	k::test::check_listening("::", k::session::DEFAULT_PORT);
+	k::test::checkListening("0.0.0.0", k::session::DEFAULT_PORT);
+	k::test::checkListening("::", k::session::DEFAULT_PORT);
 }
 
 TEST(SessionTest, session_opens_both_ipv4_ipv6_sockets)
 {
-    // Create listening socket.
-    std::uint16_t const port1 = k::test::get_temporary_listening_port();
-    std::uint16_t const port2 = k::test::get_temporary_listening_port(port1);
-    k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
-    k::endpoint ipv6_endpoint{ "::1", port2 };
+	// Create listening socket.
+	std::uint16_t const port1 = k::test::getTemporaryListeningPort();
+	std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv6, port1);
+	k::endpoint ipv4_endpoint{"127.0.0.1", port1};
+	k::endpoint ipv6_endpoint{"::1", port2};
 
-    k::endpoint const initial_peer{ "127.0.0.1", 12345 };
-    k::session s{ initial_peer
-                , ipv4_endpoint
-                , ipv6_endpoint };
+	k::endpoint const initial_peer{"127.0.0.1", 12345};
+	k::session s{initial_peer, ipv4_endpoint, ipv6_endpoint};
 
-    k::test::check_listening("127.0.0.1", port1);
-    k::test::check_listening("::1", port2);
+	k::test::checkListening("127.0.0.1", port1);
+	k::test::checkListening("::1", port2);
 }
 
 TEST(SessionTest, session_throw_on_invalid_ipv6_address)
 {
     // Create listening socket.
-    std::uint16_t const port1 = k::test::get_temporary_listening_port();
-    std::uint16_t const port2 = k::test::get_temporary_listening_port(port1);
+    std::uint16_t const port1 = k::test::getTemporaryListeningPort();
+    std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv4, port1);
     k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
     k::endpoint ipv6_endpoint{ "0.0.0.0", port2 };
 
     k::endpoint const initial_peer{ "127.0.0.1", 12345 };
-    EXPECT_THROW(k::session s(initial_peer
-                                     , ipv4_endpoint
-                                     , ipv6_endpoint)
-                       , std::exception);
+    EXPECT_THROW(k::session s(initial_peer, ipv4_endpoint, ipv6_endpoint), std::exception);
 }
 
 TEST(SessionTest, session_throw_on_invalid_ipv4_address)
 {
     // Create listening socket.
-    std::uint16_t const port1 = k::test::get_temporary_listening_port();
-    std::uint16_t const port2 = k::test::get_temporary_listening_port(port1);
+    std::uint16_t const port1 = k::test::getTemporaryListeningPort(SocketAddress::IPv6);
+    std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv6, port1);
     k::endpoint ipv4_endpoint{ "::", port1 };
     k::endpoint ipv6_endpoint{ "::1", port2 };
 

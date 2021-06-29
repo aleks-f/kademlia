@@ -74,14 +74,14 @@ public:
 		const Poco::Net::SocketAddress& address, bool reuseAddress = true, bool ipV6Only = true):
 		io_service_(io_service), local_endpoint_(), pending_reads_()
 	{
-		kademlia::detail::enable_log_for("FakeSocket");
+		//kademlia::detail::enable_log_for("FakeSocket");
 		bind(address);
 	}
 
 	FakeSocket(Poco::Net::SocketReactor* io_service):
 			io_service_(io_service), local_endpoint_(), pending_reads_()
 	{
-		kademlia::detail::enable_log_for("FakeSocket");
+		//kademlia::detail::enable_log_for("FakeSocket");
 	}
 
 	FakeSocket(const FakeSocket& o)=delete;

@@ -49,7 +49,7 @@ public:
 		responses_to_receive_(),
 		sent_messages_()
 	{
-		kademlia::detail::enable_log_for("TrackerMock");
+		//kademlia::detail::enable_log_for("TrackerMock");
 		LOG_DEBUG(TrackerMock, this) << "create TrackerMock." << std::endl;
 	}
 

@@ -24,44 +24,37 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Network.h"
-//#include <boost/asio/ip/udp.hpp>
+#include "Poco/Net/SocketDefs.h"
 #include "Poco/Net/DatagramSocket.h"
 #include "gtest/gtest.h"
+
+using namespace Poco::Net;
 
 namespace kademlia {
 namespace test {
 
-void
-checkListening
-	( std::string const& ip
-	, std::uint16_t port )
+void checkListening(std::string const& ip, std::uint16_t port)
 {
-	//using boost::asio::ip::udp;
-	auto udp_failure = createSocket<Poco::Net::DatagramSocket>(ip, port);
-	EXPECT_EQ( boost::system::errc::address_in_use, udp_failure );
+	auto udp_failure = createSocket<DatagramSocket>(ip, port);
+	EXPECT_EQ(POCO_EADDRINUSE, udp_failure);
 }
 
-std::uint16_t
-getTemporaryListeningPort
-	( std::uint16_t port )
+std::uint16_t getTemporaryListeningPort(IPAddress::Family family, std::uint16_t port)
 {
-	boost::system::error_code failure;
-
+	bool failed = false;
 	do
 	{
-		++ port;
-		//boost::asio::ip::udp::endpoint const e
-		//	{ boost::asio::ip::udp::v4() , port };
-		Poco::Net::SocketAddress sa(Poco::Net::SocketAddress::IPv4, port);
-		Poco::Net::DatagramSocket socket(sa);
-		//Poco::Net::SocketReactor io_service;
-		// Try to open a socket at this address.
-		//boost::asio::ip::udp::socket socket{ io_service, e.protocol() };
-		//socket.bind( e, failure );
-		//socket.bind(sa);
+		try
+		{
+			SocketAddress sa(family, port);
+			DatagramSocket socket(sa);
+		}
+		catch(NetException& ex)
+		{
+			failed = true;
+		}
 	}
-	while ( failure == boost::system::errc::address_in_use );
-
+	while (failed && Socket::lastError() == POCO_EADDRINUSE);
 	return port;
 }
 
