@@ -40,9 +40,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         -D_WIN32_WINNT=_WIN32_WINNT_WIN7
         -D_WINSOCK_DEPRECATED_NO_WARNINGS
     )
-    if(ENABLE_COVERAGE)
-        message(FATAL_ERROR "Can't generate coverage report on MSVC yet")
-    endif()
 else()
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
