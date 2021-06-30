@@ -87,7 +87,7 @@ public:
 			is_connected_(),
 			pending_tasks_()
 	{
-		//kademlia::detail::enable_log_for("Engine");
+		kademlia::detail::enable_log_for("Engine");
 		LOG_DEBUG(Engine, this) << "Peerless Engine created." << std::endl;
 	}
 

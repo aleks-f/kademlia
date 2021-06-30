@@ -117,6 +117,7 @@ build_test(unit_tests_lib
         EngineTest.cpp
         test_fake_socket.cpp
         FakeSocketTest.cpp
+        SocketAdapterTest.cpp
     LIBRARIES 
         kademlia_static
         Poco::Foundation

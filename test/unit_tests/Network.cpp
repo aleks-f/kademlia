@@ -46,7 +46,8 @@ std::uint16_t getTemporaryListeningPort(IPAddress::Family family, std::uint16_t 
 	{
 		try
 		{
-			SocketAddress sa(family, port);
+			failed = false;
+			SocketAddress sa(family, port++);
 			DatagramSocket socket(sa);
 		}
 		catch(NetException& ex)
