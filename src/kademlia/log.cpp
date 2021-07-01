@@ -26,7 +26,9 @@
 #include "kademlia/log.hpp"
 
 #include <iostream>
+#include <iomanip>
 #include <set>
+#include <ctime>
 
 namespace kademlia {
 namespace detail {
@@ -50,7 +52,9 @@ get_debug_log
     ( char const * module
     , void const * thiz )
 {
-    return std::cout << "[debug] (" << module << " @ "
+	std::time_t t = std::time(nullptr);
+    std::tm tm = *std::localtime(&t);
+    return std::cout << "[debug] " << std::put_time(&tm, "%F %H:%M:%S") << " (" << module << " @ "
                      << std::hex << ( std::uintptr_t( thiz ) & 0xffffff )
                      << std::dec << ") ";
 }
