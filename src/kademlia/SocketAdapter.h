@@ -152,8 +152,6 @@ public:
 			//TODO: pass error
 			_onRecvCompletion(boost::system::error_code(), n);
 		}
-		_pRecvBuf = nullptr;
-		_pRecvAddr = nullptr;
 	}
 
 	void onWritable(Poco::Net::WritableNotification* pNf)
