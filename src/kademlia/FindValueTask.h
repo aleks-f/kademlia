@@ -105,6 +105,7 @@ private:
 			load_handler_(std::move(load_handler)),
 			is_finished_()
 	{
+		kademlia::detail::enable_log_for("FindValueTask");
 		LOG_DEBUG(FindValueTask, this) << "create find value task for '"
 			<< searched_key << "' value." << std::endl;
 	}

@@ -146,7 +146,7 @@ public:
 		if (_pRecvBuf && _pRecvAddr)
 		{
 			int avail = _socket.available();
-			int n = _socket.receiveFrom(_pRecvBuf, avail, *_pRecvAddr);
+			int n = _socket.receiveFrom(&(*_pRecvBuf)[0], avail, *_pRecvAddr);
 			LOG_DEBUG(SocketAdapter, this) << '[' << _socket.address().toString() << "]"
 				"<===" << n << " bytes===[" << _pRecvAddr->toString() << ']' << std::endl;
 			//TODO: pass error
