@@ -169,7 +169,7 @@ public:
 	}
 
 	template<typename Callback>
-	void asyncReceiveFrom(boost::asio::mutable_buffer const& buffer, endpoint_type & from, Callback && callback)
+	void asyncReceiveFrom(kademlia::detail::buffer& buffer, endpoint_type & from, Callback && callback)
 	{
 		// Check if there is packets waiting.
 		if (pending_writes_.empty())
@@ -190,9 +190,9 @@ public:
 	}
 
 	template<typename Callback>
-	void asyncSendTo(boost::asio::const_buffer const& buffer, endpoint_type const& to, Callback && callback)
+	void asyncSendTo(kademlia::detail::buffer const& buffer, endpoint_type const& to, Callback && callback)
 	{
-		LOG_DEBUG(FakeSocket, this) << "asyncSendTo()" << std::endl;
+		LOG_DEBUG(FakeSocket, this) << "asyncSendTo(" << buffer.size() << " bytes)" << std::endl;
 		// Ensure the destination socket is listening.
 		auto target = get_socket(to);
 		if (! target)
@@ -210,7 +210,6 @@ public:
 		else
 		{
 			LOG_DEBUG(FakeSocket, this) << "execute write." << std::endl;
-
 			// It's already waiting for the current packet.
 			async_execute_write(target, buffer, std::forward<Callback>(callback));
 		}
@@ -251,15 +250,15 @@ private:
 
 	struct pending_read
 	{
-		boost::asio::mutable_buffer buffer_;
-		endpoint_type & source_;
+		kademlia::detail::buffer& buffer_;
+		endpoint_type& source_;
 		callback_type callback_;
 	};
 
 	struct pending_write
 	{
-		boost::asio::const_buffer buffer_;
-		endpoint_type const& source_;
+		const kademlia::detail::buffer& buffer_;
+		const endpoint_type& source_;
 		callback_type callback_;
 	};
 
@@ -309,10 +308,10 @@ private:
 	};
 
 private:
-	void log_packet(boost::asio::const_buffer const& buffer, endpoint_type const & to)
+	void log_packet(kademlia::detail::buffer const& buffer, endpoint_type const & to)
 	{
-		auto i = boost::asio::buffer_cast<uint8_t const *>(buffer);
-		auto e = i + boost::asio::buffer_size(buffer);
+		auto i = buffer.begin();
+		auto e = buffer.end();
 		packet p{ local_endpoint_, to, { i, e } };
 		get_logged_packets().push(std::move(p));
 	}
@@ -372,15 +371,15 @@ private:
 		return get_router()[ e ];
 	}
 
-	static std::size_t copy_buffer(boost::asio::const_buffer const& from
-		, boost::asio::mutable_buffer const& to)
+	static std::size_t copy_buffer(kademlia::detail::buffer const& from
+		, kademlia::detail::buffer& to)
 	{
-		auto const source_size = boost::asio::buffer_size(from);
-		poco_assert(source_size <= boost::asio::buffer_size(to)
+		auto const source_size = from.size();
+		poco_assert(source_size <= to.size()
 			  && "can't store message into target buffer");
 
-		auto source_data = boost::asio::buffer_cast<uint8_t const *>(from);
-		auto target_data = boost::asio::buffer_cast<uint8_t *>(to);
+		const uint8_t* source_data = &from[0];
+		uint8_t* target_data = &to[0];
 
 		std::memcpy(target_data, source_data, source_size);
 
@@ -389,20 +388,20 @@ private:
 
 	template<typename Callback>
 	void async_execute_write(FakeSocket * target
-		, boost::asio::const_buffer const& buffer
+		, kademlia::detail::buffer const& buf
 		, Callback && callback)
 	{
-		auto perform_write = [ this, target, buffer, callback ] ()
+		auto perform_write = [ this, target, buf, callback ] ()
 		{
 			// Retrieve the read task of the packet.
 			poco_assert(! target->pending_reads_.empty());
-			pending_read & p = target->pending_reads_.front();
+			pending_read& p = target->pending_reads_.front();
 
 			// Fill the read task buffer and endpoint.
-			auto const copied_bytes_count = copy_buffer(buffer, p.buffer_);
+			auto const copied_bytes_count = copy_buffer(buf, p.buffer_);
 			p.source_ = local_endpoint_;
 
-			// Inform the writer that data has been writeen.
+			// Inform the writer that data has been written.
 			callback(boost::system::error_code(), copied_bytes_count);
 
 			// Inform the reader that data has been read.
@@ -415,9 +414,9 @@ private:
 	}
 
 	template<typename Callback>
-	void async_execute_read(boost::asio::mutable_buffer const& buffer, endpoint_type & from, Callback && callback)
+	void async_execute_read(kademlia::detail::buffer& buf, endpoint_type & from, Callback && callback)
 	{
-		auto perform_read = [ this, buffer, &from, callback ] ()
+		auto perform_read = [ this, &buf, &from, callback ] ()
 		{
 			// Retrieve the write task of the packet.
 			poco_assert(! pending_writes_.empty());
@@ -425,9 +424,9 @@ private:
 
 			// Fill the provided buffer and endpoint.
 			from = w.source_;
-			auto const copied_bytes_count = copy_buffer(w.buffer_, buffer);
+			auto const copied_bytes_count = copy_buffer(w.buffer_, buf);
 
-			// Now inform the writeer that data has been sent.
+			// Now inform the writer that data has been sent.
 			w.callback_(boost::system::error_code(), copied_bytes_count);
 
 			// Inform the reader that data has been read.

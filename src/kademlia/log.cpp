@@ -28,7 +28,6 @@
 #include <iostream>
 #include <iomanip>
 #include <set>
-#include <ctime>
 
 namespace kademlia {
 namespace detail {
@@ -49,12 +48,16 @@ get_enabled_modules
 
 std::ostream &
 get_debug_log
-    ( char const * module
-    , void const * thiz )
+    ( char const * module,
+      void const * thiz,
+      std::tm* pTM)
 {
-	std::time_t t = std::time(nullptr);
-    std::tm tm = *std::localtime(&t);
-    return std::cout << "[debug] " << std::put_time(&tm, "%F %H:%M:%S") << " (" << module << " @ "
+    if (!pTM)
+	{
+		std::time_t t = std::time(nullptr);
+    	pTM = std::localtime(&t);
+	}
+    return std::cout << "[debug] " << std::put_time(pTM, "%F %H:%M:%S") << " (" << module << " @ "
                      << std::hex << ( std::uintptr_t( thiz ) & 0xffffff )
                      << std::dec << ") ";
 }

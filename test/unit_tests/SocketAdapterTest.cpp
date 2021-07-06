@@ -92,9 +92,9 @@ TEST_F(SocketAdapterTest, send_to_recv_from_ipv4)
 	SocketAdapter<DatagramSocket> sock2(&ioService, addr2, false, true);
 
 	std::string hello = "hello";
-	boost::asio::const_buffer sendBuf(hello.data(), hello.length());
+	kademlia::detail::buffer sendBuf(hello.begin(), hello.end());
 	sock1.asyncSendTo(sendBuf, addr2, onSendCompletion);
-	boost::asio::mutable_buffer recvBuf;
+	kademlia::detail::buffer recvBuf;
 	sock2.asyncReceiveFrom(recvBuf, addr1, onRecvCompletion);
 
 	while (recvd < hello.size()) ioService.poll();
@@ -132,9 +132,9 @@ TEST_F(SocketAdapterTest, send_to_recv_from_ipv6)
 	SocketAdapter<DatagramSocket> sock2(&ioService, addr2, false, true);
 
 	std::string hello = "hello";
-	boost::asio::const_buffer sendBuf(hello.data(), hello.length());
+	kademlia::detail::buffer sendBuf(hello.begin(), hello.end());
 	sock1.asyncSendTo(sendBuf, addr2, onSendCompletion);
-	boost::asio::mutable_buffer recvBuf;
+	kademlia::detail::buffer recvBuf;
 	sock2.asyncReceiveFrom(recvBuf, addr1, onRecvCompletion);
 
 	while (recvd < hello.size()) ioService.poll();

@@ -146,7 +146,7 @@ public:
     template< typename Callback >
     void
     asyncReceiveFrom
-        ( boost::asio::mutable_buffer const& buffer
+        ( kademlia::detail::buffer const& buffer
         , endpoint_type & from
         , Callback && callback )
     { }

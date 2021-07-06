@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <string>
 #include <sstream>
+#include <ctime>
 
 namespace kademlia {
 namespace detail {
@@ -44,8 +45,9 @@ namespace detail {
  */
 std::ostream &
 get_debug_log
-    ( char const * module
-    , void const * thiz );
+    ( char const * module,
+      void const * thiz,
+      std::tm* tm = 0 );
 
 /**
  *

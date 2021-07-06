@@ -61,7 +61,7 @@ TEST(FakeSocketTest, does_not_invoke_receive_callback_until_data_is_received)
         , std::size_t)
     { FAIL() << "unexpected call"; };
 
-    s.asyncReceiveFrom(boost::asio::buffer(buffer)
+    s.asyncReceiveFrom(buffer
                         , endpoint
                         , on_receive);
 
@@ -86,7 +86,7 @@ TEST(FakeSocketTest, invokes_send_callback_when_host_is_unreachable)
         EXPECT_EQ(0, bytes_count);
     };
 
-    s.asyncSendTo(boost::asio::buffer(buffer)
+    s.asyncSendTo(buffer
                    , endpoint
                    , on_send);
 
@@ -96,7 +96,6 @@ TEST(FakeSocketTest, invokes_send_callback_when_host_is_unreachable)
 TEST(FakeSocketTest, can_send_and_receive_messages)
 {
     a::SocketReactor io_service;
-    //a::SocketReactor::work work(io_service);
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
     k::test::FakeSocket receiver(&io_service/*, endpoint.family()*/);
@@ -120,7 +119,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
         EXPECT_EQ(sent.size(), bytes_count);
     };
 
-    receiver.asyncReceiveFrom(boost::asio::buffer(received)
+    receiver.asyncReceiveFrom(received
                                , endpoint
                                , on_receive);
 
@@ -134,7 +133,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
         received.resize(bytes_count);
     };
 
-    sender.asyncSendTo(boost::asio::buffer(sent)
+    sender.asyncSendTo(sent
                         , receiver.local_endpoint()
                         , on_send);
 
@@ -168,7 +167,7 @@ TEST(FakeSocketTest, can_detect_invalid_address)
 
     //endpoint.address(boost::asio::ip::address_v4::any());
 	endpoint = a::SocketAddress("0.0.0.0", k::test::FakeSocket::FIXED_PORT);
-    s.asyncSendTo(boost::asio::buffer(sent), endpoint, on_send);
+    s.asyncSendTo(sent, endpoint, on_send);
 
     EXPECT_LE(0ULL, io_service.poll());
     EXPECT_TRUE(send_callback_called);
@@ -195,7 +194,7 @@ TEST(FakeSocketTest, can_detect_closed_socket)
         , std::size_t)
     { };
 
-    receiver.asyncReceiveFrom(boost::asio::buffer(received)
+    receiver.asyncReceiveFrom(received
                                , endpoint
                                , on_receive);
 
@@ -212,7 +211,7 @@ TEST(FakeSocketTest, can_detect_closed_socket)
     receiver.close(failure);
     EXPECT_FALSE(failure);
 
-    sender.asyncSendTo(boost::asio::buffer(sent)
+    sender.asyncSendTo(sent
                         , receiver.local_endpoint()
                         , on_send);
 
@@ -242,7 +241,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
         EXPECT_EQ(sent.size(), bytes_count);
     };
 
-    sender.asyncReceiveFrom(boost::asio::buffer(received)
+    sender.asyncReceiveFrom(received
                              , endpoint
                              , on_receive);
 
@@ -256,7 +255,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
         received.resize(bytes_count);
     };
 
-    sender.asyncSendTo(boost::asio::buffer(sent)
+    sender.asyncSendTo(sent
                         , sender.local_endpoint()
                         , on_send);
 	EXPECT_LT(0ULL, io_service.runOne());
