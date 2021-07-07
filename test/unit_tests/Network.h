@@ -27,13 +27,8 @@
 #define KADEMLIA_TEST_HELPERS_NETWORK_H
 
 #include <cstdint>
-/*
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/udp.hpp>
-#include <boost/asio/ip/v6_only.hpp>
-#include <boost/system/system_error.hpp>
-*/
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/Socket.h"
+#include "Poco/Net/NetException.h"
 #include "kademlia/SocketAdapter.h"
 #include "common.hpp"
 
@@ -41,37 +36,18 @@ namespace kademlia {
 namespace test {
 
 template< typename Socket >
-boost::system::error_code
-createSocket
-	( std::string const& ip
-	, std::uint16_t port )
+int createSocket(std::string const& ip, std::uint16_t port)
 {
-	//auto const a = boost::asio::ip::address::from_string( ip );
-	Poco::Net::SocketReactor io_service;
-
-	// Try to create a socket.
-	//typename Socket::endpoint_type endpoint( a, port );
-	//Socket socket( io_service, endpoint.family() );
-	Poco::Net::SocketAddress sa(Poco::Net::SocketAddress::IPv4, port);
-	Poco::Net::DatagramSocket socket(sa);
-
-	//if ( endpoint.address().is_v6() )
-	//	socket.set_option( boost::asio::ip::v6_only{ true } );
-
-	boost::system::error_code failure;
-	socket.bind( sa/*, failure*/ );
-
-	return failure;
+	Poco::Net::SocketAddress sa(ip, port);
+	try { Poco::Net::DatagramSocket socket(sa, false, true); }
+	catch (Poco::Net::NetException&){}
+	return Poco::Net::Socket::lastError();
 }
 
-void
-checkListening
-	( std::string const& ip
-	, std::uint16_t port );
+void checkListening(std::string const& ip, std::uint16_t port);
 
-std::uint16_t
-getTemporaryListeningPort
-	( std::uint16_t port = 1234 );
+std::uint16_t getTemporaryListeningPort(Poco::Net::IPAddress::Family family = Poco::Net::SocketAddress::IPv4,
+	std::uint16_t port = 1234);
 
 } // namespace test
 } // namespace kademlia

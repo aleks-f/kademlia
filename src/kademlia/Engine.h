@@ -86,7 +86,7 @@ public:
 			value_store_(),
 			pending_notifications_count_()
 	{
-		//kademlia::detail::enable_log_for("Engine");
+		kademlia::detail::enable_log_for("Engine");
 		LOG_DEBUG(Engine, this) << "Peerless Engine created." << std::endl;
 	}
 

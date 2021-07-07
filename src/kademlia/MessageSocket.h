@@ -134,12 +134,11 @@ public:
 
 	MessageSocket(MessageSocket&& o): reception_buffer_(std::move(o.reception_buffer_)),
 		current_message_sender_(std::move(o.current_message_sender_)),
-		_socket(&o._ioService, Poco::Net::SocketAddress(), true, true),
+		_socket(std::move(o._socket)),
 		_messageQueue(std::move(o._messageQueue)),
 		_ioService(o._ioService),
 		_pMutex(std::move(o._pMutex))
 	{
-		_socket = std::move(o._socket);
 	}
 
 	MessageSocket& operator = (MessageSocket&& o) = delete;
@@ -173,12 +172,13 @@ public:
 		};
 		assert(reception_buffer_.size() == INPUT_BUFFER_SIZE);
 
-		_socket.asyncReceiveFrom(boost::asio::buffer(reception_buffer_), current_message_sender_, std::move(on_completion));
+		_socket.asyncReceiveFrom(reception_buffer_, current_message_sender_, std::move(on_completion));
 	}
 
 	template<typename SendCallback>
 	void async_send(buffer const& message, endpoint_type const& to, SendCallback const& callback)
 	{
+		using Poco::Net::SocketAddress;
 		if (message.size() > INPUT_BUFFER_SIZE)
 			callback(make_error_code(std::errc::value_too_large));
 		else
@@ -188,13 +188,13 @@ public:
 			_messageQueue.push_back(std::make_pair(Poco::Net::SocketAddress(to.address_, to.port_), message));
 
 			// Copy the buffer as it has to live past the end of this call.
-			auto message_copy = std::make_shared<buffer>(message);
-			auto on_completion = [ this, callback, message_copy ]
+			auto on_completion = [ this, callback ]
 				(boost::system::error_code const& failure, std::size_t /* bytes_sent */)
 			{
 				callback(boost_to_std_error(failure));
 			};
-			_socket.asyncSendTo(boost::asio::buffer(*message_copy), convert_endpoint(to), std::move(on_completion));
+			// TODO: move everything?
+			_socket.asyncSendTo(message, convert_endpoint(to), std::move(on_completion));
 		}
 	}
 
@@ -207,7 +207,7 @@ private:
 	MessageSocket(Poco::Net::SocketReactor& io_service, endpoint_type const& e):
 			reception_buffer_(INPUT_BUFFER_SIZE),
 			current_message_sender_(),
-			_socket(&io_service, convert_endpoint(e), true, true),
+			_socket(&io_service, convert_endpoint(e), false, true),
 			_ioService(io_service),
 			_pMutex(new std::mutex())
 	{

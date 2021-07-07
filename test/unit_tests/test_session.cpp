@@ -28,7 +28,7 @@
 #include "kademlia/session.hpp"
 #include "kademlia/first_session.hpp"
 #include "common.hpp"
-#include "network.hpp"
+#include "Network.h"
 #include "gtest/gtest.h"
 #include <cstdint>
 #include <future>
@@ -37,35 +37,35 @@ namespace {
 
 namespace k = kademlia;
 namespace bo = boost::asio;
+using namespace Poco::Net;
 
 
 TEST(SessionTest, session_opens_sockets_on_all_interfaces_by_default)
 {
     k::first_session s;
-
-    k::test::check_listening( "0.0.0.0", k::first_session::DEFAULT_PORT );
-    k::test::check_listening( "::", k::first_session::DEFAULT_PORT );
+    k::test::checkListening( "0.0.0.0", k::first_session::DEFAULT_PORT );
+    k::test::checkListening( "::", k::first_session::DEFAULT_PORT );
 }
 
 TEST(SessionTest, session_opens_both_ipv4_ipv6_sockets)
 {
-    // Create listening socket.
-    std::uint16_t const port1 = k::test::get_temporary_listening_port();
-    std::uint16_t const port2 = k::test::get_temporary_listening_port(port1);
-    k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
-    k::endpoint ipv6_endpoint{ "::1", port2 };
+	// Create listening socket.
+	std::uint16_t const port1 = k::test::getTemporaryListeningPort();
+	std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv6, port1);
+	k::endpoint ipv4_endpoint{"127.0.0.1", port1};
+	k::endpoint ipv6_endpoint{"::1", port2};
 
     k::first_session s{ ipv4_endpoint, ipv6_endpoint };
 
-    k::test::check_listening("127.0.0.1", port1);
-    k::test::check_listening("::1", port2);
+	k::test::checkListening("127.0.0.1", port1);
+	k::test::checkListening("::1", port2);
 }
 
 TEST(SessionTest, session_throw_on_invalid_ipv6_address)
 {
     // Create listening socket.
-    std::uint16_t const port1 = k::test::get_temporary_listening_port();
-    std::uint16_t const port2 = k::test::get_temporary_listening_port(port1);
+    std::uint16_t const port1 = k::test::getTemporaryListeningPort();
+    std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv4, port1);
     k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
     k::endpoint ipv6_endpoint{ "0.0.0.0", port2 };
 
@@ -75,8 +75,8 @@ TEST(SessionTest, session_throw_on_invalid_ipv6_address)
 TEST(SessionTest, session_throw_on_invalid_ipv4_address)
 {
     // Create listening socket.
-    std::uint16_t const port1 = k::test::get_temporary_listening_port();
-    std::uint16_t const port2 = k::test::get_temporary_listening_port(port1);
+    std::uint16_t const port1 = k::test::getTemporaryListeningPort(SocketAddress::IPv6);
+    std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv6, port1);
     k::endpoint ipv4_endpoint{ "::", port1 };
     k::endpoint ipv6_endpoint{ "::1", port2 };
 
@@ -94,7 +94,7 @@ TEST(SessionTest, first_session_run_can_be_aborted)
 
 TEST(SessionTest, session_can_save_and_load )
 {
-    auto const fs_port = k::test::get_temporary_listening_port();
+    auto const fs_port = k::test::getTemporaryListeningPort();
     k::endpoint const first_session_endpoint{ "127.0.0.1", fs_port };
     k::first_session fs{ first_session_endpoint
                        , k::endpoint{ "::1", fs_port } };
@@ -102,10 +102,11 @@ TEST(SessionTest, session_can_save_and_load )
     auto fs_result = std::async( std::launch::async
                                , &k::first_session::run, &fs );
 
-    auto const s_port = k::test::get_temporary_listening_port( fs_port );
+    auto s_port4 = k::test::getTemporaryListeningPort(Poco::Net::IPAddress::IPv4, fs_port );
+    auto s_port6 = k::test::getTemporaryListeningPort(Poco::Net::IPAddress::IPv6);
     k::session s{ first_session_endpoint
-                , k::endpoint{ "127.0.0.1", s_port }
-                , k::endpoint{ "::1", s_port } };
+                , k::endpoint{ "127.0.0.1", s_port4 }
+                , k::endpoint{ "::1", s_port6 } };
 
     auto s_result = std::async( std::launch::async
                               , &k::session::run, &s );

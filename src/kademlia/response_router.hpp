@@ -112,14 +112,14 @@ public:
             // If a callback has been removed, that means
             // the message has never been received
             // hence report the timeout to the client.
-            std::cout << "UNregister_temporary_callback[response_id]=" << response_id << std::endl;
+            LOG_DEBUG(response_router, this) << "UNregister_temporary_callback[response_id]=" << response_id << std::endl;
             if ( response_callbacks_.remove_callback( response_id ) )
                 on_error( make_error_code( std::errc::timed_out ) );
         };
 
         // Associate the response id with the
         // on_response_received callback.
-        std::cout << "register_temporary_callback[response_id]=" << response_id << std::endl;
+        LOG_DEBUG(response_router, this) << "register_temporary_callback[response_id]=" << response_id << std::endl;
         response_callbacks_.push_callback( response_id
                                          , on_response_received );
 

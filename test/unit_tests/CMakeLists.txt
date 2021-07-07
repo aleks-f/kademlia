@@ -26,7 +26,17 @@
 # Run all tests, timeout if it takes more than 30 seconds.
 add_custom_target(unit_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --timeout 30)
 add_dependencies(check unit_tests)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 add_subdirectory(${PROJECT_SOURCE_DIR}/googletest ${PROJECT_SOURCE_DIR}/googletest/cmake-build-debug/lib)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+add_subdirectory(${PROJECT_SOURCE_DIR}/googletest ${PROJECT_SOURCE_DIR}/googletest/cmake-build-release/lib)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+add_subdirectory(${PROJECT_SOURCE_DIR}/googletest ${PROJECT_SOURCE_DIR}/googletest/cmake-build-relwithdebinfo/lib)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+add_subdirectory(${PROJECT_SOURCE_DIR}/googletest ${PROJECT_SOURCE_DIR}/googletest/cmake-build-minsizerel/lib)
+endif()
+
 enable_testing()
 
 include_directories(BEFORE .)
@@ -117,6 +127,7 @@ build_test(unit_tests_lib
         EngineTest.cpp
         test_fake_socket.cpp
         FakeSocketTest.cpp
+        SocketAdapterTest.cpp
     LIBRARIES 
         kademlia_static
         Poco::Foundation

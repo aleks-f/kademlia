@@ -32,11 +32,13 @@
 
 #include <vector>
 #include <cstdint>
+#include <memory>
 
 namespace kademlia {
 namespace detail {
 
-using buffer = std::vector< std::uint8_t >;
+using buffer = std::vector<std::uint8_t>;
+using BufferPtr = std::shared_ptr<buffer>;
 
 } // namespace detail
 } // namespace kademlia

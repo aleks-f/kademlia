@@ -74,13 +74,17 @@ protected:
 TEST_F(LogTest, can_write_to_debug_log)
 {
     std::ostringstream out;
+    std::ostringstream ostr;
     {
         rdbuf_saver const s{ std::cout, out.rdbuf() };
         auto const ptr = reinterpret_cast< void *>(0x12345678);
-        kd::get_debug_log("test", ptr)<< "message" << std::endl;
+        std::time_t t = std::time(nullptr);
+    	std::tm* pTM = std::localtime(&t);
+        kd::get_debug_log("test", ptr, pTM)<< "message" << std::endl;
+        ostr << "[debug] " << std::put_time(pTM, "%F %H:%M:%S") << " (test @ 345678) message\n";
     }
 
-    EXPECT_EQ(out.str(), "[debug] (test @ 345678) message\n");
+    EXPECT_EQ(out.str(), ostr.str());
 }
 
 TEST_F(LogTest, can_write_to_debug_log_using_macro)
@@ -93,7 +97,8 @@ TEST_F(LogTest, can_write_to_debug_log_using_macro)
     }
 
 #ifdef KADEMLIA_ENABLE_DEBUG
-    EXPECT_TRUE(out.str() == ("[debug] (test @ 345678) message\n"));
+    EXPECT_TRUE(out.str().substr(0, 8) == "[debug] ");
+    EXPECT_TRUE(out.str().substr(out.str().length()-24) == "(test @ 345678) message\n");
 #else
     EXPECT_TRUE(out.str().empty());
 #endif
