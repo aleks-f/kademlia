@@ -46,6 +46,8 @@ public:
 			buffer::const_iterator i, buffer::const_iterator e) >;
 
 public:
+	ResponseCallbacks();
+
 	void push_callback(id const& message_id, callback const& on_message_received);
 
 	bool remove_callback(id const& message_id);

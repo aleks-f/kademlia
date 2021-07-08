@@ -35,7 +35,6 @@
 namespace {
 
 namespace k = kademlia;
-namespace bo = boost::asio;
 using namespace Poco::Net;
 
 

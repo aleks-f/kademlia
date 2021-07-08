@@ -37,7 +37,7 @@ load( k::session & session
                            , k::session::data_type const& data )
     {
         if ( error )
-            std::cerr << "Failed to load \"" << key << "\"" << std::endl;
+            std::cerr << "Failed to load \"" << key << "\", error: " << error.message() << std::endl;
         else
         {
             std::string const& str{ data.begin(), data.end() };
@@ -59,7 +59,7 @@ save( k::session & session
     auto on_save = [ key ] ( std::error_code const& error )
     {
         if ( error )
-            std::cerr << "Failed to save \"" << key << "\"" << std::endl;
+            std::cerr << "Failed to save \"" << key << "\", error: " << error.message() << std::endl;
         else
             std::cout << "Saved \"" << key << "\"" << std::endl;
     };

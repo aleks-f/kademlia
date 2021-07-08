@@ -11,7 +11,9 @@
 #include "kademlia/buffer.hpp"
 #include "kademlia/boost_to_std_error.hpp"
 #include "kademlia/log.hpp"
-#include <boost/asio/buffer.hpp>
+#include "Poco/ScopedLock.h"
+#include "Poco/Logger.h"
+
 
 namespace kademlia {
 namespace detail {
@@ -46,8 +48,8 @@ public:
 		_pIOService(other._pIOService),
 		_readHandler(*this, &SocketAdapter::onReadable),
 		_writeHandler(*this, &SocketAdapter::onWritable),
-		_pRecvBuf(other._pRecvBuf),
-		_pRecvAddr(other._pRecvAddr),
+		_recvBuf(other._recvBuf),
+		_recvAddr(other._recvAddr),
 		_onRecvCompletion(other._onRecvCompletion),
 		_sendBuf(other._sendBuf),
 		_sendAddr(other._sendAddr),
@@ -61,8 +63,8 @@ public:
 		_pIOService(other._pIOService),
 		_readHandler(*this, &SocketAdapter::onReadable),
 		_writeHandler(*this, &SocketAdapter::onWritable),
-		_pRecvBuf(std::move(other._pRecvBuf)),
-		_pRecvAddr(std::move(other._pRecvAddr)),
+		_recvBuf(std::move(other._recvBuf)),
+		_recvAddr(std::move(other._recvAddr)),
 		_onRecvCompletion(std::move(other._onRecvCompletion)),
 		_sendBuf(std::move(other._sendBuf)),
 		_sendAddr(std::move(other._sendAddr)),
@@ -73,13 +75,13 @@ public:
 		_pIOService->removeEventHandler(other._socket, other._readHandler);
 		_socket = std::move(other._socket);
 
-		other._pRecvBuf = nullptr;
-		other._pRecvAddr = nullptr;
-		other._onRecvCompletion = nullptr;
+		other._recvBuf.clear();
+		other._recvAddr.clear();
+		other._onRecvCompletion.clear();
 
 		other._sendBuf.clear();
-		other._sendAddr = Poco::Net::SocketAddress();
-		other._onSendCompletion = nullptr;
+		other._sendAddr.clear();
+		other._onSendCompletion.clear();
 		
 		_pIOService->addEventHandler(_socket, _readHandler);
 		_pIOService->addEventHandler(_socket, _writeHandler);
@@ -104,8 +106,8 @@ public:
 		_readHandler = ReadableObserver(*this, &SocketAdapter::onReadable);
 		_writeHandler = WritableObserver(*this, &SocketAdapter::onWritable);
 
-		_pRecvBuf = other._pRecvBuf;
-		_pRecvAddr = other._pRecvAddr;
+		_recvBuf = other._pRecvBuf;
+		_recvAddr = other._pRecvAddr;
 		_onRecvCompletion = other._onRecvCompletion;
 
 		_sendBuf = other._sendBuf;
@@ -122,20 +124,26 @@ public:
 		_socket = std::move(other._socket);
 
 		_pIOService = other._pIOService;
+		other._pIOService = nullptr;
+
 		_readHandler = ReadableObserver(*this, &SocketAdapter::onReadable);
 		_writeHandler = WritableObserver(*this, &SocketAdapter::onWritable);
 
-		_pRecvBuf = std::move(other._pRecvBuf);
-		_pRecvAddr = std::move(other._pRecvAddr);
+		_recvBuf = std::move(other._recvBuf);
+		_recvAddr = std::move(other._recvAddr);
 		_onRecvCompletion = std::move(other._onRecvCompletion);
+
+		other._recvBuf.clear();
+		other._recvAddr.clear();
+		other._onRecvCompletion.clear();
 
 		_sendBuf = std::move(other._sendBuf);
 		_sendAddr = std::move(other._sendAddr);
 		_onSendCompletion = std::move(other._onSendCompletion);
 
-		other._pRecvBuf = nullptr;
-		other._pRecvAddr = nullptr;
-		other._onRecvCompletion = nullptr;
+		other._sendBuf.clear();
+		other._sendAddr.clear();
+		other._onSendCompletion.clear();
 
 		return *this;
 	}
@@ -143,52 +151,90 @@ public:
 	void onReadable(Poco::Net::ReadableNotification* pNf)
 	{
 		pNf->release();
-		if (_pRecvBuf && _pRecvAddr)
+		Poco::ScopedLockWithUnlock<Poco::FastMutex> l(_recvMutex);
+		if (_recvBuf.size())
 		{
+			buffer* pRecvBuf = _recvBuf.front();
+			_recvBuf.pop_front();
+			Poco::Net::SocketAddress* pRecvAddr = _recvAddr.front();
+			_recvAddr.pop_front();
+			Callback onRecvCompletion = _onRecvCompletion.front();
+			_onRecvCompletion.pop_front();
+			l.unlock();
+
 			int avail = _socket.available();
-			if (_pRecvBuf->size() < avail) _pRecvBuf->resize(avail);
-			int n = _socket.receiveFrom(&(*_pRecvBuf)[0], avail, *_pRecvAddr);
+			if (pRecvBuf->size() < avail) pRecvBuf->resize(avail);
+			int n = _socket.receiveFrom(&(*pRecvBuf)[0], avail, *pRecvAddr);
 			LOG_DEBUG(SocketAdapter, this) << '[' << _socket.address().toString() << "]"
-				"<===" << n << " bytes===[" << _pRecvAddr->toString() << ']' << std::endl;
+				"<===" << n << " bytes===[" << pRecvAddr->toString() << ']' << std::endl;
+/*
+			std::string msg;
+			Poco::Logger::formatDump(msg,&(*pRecvBuf)[0], n);
+			std::cout << msg << std::endl;
+*/
 			//TODO: pass error
-			_onRecvCompletion(boost::system::error_code(), n);
+			onRecvCompletion(boost::system::error_code(), n);
 		}
 	}
 
 	void onWritable(Poco::Net::WritableNotification* pNf)
 	{
 		pNf->release();
-		if (_sendBuf.size()/* && _pSendAddr*/)
+		Poco::ScopedLockWithUnlock<Poco::FastMutex> l(_sendMutex);
+		if (_sendBuf.size())
 		{
-			int n = _socket.sendTo(&_sendBuf[0], _sendBuf.size(), _sendAddr);
-			LOG_DEBUG(SocketAdapter, this) << '[' << _socket.address().toString() << "]"
-				"===" << n << " bytes===>[" << _sendAddr.toString() << ']' << std::endl;
-			//TODO: pass error
-			_onSendCompletion(boost::system::error_code(), n);
-			_sendBuf.clear();
-			//_sendAddr = nullptr;
+			buffer buf = _sendBuf.front();
+			if (buf.size())
+			{
+				Poco::Net::SocketAddress addr = _sendAddr.front();
+				Callback onSendCompletion = _onSendCompletion.front();
+				_sendBuf.pop_front();
+				_sendAddr.pop_front();
+				_onSendCompletion.pop_front();
+				l.unlock();
+
+				int n = _socket.sendTo(&buf[0], buf.size(), addr);
+				LOG_DEBUG(SocketAdapter, this) << '[' << _socket.address().toString() << "]"
+					"===" << n << " bytes===>[" << addr.toString() << ']' << std::endl;
+/*
+				std::string msg;
+				Poco::Logger::formatDump(msg, &buf[0], n);
+				std::cout << msg << std::endl;
+*/
+				//TODO: pass error
+				onSendCompletion(boost::system::error_code(), n);
+				return;
+			}
+			else
+			{
+				// TODO: should there be a warning or error here?
+				_sendBuf.pop_front();
+				_sendAddr.pop_front();
+				_onSendCompletion.pop_front();
+				l.unlock();
+			}
 		}
 		else Poco::Thread::sleep(100);
 	}
 
 	void asyncReceiveFrom(buffer& buf, Poco::Net::SocketAddress& addr, Callback&& onCompletion)
 	{
-		_pRecvBuf = std::addressof(buf);
-		_pRecvAddr = std::addressof(addr);
-		_onRecvCompletion = std::move(onCompletion);
-		LOG_DEBUG(SocketAdapter, this) << "asyncRecvFrom(" << _pRecvBuf << ", " <<
-			_pRecvAddr->toString() << ", " << (_onRecvCompletion?1:0) << ')' <<
+		Poco::FastMutex::ScopedLock l(_recvMutex);
+		_recvBuf.push_back(std::addressof(buf));
+		_recvAddr.push_back(std::addressof(addr));
+		_onRecvCompletion.push_back(std::move(onCompletion));
+		LOG_DEBUG(SocketAdapter, this) << "asyncRecvFrom(" << &buf << ", " << addr.toString() << ')' <<
 		std::endl;
 	}
 
 	void asyncSendTo(const buffer& message, const Poco::Net::SocketAddress& addr, Callback&& onCompletion)
 	{
-		_sendBuf = message;
-		_sendAddr = addr;
-		_onSendCompletion = std::move(onCompletion);
-		LOG_DEBUG(SocketAdapter, this) << "asyncSendTo(" << _sendBuf.size() << ", " <<
-			_sendAddr.toString() << ", " << (_onSendCompletion?1:0) << ')' <<
-			std::endl;
+		Poco::FastMutex::ScopedLock l(_sendMutex);
+		_sendBuf.push_back(message);
+		_sendAddr.push_back(addr);
+		_onSendCompletion.push_back(std::move(onCompletion));
+		LOG_DEBUG(SocketAdapter, this) << "asyncSendTo(" << message.size() << ", " <<
+			addr.toString() << ')' << std::endl;
 	}
 
 	Poco::Net::SocketImpl* impl() const
@@ -213,13 +259,16 @@ private:
 	ReadableObserver _readHandler;
 	WritableObserver _writeHandler;
 
-	buffer* _pRecvBuf = nullptr;
-	Poco::Net::SocketAddress* _pRecvAddr = nullptr;
-	Callback _onRecvCompletion = nullptr;
+	std::deque<buffer*> _recvBuf;
+	std::deque<Poco::Net::SocketAddress*> _recvAddr;
+	std::deque<Callback> _onRecvCompletion;
 
-	buffer _sendBuf;
-	Poco::Net::SocketAddress _sendAddr;
-	Callback _onSendCompletion = nullptr;
+	std::deque<buffer> _sendBuf;
+	std::deque<Poco::Net::SocketAddress> _sendAddr;
+	std::deque<Callback> _onSendCompletion;
+
+	Poco::FastMutex _sendMutex;
+	Poco::FastMutex _recvMutex;
 };
 
 } }

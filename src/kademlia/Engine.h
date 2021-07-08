@@ -227,6 +227,11 @@ private:
 		for (;i != e && remaining_peer > 0; ++i, -- remaining_peer)
 			response.peers_.push_back({i->first, i->second});
 
+		LOG_DEBUG(Engine, this) << "found " << response.peers_.size() << " peers:" << std::endl;
+		for (auto& p : response.peers_)
+		{
+			LOG_DEBUG(Engine, this) << p.endpoint_.address_.toString() << ':' << p.endpoint_.port_ << std::endl;
+		}
 		// Now send the response.
 		tracker_.send_response(random_token, response, sender);
 	}

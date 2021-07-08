@@ -1,5 +1,5 @@
 #include "ResponseRouter.h"
-
+#include "kademlia/log.hpp"
 
 using Poco::Net::SocketReactor;
 
@@ -10,6 +10,7 @@ namespace detail {
 
 	ResponseRouter::ResponseRouter(SocketReactor &io_service): timer_(io_service)
 	{
+		kademlia::detail::enable_log_for("ResponseRouter");
 	}
 
 
