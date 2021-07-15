@@ -131,6 +131,13 @@ struct FindPeerRequestBody final
     id peer_to_find_id_;
 };
 
+
+inline std::ostream & operator<< ( std::ostream & out, FindPeerRequestBody const& body )
+{
+	out << body.peer_to_find_id_;
+	return out;
+}
+
 /**
  *
  */
@@ -165,6 +172,16 @@ struct FindPeerResponseBody final
     std::vector<Peer> peers_;
 };
 
+inline std::ostream & operator<< ( std::ostream & out, FindPeerResponseBody const& body )
+{
+	for (auto& p : body.peers_)
+	{
+		out << '[' << p.endpoint_.address_.toString() << ':' <<
+			p.endpoint_.port_ << "](" << p.id_ << ')' << std::endl;
+	}
+	return out;
+}
+
 /**
  *
  */
@@ -197,6 +214,12 @@ struct FindValueRequestBody final
     ///
     id value_to_find_;
 };
+
+inline std::ostream & operator<< ( std::ostream & out, FindValueRequestBody const& body )
+{
+	out << body.value_to_find_;
+	return out;
+}
 
 /**
  *
@@ -231,12 +254,19 @@ struct FindValueResponseBody final
     std::vector< std::uint8_t > data_;
 };
 
+inline std::ostream & operator<< ( std::ostream & out, FindValueResponseBody const& body )
+{
+	for (auto& d : body.data_) out << (int)d;
+	return out;
+}
+
 /**
  *
  */
 template<>
 struct message_traits< FindValueResponseBody >
 { static CXX11_CONSTEXPR Header::type TYPE_ID = Header::FIND_VALUE_RESPONSE; };
+
 
 
 /**
@@ -266,6 +296,12 @@ struct StoreValueRequestBody final
     ///
     std::vector< std::uint8_t > data_value_;
 };
+
+inline std::ostream & operator<< ( std::ostream & out, StoreValueRequestBody const& body )
+{
+	out << body.data_key_hash_;
+	return out;
+}
 
 /**
  *

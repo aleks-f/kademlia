@@ -36,6 +36,9 @@
 #include <string>
 #include <sstream>
 #include <ctime>
+#include <iostream>
+#include "kademlia/IPEndpoint.h"
+#include "kademlia/Message.h"
 
 namespace kademlia {
 namespace detail {
@@ -83,6 +86,9 @@ is_log_enabled
  */
 
 #ifdef KADEMLIA_ENABLE_DEBUG
+#undef KADEMLIA_ENABLE_DEBUG
+#endif
+#ifdef KADEMLIA_ENABLE_DEBUG
 #   define LOG_DEBUG( module, thiz )                                           \
     for ( bool used = false; ! used; used = true )                             \
         for ( static bool enabled = kademlia::detail::is_log_enabled( #module )\
@@ -113,6 +119,15 @@ to_string
     }
 
     return out.str();
+}
+
+inline void log_access(kademlia::detail::IPEndpoint const& sender, kademlia::detail::Header const& h)
+{
+	static int cnt;
+	std::cout << cnt++ << ' ';
+	std::cout << h << " from " << sender.address_.toString() << ':' << sender.port_ << std::endl;
+	std::cout << "source:[" << h.source_id_ << ']' << std::endl;
+	std::cout << "random:[" << h.random_token_ << ']' << std::endl;
 }
 
 } // namespace detail
