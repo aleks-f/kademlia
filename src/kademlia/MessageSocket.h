@@ -48,8 +48,6 @@
 #include <kademlia/detail/cxx11_macros.hpp>
 #include "kademlia/buffer.hpp"
 #include "Message.h"
-#include "kademlia/boost_to_std_error.hpp"
-#include <boost/asio/buffer.hpp>
 #include "IPEndpoint.h"
 #include "kademlia/log.hpp"
 #include "Poco/Net/DNS.h"
@@ -161,7 +159,7 @@ public:
 			// has generated an ICMP port unreachable.
 			// https://msdn.microsoft.com/en-us/library/ms740120.aspx
 			// Ignore it and schedule another read.
-			if (failure == boost::system::errc::connection_reset)
+			if (failure == std::errc::connection_reset)
 				return async_receive(callback);
 #endif
 			auto i = reception_buffer_.begin(), e = i;

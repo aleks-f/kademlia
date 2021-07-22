@@ -30,7 +30,6 @@
 #include "Network.h"
 #include "gtest/gtest.h"
 #include <cstdint>
-#include <future>
 
 namespace {
 

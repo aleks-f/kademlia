@@ -26,9 +26,6 @@
 #ifndef KADEMLIA_SOCKET_MOCK_H
 #define KADEMLIA_SOCKET_MOCK_H
 
-#ifdef _MSC_VER
-#   pragma once
-#endif
 
 #include <functional>
 #include <cstdlib>
@@ -36,7 +33,6 @@
 #include <vector>
 #include <cstdint>
 
-#include <boost/asio/buffer.hpp>
 #include "Poco/Net/SocketProactor.h"
 #include "kademlia/SocketAdapter.h"
 #include "Poco/Net/DatagramSocket.h"
@@ -51,11 +47,7 @@ namespace test {
 class SocketMock
 {
 public:
-    ///
-    //using protocol_type = Poco::Net::IPAddress::Family;//boost::asio::ip::udp;
-
-    ///
-    using endpoint_type = Poco::Net::SocketAddress;//protocol_type::endpoint;
+    using endpoint_type = Poco::Net::SocketAddress;
 
 public:
     /**
@@ -94,7 +86,7 @@ public:
     ~SocketMock
         ( void )
     {
-        boost::system::error_code ignored;
+        std::error_code ignored;
         close( ignored );
     }
 
@@ -127,17 +119,17 @@ public:
     /**
      *
      */
-    boost::system::error_code
+    std::error_code
     bind
         ( endpoint_type const& e )
-    { return boost::system::error_code{}; }
+    { return std::error_code{}; }
 
     /**
      *
      */
-    boost::system::error_code
+    std::error_code
     close
-        ( boost::system::error_code & failure )
+        ( std::error_code & failure )
     { return failure; }
 
     /**
@@ -157,7 +149,7 @@ public:
     template< typename Callback >
     void
     asyncSendTo
-        ( boost::asio::const_buffer const& buffer
+        ( kademlia::detail::buffer const& buffer
         , endpoint_type const& to
         , Callback && callback )
     { }

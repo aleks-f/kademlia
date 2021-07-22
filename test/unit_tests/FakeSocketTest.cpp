@@ -57,7 +57,7 @@ TEST(FakeSocketTest, does_not_invoke_receive_callback_until_data_is_received)
     kd::buffer buffer(32);
 
     auto on_receive = []
-        (boost::system::error_code const&
+        (std::error_code const&
         , std::size_t)
     { FAIL() << "unexpected call"; };
 
@@ -79,7 +79,7 @@ TEST(FakeSocketTest, invokes_send_callback_when_host_is_unreachable)
     kd::buffer buffer(32);
 
     auto on_send = []
-        (boost::system::error_code const& failure
+        (std::error_code const& failure
         , std::size_t bytes_count)
     {
         EXPECT_TRUE(failure);
@@ -111,7 +111,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
 
     bool receive_callback_called = false;
     auto on_receive = [ &receive_callback_called, &sent ]
-        (boost::system::error_code const& failure
+        (std::error_code const& failure
         , std::size_t bytes_count)
     {
         receive_callback_called = true;
@@ -125,7 +125,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
 
     std::iota(sent.begin(), sent.end(), 1);
     auto on_send = [ &sent, &received ]
-        (boost::system::error_code const& failure
+        (std::error_code const& failure
         , std::size_t bytes_count)
     {
         EXPECT_FALSE(failure);
@@ -157,7 +157,7 @@ TEST(FakeSocketTest, can_detect_invalid_address)
 
     bool send_callback_called = false;
     auto on_send = [ &send_callback_called ]
-        (boost::system::error_code const& failure
+        (std::error_code const& failure
         , std::size_t bytes_count)
     {
         EXPECT_TRUE(failure);
@@ -165,8 +165,7 @@ TEST(FakeSocketTest, can_detect_invalid_address)
         send_callback_called = true;
     };
 
-    //endpoint.address(boost::asio::ip::address_v4::any());
-	endpoint = a::SocketAddress("0.0.0.0", k::test::FakeSocket::FIXED_PORT);
+    endpoint = a::SocketAddress("0.0.0.0", k::test::FakeSocket::FIXED_PORT);
     s.asyncSendTo(sent, endpoint, on_send);
 
     EXPECT_LE(0ULL, io_service.poll());
@@ -190,7 +189,7 @@ TEST(FakeSocketTest, can_detect_closed_socket)
     kd::buffer sent(32);
 
     auto on_receive = []
-        (boost::system::error_code const& 
+        (std::error_code const& 
         , std::size_t)
     { };
 
@@ -200,14 +199,14 @@ TEST(FakeSocketTest, can_detect_closed_socket)
 
     std::iota(sent.begin(), sent.end(), 1);
     auto on_send = []
-        (boost::system::error_code const& failure
+        (std::error_code const& failure
         , std::size_t bytes_count)
     {
         EXPECT_TRUE(failure);
         EXPECT_EQ(0ULL, bytes_count);
     };
 
-    boost::system::error_code failure;
+    std::error_code failure;
     receiver.close(failure);
     EXPECT_FALSE(failure);
 
@@ -233,7 +232,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
 
     bool receive_callback_called = false;
     auto on_receive = [ &receive_callback_called, &sent ]
-        (boost::system::error_code const& failure
+        (std::error_code const& failure
         , std::size_t bytes_count)
     {
         receive_callback_called = true;
@@ -247,7 +246,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
 
     std::iota(sent.begin(), sent.end(), 1);
     auto on_send = [ &sent, &received ]
-        (boost::system::error_code const& failure
+        (std::error_code const& failure
         , std::size_t bytes_count)
     {
         EXPECT_FALSE(failure);
@@ -264,4 +263,3 @@ TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
 }
 
 }
-

@@ -29,24 +29,18 @@ set(kademlia_sources
         error.cpp
     error_impl.cpp
     id.cpp
-    ip_endpoint.cpp
     IPEndpoint.cpp
     log.cpp
     LookupTask.cpp
-    message.cpp
     Message.cpp
-    message_serializer.cpp
     MessageSerializer.cpp
-        peer.cpp
     Peer.cpp
-    response_callbacks.cpp
     ResponseCallbacks.cpp
     ResponseRouter.cpp
     session.cpp
     SessionImpl.cpp
     session_base.cpp
-        first_session.cpp
-    timer.cpp
+    first_session.cpp
     Timer.cpp)
 
 # Kademlia shared
