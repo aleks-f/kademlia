@@ -37,8 +37,6 @@
 #include <vector>
 #include <cstdint>
 
-#include <boost/asio/buffer.hpp>
-#include <boost/system/error_code.hpp>
 #include "Poco/Net/IPAddress.h"
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/SocketProactor.h"
@@ -110,7 +108,7 @@ public:
 
 	~FakeSocket()
 	{
-		boost::system::error_code ignored;
+		std::error_code ignored;
 		close(ignored);
 	}
 
@@ -129,11 +127,11 @@ public:
 		return local_endpoint_;
 	}
 
-	boost::system::error_code bind(endpoint_type const& e)
+	std::error_code bind(endpoint_type const& e)
 	{
 		// Only fixed port is handled right now.
 		if (e.port() != FIXED_PORT)
-			return make_error_code(boost::system::errc::invalid_argument);
+			return make_error_code(std::errc::invalid_argument);
 
 		// Generate our local address.
 		if (e.host().isV4())
@@ -142,10 +140,10 @@ public:
 			local_endpoint(generate_unique_ipv6_endpoint(e.port()));
 
 		add_route_to_socket(local_endpoint(), this);
-		return boost::system::error_code();
+		return std::error_code();
 	}
 
-	boost::system::error_code close(boost::system::error_code& failure)
+	std::error_code close(std::error_code& failure)
 	{
 		try
 		{
@@ -156,14 +154,14 @@ public:
 				failure.clear();
 			}
 			else
-				failure = make_error_code(boost::system::errc::not_connected);
+				failure = make_error_code(std::errc::not_connected);
 
 			pending_reads_.clear();
 			pending_writes_.clear();
 		}
 		catch(Poco::NullPointerException&)
 		{
-			failure = make_error_code(boost::system::errc::not_connected);
+			failure = make_error_code(std::errc::not_connected);
 		}
 		return failure;
 	}
@@ -198,7 +196,7 @@ public:
 		if (! target)
 		{
 			LOG_DEBUG(FakeSocket, this) << "network unreachable." << std::endl;
-			callback(make_error_code(boost::system::errc::network_unreachable), 0ULL);
+			callback(make_error_code(std::errc::network_unreachable), 0ULL);
 		}
 		// Check if it's not waiting for any packet.
 		else if (target->pending_reads_.empty())
@@ -246,7 +244,7 @@ public:
 	}
 
 private:
-	using callback_type = std::function<void (boost::system::error_code const&, std::size_t)>;
+	using callback_type = std::function<void (std::error_code const&, std::size_t)>;
 
 	struct pending_read
 	{
@@ -401,10 +399,10 @@ private:
 			p.source_ = local_endpoint_;
 
 			// Inform the writer that data has been written.
-			callback(boost::system::error_code(), copied_bytes_count);
+			callback(std::error_code(), copied_bytes_count);
 
 			// Inform the reader that data has been read.
-			p.callback_(boost::system::error_code(), copied_bytes_count);
+			p.callback_(std::error_code(), copied_bytes_count);
 
 			target->pending_reads_.pop_front();
 		};
@@ -426,10 +424,10 @@ private:
 			auto const copied_bytes_count = copy_buffer(w.buffer_, buf);
 
 			// Now inform the writer that data has been sent.
-			w.callback_(boost::system::error_code(), copied_bytes_count);
+			w.callback_(std::error_code(), copied_bytes_count);
 
 			// Inform the reader that data has been read.
-			callback(boost::system::error_code(), copied_bytes_count);
+			callback(std::error_code(), copied_bytes_count);
 
 			// The current task has been consumed.
 			pending_writes_.pop_front();

@@ -9,7 +9,6 @@
 #include "Poco/Net/SocketNotification.h"
 #include "Poco/Thread.h"
 #include "kademlia/buffer.hpp"
-#include "kademlia/boost_to_std_error.hpp"
 #include "kademlia/log.hpp"
 #include "Poco/ScopedLock.h"
 #include "Poco/Logger.h"

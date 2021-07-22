@@ -44,17 +44,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 add_library(test_helpers STATIC
     common.cpp
-    common.hpp
-    network.hpp
-    network.cpp
-    Network.cpp
-    peer_factory.hpp
-    PeerFactory.h
-    routing_table_mock.hpp
-    tracker_mock.hpp
-    socket_mock.hpp
-    corrupted_message.hpp
-    task_fixture.hpp)
+    Network.cpp)
 
 target_link_libraries(test_helpers
     ${Boost_FILESYSTEM_LIBRARY}
@@ -77,7 +67,7 @@ endmacro()
 
 build_test(unit_tests_helpers
     SOURCES
-        test_fake_socket.cpp
+        FakeSocketTest.cpp
     LIBRARIES
         kademlia_static)
 
@@ -86,47 +76,28 @@ build_test(unit_tests_lib
         test_id.cpp
         test_endpoint.cpp
         EndpointTest.cpp
-        test_boost_to_std_error.cpp
-        test_message.cpp
         MessageTest.cpp
-        test_message_serializer.cpp
         MessageSerializerTest.cpp
-        test_lookup_task.cpp
         LookupTaskTest.cpp
-        test_store_value_task.cpp
         StoreValueTaskTest.cpp
-        test_find_value_task.cpp
         FindValueTaskTest.cpp
-        test_ip_endpoint.cpp
         IPEndpointTest.cpp
-        test_peer.cpp
         PeerTest.cpp
         test_error.cpp
-        test_discover_neighbors_task.cpp
         DiscoverNeighborsTaskTest.cpp
-        test_notify_peer_task.cpp
         NotifyPeerTaskTest.cpp
-        test_response_router.cpp
         ResponseRouterTest.cpp
-        test_response_callbacks.cpp
         ResponseCallbacksTest.cpp
-        test_timer.cpp
         TimerTest.cpp
-        test_network.cpp
         NetworkTest.cpp
-        test_message_socket.cpp
         MessageSocketTest.cpp
         test_log.cpp
         test_r.cpp
-        test_routing_table.cpp
         RoutingTableTest.cpp
         test_session.cpp
         test_first_session.cpp
         test_concurrent_guard.cpp
-        test_engine.cpp
         EngineTest.cpp
-        test_fake_socket.cpp
-        FakeSocketTest.cpp
         SocketAdapterTest.cpp
     LIBRARIES 
         kademlia_static

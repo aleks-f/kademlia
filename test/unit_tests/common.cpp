@@ -25,25 +25,27 @@
 
 #include "common.hpp"
 #include "kademlia/log.hpp"
+#include "Poco/Path.h"
+#include <fstream>
 
-#include <iostream>
-#include <boost/system/system_error.hpp>
-#include <boost/filesystem.hpp>
-
-namespace filesystem = boost::filesystem;
+using Poco::Path;
 
 namespace kademlia {
 namespace test {
 
 namespace {
 
-filesystem::path const tests_directory_{ TESTS_DIR };
+Path _testsDirectory {TESTS_DIR};
 
 }
 
 std::string get_capture_path( std::string const & capture_name )
 {
-    return ( tests_directory_ / "captures" / capture_name ).string();
+	Path path(_testsDirectory);
+	path.makeDirectory();
+	path.pushDirectory("captures").pushDirectory(capture_name);
+	path.makeFile();
+    return path.toString();
 }
 
 std::string readFile(const std::string& name, const std::string& eol)
