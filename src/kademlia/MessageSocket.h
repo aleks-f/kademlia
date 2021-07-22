@@ -39,7 +39,7 @@
 #include <type_traits>
 #include "Poco/Error.h"
 #include "Poco/NumberParser.h"
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/SocketNotification.h"
 #include "SocketAdapter.h"
@@ -63,8 +63,6 @@ template<typename SocketType>
 class MessageSocket final
 {
 public:
-	/// Consider we won't receive IPv6 jumbo datagram.
-	static CXX11_CONSTEXPR std::size_t INPUT_BUFFER_SIZE = UINT16_MAX;
 	using endpoint_type = IPEndpoint;
 	using resolved_endpoints = std::vector<endpoint_type>;
 	using underlying_socket_type = SocketType;
@@ -72,7 +70,7 @@ public:
 	using SendPacket = std::pair<Poco::Net::SocketAddress, buffer>;
  
 	template<typename EndpointType>
-	static resolved_endpoints resolve_endpoint(Poco::Net::SocketReactor& io_service, EndpointType const& e)
+	static resolved_endpoints resolve_endpoint(Poco::Net::SocketProactor& io_service, EndpointType const& e)
 	{
 		resolved_endpoints re;
 		try
@@ -96,7 +94,7 @@ public:
 	}
 
 	template<typename EndpointType>
-	static MessageSocket ipv4(Poco::Net::SocketReactor& io_service, EndpointType const& e)
+	static MessageSocket ipv4(Poco::Net::SocketProactor& io_service, EndpointType const& e)
 	{
 		auto endpoints = resolve_endpoint(io_service, e);
 		for (auto const& i : endpoints)
@@ -114,7 +112,7 @@ public:
 	}
 
 	template<typename EndpointType>
-	static MessageSocket ipv6(Poco::Net::SocketReactor& io_service, EndpointType const& e)
+	static MessageSocket ipv6(Poco::Net::SocketProactor& io_service, EndpointType const& e)
 	{
 		auto endpoints = resolve_endpoint(io_service, e);
 		for (auto const& i : endpoints)
@@ -154,7 +152,7 @@ public:
 	void async_receive(ReceiveCallback const& callback)
 	{
 		auto on_completion = [ this, callback ]
-			(boost::system::error_code const& failure
+			(std::error_code const& failure
 			, std::size_t bytes_received)
 		{
 #ifdef _MSC_VER
@@ -168,34 +166,25 @@ public:
 #endif
 			auto i = reception_buffer_.begin(), e = i;
 			if (!failure) std::advance(e, bytes_received);
-			callback(boost_to_std_error(failure), convert_endpoint(current_message_sender_), i, e);
+			callback(failure, convert_endpoint(current_message_sender_), i, e);
 		};
-		assert(reception_buffer_.size() == INPUT_BUFFER_SIZE);
 
 		_socket.asyncReceiveFrom(reception_buffer_, current_message_sender_, std::move(on_completion));
 	}
 
 	template<typename SendCallback>
-	void async_send(buffer const& message, endpoint_type const& to, SendCallback const& callback)
+	void async_send(buffer&& message, const endpoint_type& to, SendCallback const& callback)
 	{
 		using Poco::Net::SocketAddress;
-		if (message.size() > INPUT_BUFFER_SIZE)
-			callback(make_error_code(std::errc::value_too_large));
-		else
-		{
-			// TODO: make buffer rvalue so it can be moved
-			std::unique_lock<std::mutex> l(*_pMutex);
-			_messageQueue.push_back(std::make_pair(Poco::Net::SocketAddress(to.address_, to.port_), message));
+		std::unique_lock<std::mutex> l(*_pMutex);
+		_messageQueue.push_back(std::make_pair(Poco::Net::SocketAddress(to.address_, to.port_), message));
 
-			// Copy the buffer as it has to live past the end of this call.
-			auto on_completion = [ this, callback ]
-				(boost::system::error_code const& failure, std::size_t /* bytes_sent */)
-			{
-				callback(boost_to_std_error(failure));
-			};
-			// TODO: move everything?
-			_socket.asyncSendTo(message, convert_endpoint(to), std::move(on_completion));
-		}
+		auto on_completion = [ this, callback ]
+			(std::error_code const& failure, std::size_t /* bytes_sent */)
+		{
+			callback(failure);
+		};
+		_socket.asyncSendTo(std::move(message), convert_endpoint(to), std::move(on_completion));
 	}
 
 	endpoint_type local_endpoint() const
@@ -204,8 +193,7 @@ public:
 	}
 
 private:
-	MessageSocket(Poco::Net::SocketReactor& io_service, endpoint_type const& e):
-			reception_buffer_(INPUT_BUFFER_SIZE),
+	MessageSocket(Poco::Net::SocketProactor& io_service, endpoint_type const& e):
 			current_message_sender_(),
 			_socket(&io_service, convert_endpoint(e), false, true),
 			_ioService(io_service),
@@ -214,7 +202,7 @@ private:
 		kademlia::detail::enable_log_for("MessageSocket");
 	}
 
-	static underlying_socket_type create_underlying_socket(Poco::Net::SocketReactor& io_service, endpoint_type const& endpoint)
+	static underlying_socket_type create_underlying_socket(Poco::Net::SocketProactor& io_service, endpoint_type const& endpoint)
 	{
 
 		auto const e = convert_endpoint(endpoint);
@@ -237,7 +225,7 @@ private:
 	Poco::Net::SocketAddress current_message_sender_;
 	underlying_socket_type _socket;
 	std::deque<SendPacket> _messageQueue;
-	Poco::Net::SocketReactor& _ioService;
+	Poco::Net::SocketProactor& _ioService;
 	std::unique_ptr<std::mutex> _pMutex = nullptr;
 };
 

@@ -30,7 +30,7 @@
 #include <map>
 #include <chrono>
 #include <functional>
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 
 
 namespace kademlia {
@@ -44,7 +44,7 @@ public:
 	using duration = clock::duration;
 
 public:
-	explicit Timer(Poco::Net::SocketReactor& ioService);
+	explicit Timer(Poco::Net::SocketProactor& ioService);
 
 	template< typename Callback >
 	void expires_from_now(duration const& timeout, Callback const& on_timer_expired)
@@ -57,20 +57,20 @@ public:
 		// beginning of the handlers queue)
 		auto on_next_run = [this] ()
 		{
-			int schedComplHandlerCnt = _ioService.scheduledCompletionHandlers();
+			int schedComplHandlerCnt = _ioService.scheduledWork();
 			if (schedComplHandlerCnt > 0)
-				_ioService.removeScheduledCompletionHandlers(schedComplHandlerCnt-1);
-			_ioService.removePermanentCompletionHandlers(1);
+				_ioService.removeScheduledWork(schedComplHandlerCnt-1);
+			_ioService.removePermanentWork(1);
 		};
 
 		// If the current expiration time will be the sooner to expire
 		// then cancel any pending wait and schedule this one instead.
 		if (timeouts_.empty() || expiration_time < timeouts_.begin()->first)
 		{
-			if (_ioService.scheduledCompletionHandlers())
+			if (_ioService.scheduledWork())
 			{
-				_ioService.addCompletionHandler(std::move(on_next_run),
-					Poco::Net::SocketReactor::PERMANENT_COMPLETION_HANDLER, 0);
+				_ioService.addWork(std::move(on_next_run),
+					Poco::Net::SocketProactor::PERMANENT_COMPLETION_HANDLER, 0);
 			}
 			schedule_next_tick(expiration_time);
 		}
@@ -87,7 +87,7 @@ private:
 	Poco::Timestamp::TimeDiff getTimeout(time_point const& expiration_time);
 
 private:
-	Poco::Net::SocketReactor& _ioService;
+	Poco::Net::SocketProactor& _ioService;
 	timeouts timeouts_;
 };
 

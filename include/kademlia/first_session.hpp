@@ -94,8 +94,11 @@ public:
      */
     KADEMLIA_SYMBOL_VISIBILITY
     std::error_code
-    run
+    runImpl
         ( void );
+
+	KADEMLIA_SYMBOL_VISIBILITY
+    std::error_code wait();
 
     /**
      *  @brief Abort the first_session main loop.

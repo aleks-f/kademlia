@@ -41,7 +41,7 @@
 #include <boost/system/error_code.hpp>
 #include "Poco/Net/IPAddress.h"
 #include "Poco/Net/SocketAddress.h"
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 
 #include "kademlia/log.hpp"
 #include "kademlia/error_impl.hpp"
@@ -70,7 +70,7 @@ public:
 	using packets = std::queue<packet>;
 
 public:
-	FakeSocket(Poco::Net::SocketReactor* io_service,
+	FakeSocket(Poco::Net::SocketProactor* io_service,
 		const Poco::Net::SocketAddress& address, bool reuseAddress = true, bool ipV6Only = true):
 		io_service_(io_service), local_endpoint_(), pending_reads_()
 	{
@@ -78,7 +78,7 @@ public:
 		bind(address);
 	}
 
-	FakeSocket(Poco::Net::SocketReactor* io_service):
+	FakeSocket(Poco::Net::SocketProactor* io_service):
 			io_service_(io_service), local_endpoint_(), pending_reads_()
 	{
 		//kademlia::detail::enable_log_for("FakeSocket");
@@ -375,8 +375,7 @@ private:
 		, kademlia::detail::buffer& to)
 	{
 		auto const source_size = from.size();
-		poco_assert(source_size <= to.size()
-			  && "can't store message into target buffer");
+		if (source_size > to.size()) to.resize(source_size);
 
 		const uint8_t* source_data = &from[0];
 		uint8_t* target_data = &to[0];
@@ -410,7 +409,7 @@ private:
 			target->pending_reads_.pop_front();
 		};
 
-		io_service_->addCompletionHandler(std::move(perform_write), 0);
+		io_service_->addWork(std::move(perform_write), 0);
 	}
 
 	template<typename Callback>
@@ -436,11 +435,11 @@ private:
 			pending_writes_.pop_front();
 		};
 
-		io_service_->addCompletionHandler(std::move(perform_read), 0);
+		io_service_->addWork(std::move(perform_read), 0);
 	}
 
 private:
-	Poco::Net::SocketReactor* io_service_;
+	Poco::Net::SocketProactor* io_service_;
 	endpoint_type local_endpoint_;
 	std::deque<pending_read> pending_reads_;
 	std::deque<pending_write> pending_writes_;

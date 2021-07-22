@@ -24,7 +24,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "common.hpp"
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/buffer.hpp"
 #include "FakeSocket.h"
 #include "gtest/gtest.h"
@@ -39,7 +39,7 @@ namespace a = Poco::Net;
 
 TEST(FakeSocketTest, can_be_created)
 {
-    a::SocketReactor io_service;
+    a::SocketProactor io_service;
     k::test::FakeSocket s(&io_service
                            /*, a::SocketAddress().family()*/);
 
@@ -48,7 +48,7 @@ TEST(FakeSocketTest, can_be_created)
 
 TEST(FakeSocketTest, does_not_invoke_receive_callback_until_data_is_received)
 {
-    a::SocketReactor io_service;
+    a::SocketProactor io_service;
     a::SocketAddress endpoint;
     k::test::FakeSocket s(&io_service/*, endpoint.family()*/);
 
@@ -70,7 +70,7 @@ TEST(FakeSocketTest, does_not_invoke_receive_callback_until_data_is_received)
 
 TEST(FakeSocketTest, invokes_send_callback_when_host_is_unreachable)
 {
-    a::SocketReactor io_service;
+    a::SocketProactor io_service;
     a::SocketAddress endpoint;
     k::test::FakeSocket s(&io_service/*, endpoint.family()*/);
 
@@ -95,7 +95,7 @@ TEST(FakeSocketTest, invokes_send_callback_when_host_is_unreachable)
 
 TEST(FakeSocketTest, can_send_and_receive_messages)
 {
-    a::SocketReactor io_service;
+    a::SocketProactor io_service;
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
     k::test::FakeSocket receiver(&io_service/*, endpoint.family()*/);
@@ -144,7 +144,7 @@ TEST(FakeSocketTest, can_send_and_receive_messages)
 
 TEST(FakeSocketTest, can_detect_invalid_address)
 {
-    a::SocketReactor io_service;
+    a::SocketProactor io_service;
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
     k::test::FakeSocket s(&io_service/*, endpoint.family()*/);
@@ -175,7 +175,7 @@ TEST(FakeSocketTest, can_detect_invalid_address)
 
 TEST(FakeSocketTest, can_detect_closed_socket)
 {
-    a::SocketReactor io_service;
+    a::SocketProactor io_service;
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
     k::test::FakeSocket receiver(&io_service/*, endpoint.family()*/);
@@ -220,7 +220,7 @@ TEST(FakeSocketTest, can_detect_closed_socket)
 
 TEST(FakeSocketTest, can_send_and_receive_messages_to_self)
 {
-    a::SocketReactor io_service;
+    a::SocketProactor io_service;
     a::SocketAddress endpoint(k::test::FakeSocket::FIXED_PORT);
 
     k::test::FakeSocket sender(&io_service/*, endpoint.family()*/);

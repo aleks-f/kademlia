@@ -27,7 +27,7 @@
 #define KADEMLIA_RESPONSE_ROUTER_H
 
 
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/error.hpp"
 #include "IPEndpoint.h"
 #include "ResponseCallbacks.h"
@@ -44,7 +44,7 @@ class ResponseRouter final
 public:
 	using endpoint_type = IPEndpoint;
 
-	explicit ResponseRouter(Poco::Net::SocketReactor& io_service);
+	explicit ResponseRouter(Poco::Net::SocketProactor& io_service);
 
 	ResponseRouter(ResponseRouter const&) = delete;
 

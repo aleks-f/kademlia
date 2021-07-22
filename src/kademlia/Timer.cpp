@@ -36,7 +36,7 @@ using namespace Poco::Net;
 namespace kademlia {
 namespace detail {
 
-Timer::Timer(SocketReactor& ioService): _ioService(ioService),
+Timer::Timer(SocketProactor& ioService): _ioService(ioService),
 	timeouts_{}
 {
 }
@@ -74,7 +74,7 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 
 	int tout = getTimeout(expiration_time);
 	LOG_DEBUG(Timer, this) << "\tscheduled timer in " << tout << " [ms]" << std::endl;
-	_ioService.addCompletionHandler(on_fire, tout);
+	_ioService.addWork(on_fire, tout);
 }
 
 

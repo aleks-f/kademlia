@@ -38,7 +38,7 @@ namespace kd = k::detail;
 
 TEST(TimerConstructTest, can_be_constructed_using_a_reactor)
 {
-    Poco::Net::SocketReactor io_service;
+    Poco::Net::SocketProactor io_service;
     EXPECT_NO_THROW(kd::Timer{ io_service });
 }
 
@@ -51,7 +51,7 @@ struct TimerTest: public ::testing::Test
         , timeouts_received_{}
     { }
 
-    Poco::Net::SocketReactor io_service_;
+    Poco::Net::SocketProactor io_service_;
     kd::Timer manager_;
     std::size_t timeouts_received_;
 

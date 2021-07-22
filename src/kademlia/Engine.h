@@ -39,7 +39,7 @@
 #include <utility>
 #include <type_traits>
 #include <functional>
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/endpoint.hpp"
 #include "kademlia/error_impl.hpp"
 #include "kademlia/log.hpp"
@@ -73,7 +73,7 @@ public:
 	using value_store_type = value_store<id, data_type>;
 
 public:
-	Engine(Poco::Net::SocketReactor& io_service, endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}):
+	Engine(Poco::Net::SocketProactor& io_service, endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}):
 			random_engine_(std::random_device{}()),
 			my_id_(new_id == id{} ? id{ random_engine_ } : new_id),
 			network_(io_service,
@@ -91,7 +91,7 @@ public:
 		LOG_DEBUG(Engine, this) << "Peerless Engine created." << std::endl;
 	}
 
-	Engine(Poco::Net::SocketReactor& io_service, endpoint const& initial_peer,
+	Engine(Poco::Net::SocketProactor& io_service, endpoint const& initial_peer,
 		endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}):
 			Engine(io_service, ipv4, ipv6, new_id)
 	{
@@ -182,6 +182,7 @@ private:
 	void handle_ping_request(IPEndpoint const& sender, Header const& h)
 	{
 		LOG_DEBUG(Engine, this) << "handling ping request." << std::endl;
+		//log_access(sender, h);
 		tracker_.send_response(h.random_token_, Header::PING_RESPONSE, sender);
 	}
 
@@ -189,6 +190,7 @@ private:
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling store request." << std::endl;
+		//log_access(sender, h);
 		StoreValueRequestBody request;
 		if (auto failure = deserialize(i, e, request))
 		{
@@ -203,6 +205,7 @@ private:
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling find peer request." << std::endl;
+		//log_access(sender, h);
 
 		// Ensure the request is valid.
 		FindPeerRequestBody request;
@@ -240,6 +243,7 @@ private:
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling find value request." << std::endl;
+		//log_access(sender, h);
 
 		FindValueRequestBody request;
 		if (auto failure = deserialize(i, e, request))

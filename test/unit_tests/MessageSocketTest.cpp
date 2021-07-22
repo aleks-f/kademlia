@@ -23,7 +23,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/endpoint.hpp"
 #include "kademlia/MessageSocket.h"
 #include "kademlia/SocketAdapter.h"
@@ -40,7 +40,7 @@ using MessageSocket_type = kd::MessageSocket<kd::SocketAdapter<Poco::Net::Datagr
 
 TEST(MessageSocketTest, faulty_address_are_detected)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	{
 		k::endpoint const endpoint{ "error", "27980" };
@@ -52,7 +52,7 @@ TEST(MessageSocketTest, faulty_address_are_detected)
 
 TEST(MessageSocketTest, dns_can_be_resolved)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	k::endpoint const endpoint{ "localhost", "27980" };
 
@@ -62,7 +62,7 @@ TEST(MessageSocketTest, dns_can_be_resolved)
 
 TEST(MessageSocketTest, ipv4_address_can_be_resolved)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	k::endpoint const endpoint{ "127.0.0.1", "27980" };
 
@@ -73,7 +73,7 @@ TEST(MessageSocketTest, ipv4_address_can_be_resolved)
 
 TEST(MessageSocketTest, ipv6_address_can_be_resolved)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	k::endpoint const endpoint{ "::1", "27980" };
 
@@ -84,7 +84,7 @@ TEST(MessageSocketTest, ipv6_address_can_be_resolved)
 
 TEST(MessageSocketTest, ipv4_socket_can_be_created)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	k::endpoint const endpoint("127.0.0.1", k::test::getTemporaryListeningPort());
 
@@ -93,7 +93,7 @@ TEST(MessageSocketTest, ipv4_socket_can_be_created)
 
 TEST(MessageSocketTest, ipv6_socket_can_be_created)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	k::endpoint const endpoint("::1", k::test::getTemporaryListeningPort());
 

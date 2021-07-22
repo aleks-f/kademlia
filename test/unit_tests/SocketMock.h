@@ -37,7 +37,7 @@
 #include <cstdint>
 
 #include <boost/asio/buffer.hpp>
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/SocketAdapter.h"
 #include "Poco/Net/DatagramSocket.h"
 #include "kademlia/error_impl.hpp"
@@ -62,7 +62,7 @@ public:
      *
      */
     SocketMock
-        ( Poco::Net::SocketReactor* io_service,
+        ( Poco::Net::SocketProactor* io_service,
 		const Poco::Net::SocketAddress& address, bool reuseAddress = true, bool ipV6Only = true )
     { }
 
@@ -98,7 +98,7 @@ public:
         close( ignored );
     }
 
-	void setIOService(Poco::Net::SocketReactor& io_service)
+	void setIOService(Poco::Net::SocketProactor& io_service)
 	{
 	}
 

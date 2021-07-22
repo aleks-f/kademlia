@@ -46,20 +46,15 @@ void ResponseCallbacks::push_callback(id const& message_id, callback const& on_m
 
 bool ResponseCallbacks::remove_callback(id const& message_id)
 {
-	return callbacks_.erase( message_id ) > 0;
+	std::size_t i = callbacks_.erase( message_id ) > 0;
+	return i;
 }
 
 std::error_code ResponseCallbacks::dispatch_response(endpoint_type const& sender,
 	Header const& h, buffer::const_iterator i, buffer::const_iterator e )
 {
 	auto callback = callbacks_.find( h.random_token_ );
-	/*for (auto t : h.random_token_) std::cout << int(t);
-	std::cout << std::endl;
-	for (auto c : callbacks_)
-	{
-		for (auto t : c.first) std::cout << int(t);
-		std::cout << std::endl;
-	}*/
+
 	if ( callback == callbacks_.end() )
 	{
 		LOG_DEBUG(ResponseCallbacks, this) << "dropping unknown response." << std::endl;

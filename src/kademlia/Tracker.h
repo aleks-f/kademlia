@@ -30,7 +30,7 @@
 #   pragma once
 #endif
 
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/log.hpp"
 #include "MessageSerializer.h"
 #include "ResponseRouter.h"
@@ -54,7 +54,7 @@ public:
 	using random_engine_type = RandomEngineType;
 
 public:
-	Tracker(Poco::Net::SocketReactor& io_service, id const& my_id,
+	Tracker(Poco::Net::SocketProactor& io_service, id const& my_id,
 		network_type & network, random_engine_type & random_engine):
 			response_router_(io_service),
 			message_serializer_(my_id),
@@ -66,7 +66,7 @@ public:
 	Tracker& operator = (Tracker const&) = delete;
 
 	template< typename Request, typename OnResponseReceived, typename OnError >
-	void send_request(Request const& request, endpoint_type const& e, Timer::duration const& timeout
+	void send_request(Request const& request, const endpoint_type& e, Timer::duration const& timeout
 		, OnResponseReceived const& on_response_received, OnError const& on_error)
 	{
 		id const response_id(random_engine_);
@@ -85,7 +85,7 @@ public:
 		};
 
 		// Serialize the request and send it.
-		network_.send(message, e, on_request_sent);
+		network_.send(std::move(message), e, std::move(on_request_sent));
 	}
 
 	template<typename Request>
@@ -96,14 +96,14 @@ public:
 	}
 
 	template< typename Response >
-	void send_response(id const& response_id, Response const& response, endpoint_type const& e)
+	void send_response(id const& response_id, Response const& response, const endpoint_type& e)
 	{
 		auto message = message_serializer_.serialize(response, response_id);
 
 		auto on_response_sent = [] (std::error_code const& /* failure */)
 		{ };
 
-		network_.send(message, e, on_response_sent);
+		network_.send(std::move(message), e, on_response_sent);
 	}
 
 	void handle_new_response(endpoint_type const& s, Header const& h,

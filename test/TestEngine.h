@@ -24,7 +24,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include <kademlia/session_base.hpp>
 #include <kademlia/endpoint.hpp>
 #include "kademlia/log.hpp"
@@ -38,13 +38,13 @@ namespace test {
 class TestEngine final
 {
 public:
-	TestEngine(Poco::Net::SocketReactor& service,endpoint const & ipv4,endpoint const & ipv6,
+	TestEngine(Poco::Net::SocketProactor& service,endpoint const & ipv4,endpoint const & ipv6,
 		detail::id const& new_id): engine_(service, ipv4, ipv6, new_id),
 			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), session_base::DEFAULT_PORT),
 			listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), session_base::DEFAULT_PORT)
 	{ }
 
-	TestEngine(Poco::Net::SocketReactor& service, endpoint const & initial_peer
+	TestEngine(Poco::Net::SocketProactor& service, endpoint const & initial_peer
 		, endpoint const & ipv4, endpoint const & ipv6, detail::id const& new_id)
 			: engine_(service, initial_peer, ipv4, ipv6, new_id),
 			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), session_base::DEFAULT_PORT),

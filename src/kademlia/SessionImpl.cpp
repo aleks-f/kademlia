@@ -34,10 +34,12 @@ namespace detail {
 
 
 SessionImpl::SessionImpl(endpoint const& ipv4, endpoint const& ipv6):
+	_ioService(300000),
 	_engine{ _ioService, ipv4, ipv6 }
 { }
 
-SessionImpl::SessionImpl(endpoint const& initPeer, endpoint const& ipv4, endpoint const& ipv6): _ioService{},
+SessionImpl::SessionImpl(endpoint const& initPeer, endpoint const& ipv4, endpoint const& ipv6):
+	_ioService(300000),
 	_engine{ _ioService, initPeer, ipv4, ipv6 }
 { }
 

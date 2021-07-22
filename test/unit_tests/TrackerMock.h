@@ -27,7 +27,7 @@
 #define KADEMLIA_TEST_HELPERS_TRACKER_MOCK_H
 
 
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/error_impl.hpp"
 #include "kademlia/Message.h"
 #include "kademlia/MessageSerializer.h"
@@ -43,7 +43,7 @@ public:
 	using endpoint_type = detail::IPEndpoint;
 
 public:
-	TrackerMock(Poco::Net::SocketReactor& io_service): io_service_(io_service),
+	TrackerMock(Poco::Net::SocketProactor& io_service): io_service_(io_service),
 		id_(),
 		message_serializer_(id_),
 		responses_to_receive_(),
@@ -91,7 +91,7 @@ public:
 		if (responses_to_receive_.empty() || responses_to_receive_.front().endpoint != endpoint)
 		{
 			LOG_DEBUG(TrackerMock, this) << "add on_error." << std::endl;
-			io_service_.addCompletionHandler([on_error](){ on_error(detail::make_error_code(UNIMPLEMENTED)); }, 0);
+			io_service_.addWork([on_error](){ on_error(detail::make_error_code(UNIMPLEMENTED)); }, 0);
 		}
 		else
 		{
@@ -103,7 +103,7 @@ public:
 				on_message_received(r.endpoint, h, r.body.begin(), r.body.end());
 			};
 			LOG_DEBUG(TrackerMock, this) << "add on_message_received." << std::endl;
-			io_service_.addCompletionHandler(std::move(forwarder), 0);
+			io_service_.addWork(std::move(forwarder), 0);
 		}
 	}
 
@@ -142,7 +142,7 @@ private:
 		sent_messages_.push(m);
 	}
 
-	Poco::Net::SocketReactor& io_service_;
+	Poco::Net::SocketProactor& io_service_;
 	detail::id id_;
 	detail::MessageSerializer message_serializer_;
 	std::queue<message_to_receive> responses_to_receive_;

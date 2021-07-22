@@ -4,7 +4,7 @@
 #include <future>
 #include <iostream>
 #include <iterator>
-#include <sstream>
+#include <thread>
 
 #include <kademlia/endpoint.hpp>
 #include <kademlia/session.hpp>
@@ -17,6 +17,7 @@ namespace {
 const char HELP[] =
 "save <KEY> <VALUE>\n\tSave <VALUE> as <KEY>\n\n"
 "load <KEY>\n\tLoad value associated with <KEY>\n\n"
+"exit\n\tExit the program\n\n"
 "help\n\tPrint this message\n\n";
 
 std::vector< std::string >
@@ -77,9 +78,7 @@ print_interactive_help
 
 } // anonymous namespace
 
-int main
-        ( int argc
-        , char** argv )
+int main(int argc, char** argv)
 {
     // Check command line arguments count
     if ( argc != 3 )
@@ -101,14 +100,10 @@ int main
     auto boot_addr = boot_ep.substr(0, sep_idx);
     auto boot_port = boot_ep.substr(sep_idx+1);
 
-    // Create the session
+    // Create the session (runs in its own thread)
     k::session session{ k::endpoint{ boot_addr, boot_port }
                       , k::endpoint{ "0.0.0.0", port }
                       , k::endpoint{ "::", port } };
-
-    // Start the main loop thread
-    auto main_loop = std::async( std::launch::async
-                               , &k::session::run, &session );
 
     // Parse stdin until EOF (CTRL-D in Unix, CTRL-Z-Enter on Windows))
     std::cout << "Enter \"help\" to see available actions" << std::endl;
@@ -137,15 +132,17 @@ int main
             else
                 load( session, tokens[1] );
         }
+        else if ( tokens[0] == "exit" ) break;
         else
             print_interactive_help();
     }
 
-    // Stop the main loop thread
+    // Stop the session loop
     session.abort();
 
-    // Wait for the main loop thread termination
-    auto failure = main_loop.get();
-    if ( failure != k::RUN_ABORTED )
+    // Wait for the session termination
+    auto failure = session.wait();
+    if (failure != k::RUN_ABORTED)
         std::cerr << failure.message() << std::endl;
+    std::cout << "Goodbye!" << std::endl;
 }

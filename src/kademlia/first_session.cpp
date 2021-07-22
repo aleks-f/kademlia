@@ -49,16 +49,25 @@ first_session::first_session
     ( endpoint const& listen_on_ipv4
     , endpoint const& listen_on_ipv6 )
         : impl_{ new impl{ listen_on_ipv4, listen_on_ipv6 } }
-{ }
+{ result(); }
 
 first_session::~first_session
     ( void )
-{ }
+{
+	abort();
+	wait();
+}
 
 std::error_code
-first_session::run
+first_session::runImpl
     ( void )
 { return impl_->run(); }
+
+std::error_code first_session::wait()
+{
+	result().wait();
+	return result().data();
+}
 
 void
 first_session::abort

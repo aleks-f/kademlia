@@ -51,7 +51,7 @@ TEST_F(SocketAdapterTest, copy_and_move)
 {
 	std::uint16_t port = getTemporaryListeningPort(SocketAddress::IPv4);
 	SocketAddress addr("127.0.0.1", port);
-	Poco::Net::SocketReactor ioService;
+	Poco::Net::SocketProactor ioService;
 	SocketAdapter<DatagramSocket> sock1(&ioService, addr, false, true);
 	LOG_DEBUG(SocketAdapterTest, this) << sock1.address().toString() << std::endl;
 	SocketAdapter<DatagramSocket> sock2(sock1);
@@ -67,41 +67,50 @@ TEST_F(SocketAdapterTest, copy_and_move)
 
 TEST_F(SocketAdapterTest, send_to_recv_from_ipv4)
 {
-	std::size_t sent = 0, recvd = 0;
-
-	auto onSendCompletion = [&](boost::system::error_code const& failure, std::size_t bytes_sent)
+	try
 	{
-		sent += bytes_sent;
-		LOG_DEBUG(SocketAdapterTest, this) << "onSendCompletion: sent " << bytes_sent << " bytes" << std::endl;
-	};
+		std::size_t sent = 0, recvd = 0;
 
-	auto onRecvCompletion = [&](boost::system::error_code const& failure, std::size_t bytes_received)
+		auto onSendCompletion = [&](std::error_code const &failure, std::size_t bytes_sent)
+		{
+			sent += bytes_sent;
+			LOG_DEBUG(SocketAdapterTest, this) << "onSendCompletion: sent " << bytes_sent << " bytes" << std::endl;
+		};
+
+		auto onRecvCompletion = [&](std::error_code const &failure, std::size_t bytes_received)
+		{
+			recvd += bytes_received;
+			LOG_DEBUG(SocketAdapterTest, this) << "onRecvCompletion: received " << bytes_received << " bytes"
+											   << std::endl;
+		};
+
+		Poco::Net::SocketProactor ioService;
+
+		std::uint16_t port1 = getTemporaryListeningPort(SocketAddress::IPv4);
+		std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv4, port1);
+		SocketAddress addr1("127.0.0.1", port1);
+		SocketAddress addr2("127.0.0.1", port2);
+
+		SocketAdapter<DatagramSocket> sock1(&ioService, addr1, false, true);
+		SocketAdapter<DatagramSocket> sock2(&ioService, addr2, false, true);
+
+		std::string hello = "hello";
+		kademlia::detail::buffer sendBuf(hello.begin(), hello.end());
+		sock1.asyncSendTo(sendBuf, addr2, onSendCompletion);
+		kademlia::detail::buffer recvBuf;
+		sock2.asyncReceiveFrom(recvBuf, addr1, onRecvCompletion);
+
+		while (recvd < hello.size())
+			ioService.poll();
+
+		EXPECT_GT(sent, 0);
+		EXPECT_EQ(sent, recvd);
+		EXPECT_EQ(recvd, hello.size());
+	}
+	catch (Poco::SystemException& ex)
 	{
-		recvd += bytes_received;
-		LOG_DEBUG(SocketAdapterTest, this) << "onRecvCompletion: received " << bytes_received << " bytes" << std::endl;
-	};
-
-	Poco::Net::SocketReactor ioService;
-
-	std::uint16_t port1 = getTemporaryListeningPort(SocketAddress::IPv4);
-	std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv4, port1);
-	SocketAddress addr1("127.0.0.1", port1);
-	SocketAddress addr2("127.0.0.1", port2);
-
-	SocketAdapter<DatagramSocket> sock1(&ioService, addr1, false, true);
-	SocketAdapter<DatagramSocket> sock2(&ioService, addr2, false, true);
-
-	std::string hello = "hello";
-	kademlia::detail::buffer sendBuf(hello.begin(), hello.end());
-	sock1.asyncSendTo(sendBuf, addr2, onSendCompletion);
-	kademlia::detail::buffer recvBuf;
-	sock2.asyncReceiveFrom(recvBuf, addr1, onRecvCompletion);
-
-	while (recvd < hello.size()) ioService.poll();
-
-	EXPECT_GT(sent, 0);
-	EXPECT_EQ(sent, recvd);
-	EXPECT_EQ(recvd, hello.size());
+		std::cerr << ex.displayText() << std::endl;
+	}
 }
 
 
@@ -109,19 +118,19 @@ TEST_F(SocketAdapterTest, send_to_recv_from_ipv6)
 {
 	std::size_t sent = 0;
 	std::size_t recvd = 0;
-	auto onSendCompletion = [&](boost::system::error_code const& failure, std::size_t bytes_sent)
+	auto onSendCompletion = [&](std::error_code const& failure, std::size_t bytes_sent)
 	{
 		sent += bytes_sent;
 		LOG_DEBUG(SocketAdapterTest, this) << "onSendCompletion: sent " << bytes_sent << " bytes" << std::endl;
 	};
 
-	auto onRecvCompletion = [&](boost::system::error_code const& failure, std::size_t bytes_received)
+	auto onRecvCompletion = [&](std::error_code const& failure, std::size_t bytes_received)
 	{
 		recvd += bytes_received;
 		LOG_DEBUG(SocketAdapterTest, this) << "onRecvCompletion: received " << bytes_received << " bytes" << std::endl;
 	};
 
-	Poco::Net::SocketReactor ioService;
+	Poco::Net::SocketProactor ioService;
 
 	std::uint16_t port1 = getTemporaryListeningPort(SocketAddress::IPv6);
 	std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv6, port1);
