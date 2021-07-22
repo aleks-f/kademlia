@@ -92,11 +92,11 @@ TEST(FirstSessionTest, run_can_be_aborted)
 {
     k::first_session s;
 
-    auto result = std::async(std::launch::async
-                            , &k::first_session::run, &s);
+    //auto result = std::async(std::launch::async
+    //                        , &k::first_session::run, &s);
     s.abort();
-
-    EXPECT_TRUE(result.get() == k::RUN_ABORTED);
+	auto result = s.wait();
+    EXPECT_TRUE(result/*.get()*/ == k::RUN_ABORTED);
 }
 
 }

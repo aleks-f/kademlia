@@ -62,14 +62,14 @@ TEST(RoutingTableTest, largest_k_bucket_can_receive_unlimited_peers)
     test_routing_table rt{ my_id, bucket_size };
 
     // This peer will be associated with every id.
-    // Unicity applies only to id, not peer.
+    // Uniqueness applies only to id, not peer.
     auto const test_peer(createEndpoint());
 
-    // Theses should go into high bucket.
+    // These should go into high bucket.
     EXPECT_TRUE(rt.push(kd::id{ "10" }, test_peer));
     EXPECT_TRUE(rt.push(kd::id{ "11" }, test_peer));
 
-    // While theses go to a lower bucket.
+    // While these go to a lower bucket.
     EXPECT_TRUE(rt.push(kd::id{ "20" }, test_peer));
     EXPECT_TRUE(rt.push(kd::id{ "21" }, test_peer));
     // This one should flag the lower bucket as the largest.

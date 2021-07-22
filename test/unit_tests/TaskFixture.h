@@ -28,9 +28,7 @@
 
 #include <cstdint>
 #include <system_error>
-
-//#include <boost/asio/io_service.hpp>
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/Peer.h"
 #include "common.hpp"
 #include "TrackerMock.h"
@@ -44,7 +42,6 @@ namespace test {
 struct TaskFixture: public ::testing::Test
 {
 	TaskFixture(): io_service_()
-			//, io_service_work_(io_service_)
 			, tracker_(io_service_)
 			, failure_()
 			, routing_table_()
@@ -65,8 +62,7 @@ struct TaskFixture: public ::testing::Test
 		return p;
 	}
 
-	Poco::Net::SocketReactor io_service_;
-	//Poco::Net::SocketReactor::work io_service_work_;
+	Poco::Net::SocketProactor io_service_;
 	TrackerMock tracker_;
 	std::error_code failure_;
 	RoutingTableMock routing_table_;

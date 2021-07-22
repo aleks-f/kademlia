@@ -24,7 +24,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "common.hpp"
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "kademlia/ResponseRouter.h"
 #include "gtest/gtest.h"
 
@@ -36,7 +36,7 @@ namespace kd = k::detail;
 
 TEST(ResponseRouterNoThrowTest, can_be_constructed_using_a_reactor)
 {
-    Poco::Net::SocketReactor io_service;
+    Poco::Net::SocketProactor io_service;
     EXPECT_NO_THROW( kd::ResponseRouter{ io_service } );
 }
 
@@ -50,7 +50,7 @@ struct ResponseRouterTest: public ::testing::Test
         , error_count_{}
     { }
 
-    Poco::Net::SocketReactor io_service_;
+    Poco::Net::SocketProactor io_service_;
     kd::ResponseRouter router_;
     std::size_t messages_received_count_;
     std::size_t error_count_;

@@ -30,10 +30,12 @@
 #   pragma once
 #endif
 
+#include "Poco/ActiveMethod.h"
 #include <cstdint>
 #include <vector>
 #include <system_error>
 #include <functional>
+#include <memory>
 
 #include <kademlia/detail/cxx11_macros.hpp>
 
@@ -67,14 +69,34 @@ public:
     static CXX11_CONSTEXPR std::uint16_t DEFAULT_PORT = 27980;
 
 protected:
+    session_base(): runMethod(this, &session_base::runImpl)
+	{
+	}
+
+    using RunType = Poco::ActiveMethod<std::error_code, void, session_base>;
+    using Result = Poco::ActiveResult<std::error_code>;
+    using ResultPtr = std::unique_ptr<Result>;
+    RunType runMethod;
+    virtual std::error_code runImpl(void) = 0;
+
+	Result& result()
+	{
+		if (!_pResult)
+			_pResult.reset(new Result(this->runMethod()));
+		return *_pResult;
+	}
+
     /**
      *  @brief Destructor used to prevent
-     *         usage dervied classes as this
+     *         usage derived classes as this
      *         base.
      */
     ~session_base
         ( void )
         = default;
+
+private:
+    ResultPtr _pResult;
 };
 
 } // namespace kademlia

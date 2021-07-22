@@ -24,7 +24,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "TestEngine.h"
 #include "gtest/gtest.h"
 
@@ -36,7 +36,7 @@ namespace t = k::test;
 
 template<typename ... InitialPeer >
 std::unique_ptr< t::TestEngine >
-create_test_engine(Poco::Net::SocketReactor& io_service
+create_test_engine(Poco::Net::SocketProactor& io_service
 				  , d::id const& id
 				  , InitialPeer &&... initial_peer)
 {
@@ -56,7 +56,7 @@ create_test_engine(Poco::Net::SocketReactor& io_service
 TEST(EngineTest, isolated_bootstrap_engine_cannot_save)
 {
 	//kademlia::detail::enable_log_for("EngineTest");
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	k::endpoint ipv4_endpoint{ "127.0.0.1", k::session_base::DEFAULT_PORT };
 	k::endpoint ipv6_endpoint{ "::1", k::session_base::DEFAULT_PORT };
@@ -85,7 +85,7 @@ TEST(EngineTest, isolated_bootstrap_engine_cannot_save)
 
 TEST(EngineTest, isolated_bootstrap_engine_cannot_load)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	auto e1 = create_test_engine(io_service, d::id{ "0" });
 
@@ -111,7 +111,7 @@ TEST(EngineTest, isolated_bootstrap_engine_cannot_load)
 
 TEST(EngineTest, isolated_engine_cannot_be_constructed)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	k::endpoint initial_peer{ "172.18.1.2", k::session_base::DEFAULT_PORT };
 
@@ -123,7 +123,7 @@ TEST(EngineTest, isolated_engine_cannot_be_constructed)
 
 TEST(EngineTest, two_engines_can_find_themselves)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	d::id const id1{ "8000000000000000000000000000000000000000" };
 	auto e1 = create_test_engine(io_service, id1);
@@ -138,7 +138,7 @@ TEST(EngineTest, two_engines_can_find_themselves)
 
 TEST(EngineTest, two_engines_can_save_and_load)
 {
-	Poco::Net::SocketReactor io_service;
+	Poco::Net::SocketProactor io_service;
 
 	d::id const id1{ "8000000000000000000000000000000000000000" };
 	auto e1 = create_test_engine(io_service, id1);

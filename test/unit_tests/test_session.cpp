@@ -96,11 +96,9 @@ TEST(SessionTest, first_session_run_can_be_aborted)
     k::endpoint const initial_peer{ "127.0.0.1", 12345 };
     k::session s{ initial_peer };
 
-    auto result = std::async(std::launch::async
-                            , &k::session::run, &s);
     s.abort();
-
-    EXPECT_TRUE(result.get() == k::RUN_ABORTED);
+	auto result = s.wait();
+    EXPECT_TRUE(result/*.get()*/ == k::RUN_ABORTED);
 }
 
 

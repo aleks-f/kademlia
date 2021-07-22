@@ -1,14 +1,15 @@
+
 #include "ResponseRouter.h"
 #include "kademlia/log.hpp"
 
-using Poco::Net::SocketReactor;
+using Poco::Net::SocketProactor;
 
 
 namespace kademlia {
 namespace detail {
 
 
-	ResponseRouter::ResponseRouter(SocketReactor &io_service): timer_(io_service)
+	ResponseRouter::ResponseRouter(SocketProactor &io_service): timer_(io_service)
 	{
 		kademlia::detail::enable_log_for("ResponseRouter");
 	}

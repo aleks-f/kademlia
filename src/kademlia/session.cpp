@@ -3,14 +3,14 @@
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the University of California, Berkeley nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
+//	 * Redistributions of source code must retain the above copyright
+//	   notice, this list of conditions and the following disclaimer.
+//	 * Redistributions in binary form must reproduce the above copyright
+//	   notice, this list of conditions and the following disclaimer in the
+//	   documentation and/or other materials provided with the distribution.
+//	 * Neither the name of the University of California, Berkeley nor the
+//	   names of its contributors may be used to endorse or promote products
+//	   derived from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY DAVID KELLER AND CONTRIBUTORS ``AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -32,55 +32,62 @@ namespace kademlia {
 /**
  *
  */
-struct session::impl final
-        : detail::SessionImpl
+struct session::impl final: detail::SessionImpl
 {
-    /**
-     *
-     */
-    impl
-        ( endpoint const& initial_peer
-        , endpoint const& listen_on_ipv4
-        , endpoint const& listen_on_ipv6 )
-            : SessionImpl{ initial_peer
-                          , listen_on_ipv4
-                          , listen_on_ipv6 }
-    { }
+	impl(endpoint const& initial_peer,
+		 endpoint const& listen_on_ipv4,
+		 endpoint const& listen_on_ipv6):
+			 SessionImpl{initial_peer, listen_on_ipv4, listen_on_ipv6 }
+	{ }
 };
 
-session::session
-    ( endpoint const& initial_peer
-    , endpoint const& listen_on_ipv4
-    , endpoint const& listen_on_ipv6 )
-        : impl_{ new impl{ initial_peer, listen_on_ipv4, listen_on_ipv6 } }
-{ }
+session::session(endpoint const& initial_peer,
+	endpoint const& listen_on_ipv4,
+	endpoint const& listen_on_ipv6 ):
+		impl_{ new impl{ initial_peer, listen_on_ipv4, listen_on_ipv6 } }
+{
+	result();
+}
 
-session::~session
-    ( void )
-{ }
 
-void
-session::async_save
-    ( key_type const& key
-    , data_type const& data
-    , save_handler_type handler )
-{ impl_->async_save( key, data, std::move( handler ) ); }
+session::~session()
+{
+	abort();
+	wait();
+}
 
-void
-session::async_load
-    ( key_type const& key
-    , load_handler_type handler )
-{ impl_->async_load( key, std::move( handler ) ); }
 
-std::error_code
-session::run
-    ( void )
-{ return impl_->run(); }
+void session::async_save(key_type const& key,
+	data_type const& data,
+	save_handler_type handler)
+{
+	impl_->async_save( key, data, std::move( handler ) );
+}
 
-void
-session::abort
-        ( void )
-{ impl_->abort(); }
+
+void session::async_load(key_type const& key,
+	load_handler_type handler)
+{
+	impl_->async_load( key, std::move( handler ) );
+}
+
+
+std::error_code session::wait()
+{
+	result().wait();
+	return result().data();
+}
+
+
+std::error_code session::runImpl()
+{
+	return impl_->run();
+}
+
+
+void session::abort()
+{
+	impl_->abort();
+}
 
 } // namespace kademlia
-

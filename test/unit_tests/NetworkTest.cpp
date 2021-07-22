@@ -27,7 +27,7 @@
 #include "kademlia/endpoint.hpp"
 #include "kademlia/MessageSocket.h"
 #include "SocketMock.h"
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -55,7 +55,7 @@ struct NetworkTest: public ::testing::Test
         , kd::buffer::const_iterator)
     { };
 
-    Poco::Net::SocketReactor io_service_;
+    Poco::Net::SocketProactor io_service_;
     k::endpoint ipv4_;
     k::endpoint ipv6_;
     

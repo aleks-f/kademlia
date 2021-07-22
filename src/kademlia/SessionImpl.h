@@ -34,7 +34,7 @@
 #include <utility>
 #include "SocketAdapter.h"
 #include "Poco/Net/DatagramSocket.h"
-#include "Poco/Net/SocketReactor.h"
+#include "Poco/Net/SocketProactor.h"
 #include "MessageSocket.h"
 #include "kademlia/endpoint.hpp"
 #include "Engine.h"
@@ -75,7 +75,7 @@ public:
 	void abort();
 
 private:
-	Poco::Net::SocketReactor _ioService;
+	Poco::Net::SocketProactor _ioService;
 	EngineType _engine;
 	detail::concurrent_guard _concurrentGuard;
 };
