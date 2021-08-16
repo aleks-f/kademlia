@@ -328,7 +328,7 @@ private:
 		auto i = bytes.rbegin(), e = bytes.rend();
 		for (; i != e && (++ *i) == 0; ++i) continue;
 		poco_assert(i != e /* all ip address have been allocated */);
-		address = IpAddress(&bytes[0], bytes.size());
+		address = IpAddress(&bytes[0], static_cast<int>(bytes.size()));
 		return address;
 	}
 

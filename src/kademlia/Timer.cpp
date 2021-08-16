@@ -72,7 +72,7 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 		}
 	};
 
-	int tout = getTimeout(expiration_time);
+	int tout = static_cast<int>(getTimeout(expiration_time));
 	LOG_DEBUG(Timer, this) << "\tscheduled timer in " << tout << " [ms]" << std::endl;
 	_ioService.addWork(on_fire, tout);
 }

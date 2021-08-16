@@ -39,9 +39,18 @@
 #include <vector>
 #include <iterator>
 
-#include <kademlia/detail/cxx11_macros.hpp>
+#include "kademlia/detail/cxx11_macros.hpp"
 #include "kademlia/id.hpp"
 #include "kademlia/log.hpp"
+
+#ifdef _MSC_VER
+#   ifdef max
+#      undef max
+#   endif
+#   ifdef min
+#      undef min
+#   endif
+#endif
 
 namespace kademlia {
 namespace detail {
