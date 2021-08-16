@@ -53,7 +53,6 @@ set_target_properties(kademlia
         COMPILE_DEFINITIONS "KADEMLIA_BUILDING_AS_SHARED;KADEMLIA_AS_SHARED")
 
 target_link_libraries(kademlia
-    ${Boost_SYSTEM_LIBRARY}
     ${OPENSSL_CRYPTO_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     Poco::Foundation
@@ -66,7 +65,6 @@ add_library(kademlia_static STATIC
 target_link_directories(kademlia_static PUBLIC ${CMAKE_BINARY_DIR}/lib)
 
 target_link_libraries(kademlia_static
-    ${Boost_SYSTEM_LIBRARY}
     ${OPENSSL_CRYPTO_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     Poco::Foundation

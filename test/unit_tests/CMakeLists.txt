@@ -47,7 +47,6 @@ add_library(test_helpers STATIC
     Network.cpp)
 
 target_link_libraries(test_helpers
-    ${Boost_FILESYSTEM_LIBRARY}
     gtest
     Poco::Foundation
     Poco::Net)

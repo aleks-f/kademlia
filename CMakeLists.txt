@@ -70,40 +70,20 @@ endif()
 # Threads
 find_package(Threads REQUIRED)
 
-# Boost
-if(WIN32)
-    set(Boost_USE_STATIC_LIBS ON)
-endif()
-find_package(Boost REQUIRED COMPONENTS
-    system
-    filesystem
-    unit_test_framework)
-
 # Crypto
 find_package(OpenSSL REQUIRED)
 
 # Setup C++ definitions.
 add_definitions(-DPACKAGE_VERSION="0.0.0")
 add_definitions(-DPACKAGE_BUGREPORT="david.keller@litchis.fr")
-add_definitions(-DBOOST_ALL_NO_LIB
-    -DBOOST_ASIO_HAS_MOVE
-    -DBOOST_ASIO_HAS_VARIADIC_TEMPLATES
-    -DBOOST_ASIO_HAS_STD_SYSTEM_ERROR
-    -DBOOST_ASIO_HAS_STD_ARRAY
-    -DBOOST_ASIO_HAS_STD_SHARED_PTR
-    -DBOOST_ASIO_HAS_STD_ATOMIC
-    -DBOOST_ASIO_HAS_STD_CHRONO)
-if(NOT Boost_USE_STATIC_LIBS)
-    add_definitions(-DBOOST_ALL_DYN_LINK)
-endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DKADEMLIA_ENABLE_DEBUG)
 endif()
 
 # Setup includes directories.
 include_directories(BEFORE include src test)
-include_directories(${Boost_INCLUDE_DIRS}
-        ${OPENSSL_INCLUDE_DIR})
+include_directories(${OPENSSL_INCLUDE_DIR})
 
 # Build everything.
 include(Poco)
