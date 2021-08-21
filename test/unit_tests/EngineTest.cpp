@@ -24,6 +24,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
+#include "Poco/Thread.h"
 #include "Poco/Net/SocketProactor.h"
 #include "TestEngine.h"
 #include "gtest/gtest.h"
@@ -34,9 +35,12 @@ namespace k = kademlia;
 namespace d = k::detail;
 namespace t = k::test;
 
+using Poco::Net::SocketProactor;
+using Poco::Thread;
+
 template<typename ... InitialPeer >
 std::unique_ptr< t::TestEngine >
-create_test_engine(Poco::Net::SocketProactor& io_service
+create_test_engine(SocketProactor& io_service
 				  , d::id const& id
 				  , InitialPeer &&... initial_peer)
 {
@@ -74,12 +78,11 @@ TEST(EngineTest, isolated_bootstrap_engine_cannot_save)
 	e1->async_save("key", "data", on_save);
 
 	EXPECT_EQ(0, io_service.poll());
-
-	EXPECT_TRUE(! save_executed);
+	EXPECT_TRUE(!save_executed);
 
 	auto e2 = create_test_engine(io_service, d::id{ "1" }, e1->ipv4());
 
-	EXPECT_GT(io_service.poll(), 0);
+	while (!io_service.poll()) Thread::sleep(10);
 	EXPECT_TRUE(save_executed);
 }
 
@@ -94,12 +97,14 @@ TEST(EngineTest, isolated_bootstrap_engine_cannot_load)
 	bool load_executed = false;
 	auto on_load = [ &load_executed ](std::error_code const& failure
 									 , std::string const& data)
-	{ load_executed = true; };
+	{
+		load_executed = true;
+	};
 	e1->async_load("key", on_load);
 
 	EXPECT_EQ(0, io_service.poll());
 
-	EXPECT_TRUE(! load_executed);
+	EXPECT_TRUE(!load_executed);
 
 	auto e2 = create_test_engine(io_service
 								, d::id{ "1" }

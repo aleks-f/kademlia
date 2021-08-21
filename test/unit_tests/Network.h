@@ -38,10 +38,26 @@ namespace test {
 template< typename Socket >
 int createSocket(std::string const& ip, std::uint16_t port)
 {
+	int err = 0;
 	Poco::Net::SocketAddress sa(ip, port);
-	try { Poco::Net::DatagramSocket socket(sa, false, true); }
-	catch (Poco::Net::NetException&){}
-	return Poco::Net::Socket::lastError();
+	Poco::Net::DatagramSocket sock(sa.family());
+	try
+	{
+		if (sa.family() == SocketAddress::IPv4)
+			sock.bind(sa, false);
+		else if (sa.family() == SocketAddress::IPv6)
+			sock.bind6(sa, false, false, true);
+		else
+			throw Poco::InvalidArgumentException("createSocket()");
+	}
+	catch (Poco::IOException&)
+	{
+		err = Socket::lastError();
+		if (!err) // if nothing, one more attempt
+			sock.getOption(SOL_SOCKET, SO_ERROR, err);
+	}
+
+	return err;
 }
 
 void checkListening(std::string const& ip, std::uint16_t port);

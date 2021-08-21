@@ -45,7 +45,7 @@ TEST(MessageSocketTest, faulty_address_are_detected)
 	{
 		k::endpoint const endpoint{ "error", "27980" };
 
-		EXPECT_THROW(MessageSocket_type::resolve_endpoint(io_service, endpoint);,
+		EXPECT_THROW(MessageSocket_type::resolve_endpoint(endpoint);,
 					 std::exception);
 	}
 }
@@ -56,7 +56,7 @@ TEST(MessageSocketTest, dns_can_be_resolved)
 
 	k::endpoint const endpoint{ "localhost", "27980" };
 
-	auto const e = MessageSocket_type::resolve_endpoint(io_service, endpoint);
+	auto const e = MessageSocket_type::resolve_endpoint(endpoint);
 	EXPECT_LE(1, e.size());
 }
 
@@ -66,7 +66,7 @@ TEST(MessageSocketTest, ipv4_address_can_be_resolved)
 
 	k::endpoint const endpoint{ "127.0.0.1", "27980" };
 
-	auto const e = MessageSocket_type::resolve_endpoint(io_service, endpoint);
+	auto const e = MessageSocket_type::resolve_endpoint(endpoint);
 
 	EXPECT_LE(1, e.size());
 }
@@ -77,7 +77,7 @@ TEST(MessageSocketTest, ipv6_address_can_be_resolved)
 
 	k::endpoint const endpoint{ "::1", "27980" };
 
-	auto e = MessageSocket_type::resolve_endpoint(io_service, endpoint);
+	auto e = MessageSocket_type::resolve_endpoint(endpoint);
 	EXPECT_LE/*EQ*/(1, e.size());
 }
 

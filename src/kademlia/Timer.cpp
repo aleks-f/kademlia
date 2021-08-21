@@ -39,10 +39,13 @@ namespace detail {
 Timer::Timer(SocketProactor& ioService): _ioService(ioService),
 	timeouts_{}
 {
+	kademlia::detail::enable_log_for("Timer");
+	LOG_DEBUG(Timer, this) << "Timer created." << std::endl;
 }
 
 void Timer::schedule_next_tick(time_point const& expiration_time)
 {
+	LOG_DEBUG(Timer, this) << "\tscheduling next tick ..." << std::endl;
 	auto on_fire = [ this ](/*boost::system::error_code const& failure*/)
 	{
 		// The current timeout has been canceled
@@ -59,7 +62,8 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 		auto begin = timeouts_.begin();
 		auto end = timeouts_.upper_bound(begin->first);
 		// Call the user callbacks.
-		for (auto i = begin; i != end; ++ i) i->second();
+		for (auto i = begin; i != end; ++i)
+			i->second();
 
 		// And remove the timeout.
 		timeouts_.erase(begin, end);

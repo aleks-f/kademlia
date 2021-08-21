@@ -26,6 +26,7 @@
 #include "Network.h"
 #include "Poco/Net/SocketDefs.h"
 #include "Poco/Net/DatagramSocket.h"
+#include "Poco/Net/DNS.h"
 #include "gtest/gtest.h"
 
 using namespace Poco::Net;
@@ -33,29 +34,63 @@ using namespace Poco::Net;
 namespace kademlia {
 namespace test {
 
+std::string resolveAddress(const std::string& address)
+{
+	try
+	{
+		Poco::Net::HostEntry he = Poco::Net::DNS::resolve(address);
+		if (he.addresses().size() == 0) throw Poco::Net::HostNotFoundException();
+		return he.name();
+	}
+	catch (Poco::Net::HostNotFoundException&) {}
+	return address;
+}
+
+
 void checkListening(std::string const& ip, std::uint16_t port)
 {
-	auto udp_failure = createSocket<DatagramSocket>(ip, port);
-	EXPECT_EQ(POCO_EADDRINUSE, udp_failure);
+	int udp_failure = 0;
+	IPAddress addr;
+	if (IPAddress::tryParse(ip, addr))
+		udp_failure = createSocket<DatagramSocket>(ip, port);
+	else
+		udp_failure = createSocket<DatagramSocket>(resolveAddress(ip), port);
+
+	EXPECT_TRUE((POCO_EACCES == udp_failure) || (POCO_EADDRINUSE == udp_failure));
 }
 
 std::uint16_t getTemporaryListeningPort(IPAddress::Family family, std::uint16_t port)
 {
 	bool failed = false;
+	poco_assert_dbg(port > 0);
+	--port;
+	DatagramSocket sock(family);
 	do
 	{
+		failed = false;
+		SocketAddress sa(family, ++port);
 		try
 		{
-			failed = false;
-			SocketAddress sa(family, port++);
-			DatagramSocket socket(sa);
+			if (family == SocketAddress::IPv4)
+				sock.bind(sa, false);
+			else if (family == SocketAddress::IPv6)
+				sock.bind6(sa, false, false, true);
+			else
+				throw Poco::InvalidArgumentException("getTemporaryListeningPort: unknown address family");
 		}
 		catch(NetException&)
 		{
 			failed = true;
 		}
 	}
-	while (failed && Socket::lastError() == POCO_EADDRINUSE);
+	while (failed &&
+		(
+			(sock.getError() == POCO_EADDRINUSE) ||
+			(sock.getError() == POCO_EACCES) ||
+			(Socket::lastError() == POCO_EADDRINUSE) ||
+			(Socket::lastError() == POCO_EACCES)
+		)
+	);
 	return port;
 }
 

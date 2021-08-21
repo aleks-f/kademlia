@@ -60,7 +60,10 @@ public:
 			message_serializer_(my_id),
 			network_(network),
 			random_engine_(random_engine)
-	{ }
+	{
+		kademlia::detail::enable_log_for("Tracker");
+		LOG_DEBUG(Tracker, this) << "Tracker created" << std::endl;
+	}
 
 	Tracker(Tracker const&) = delete;
 	Tracker& operator = (Tracker const&) = delete;
@@ -84,8 +87,10 @@ public:
 					timeout, on_response_received, on_error);
 		};
 
+		LOG_DEBUG(Tracker, this) << "sending message ..." << std::endl;
 		// Serialize the request and send it.
 		network_.send(std::move(message), e, std::move(on_request_sent));
+		LOG_DEBUG(Tracker, this) << "message sent." << std::endl;
 	}
 
 	template<typename Request>

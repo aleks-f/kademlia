@@ -52,6 +52,7 @@
 #include "kademlia/log.hpp"
 #include "Poco/Net/DNS.h"
 #include "Poco/Net/HostEntry.h"
+#include "Poco/Net/IPAddress.h"
 
 namespace kademlia {
 namespace detail {
@@ -68,23 +69,32 @@ public:
 	using SendPacket = std::pair<Poco::Net::SocketAddress, buffer>;
  
 	template<typename EndpointType>
-	static resolved_endpoints resolve_endpoint(Poco::Net::SocketProactor& io_service, EndpointType const& e)
+	static resolved_endpoints resolve_endpoint(EndpointType const& e)
 	{
+		using Poco::Net::IPAddress;
 		resolved_endpoints re;
 		try
 		{
-			Poco::Net::HostEntry he = Poco::Net::DNS::resolve(e.address());
-
-			re.reserve(he.addresses().size());
-			for (const auto& addr : he.addresses())
+			IPAddress addr;
+			if (IPAddress::tryParse(e.address(), addr))
 			{
 				re.emplace_back(toIPEndpoint(addr.toString(),
+					static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
+			}
+			else
+			{
+				Poco::Net::HostEntry he = Poco::Net::DNS::resolve(e.address());
+
+				re.reserve(he.addresses().size());
+				for (const auto& addr : he.addresses())
+				{
+					re.emplace_back(toIPEndpoint(addr.toString(),
 						static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
+				}
 			}
 		}
 		catch (Poco::Net::HostNotFoundException&)
 		{
-			// TODO: why/how does asio resolve 0.0.0.0 and we do not?
 			re.emplace_back(toIPEndpoint(e.address(),
 				static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
 		}
@@ -94,12 +104,17 @@ public:
 	template<typename EndpointType>
 	static MessageSocket ipv4(Poco::Net::SocketProactor& io_service, EndpointType const& e)
 	{
-		auto endpoints = resolve_endpoint(io_service, e);
+		std::cout << "Resolving " << e.address() << ':' << e.service() << " ..." << std::endl;
+		auto endpoints = resolve_endpoint(e);
 		for (auto const& i : endpoints)
 		{
 			try
 			{
-				if (i.address_.isV4()) return MessageSocket(io_service, i);
+				if (i.address_.isV4())
+				{
+					std::cout << "Resolved: " << i << std::endl;
+					return MessageSocket(io_service, i);
+				}
 			}
 			catch (Poco::Net::NetException& ex)
 			{
@@ -112,7 +127,7 @@ public:
 	template<typename EndpointType>
 	static MessageSocket ipv6(Poco::Net::SocketProactor& io_service, EndpointType const& e)
 	{
-		auto endpoints = resolve_endpoint(io_service, e);
+		auto endpoints = resolve_endpoint(e);
 		for (auto const& i : endpoints)
 		{
 			try
@@ -198,6 +213,7 @@ private:
 			_pMutex(new std::mutex())
 	{
 		kademlia::detail::enable_log_for("MessageSocket");
+		LOG_DEBUG(MessageSocket, this) << "MessageSocket created for " << _socket.address().toString() << std::endl;
 	}
 
 	static underlying_socket_type create_underlying_socket(Poco::Net::SocketProactor& io_service, endpoint_type const& endpoint)

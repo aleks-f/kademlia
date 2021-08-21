@@ -88,6 +88,7 @@ is_log_enabled
 #ifdef KADEMLIA_ENABLE_DEBUG
 #undef KADEMLIA_ENABLE_DEBUG
 #endif
+#define KADEMLIA_ENABLE_DEBUG
 #ifdef KADEMLIA_ENABLE_DEBUG
 #   define LOG_DEBUG( module, thiz )                                           \
     for ( bool used = false; ! used; used = true )                             \

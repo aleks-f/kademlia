@@ -56,10 +56,11 @@ public:
 		on_message_received_type on_message_received): io_service_(io_service),
 			socket_ipv4_(std::move(socket_ipv4)),
 			socket_ipv6_(std::move(socket_ipv6)),
-			on_message_received_( on_message_received )
+			on_message_received_(on_message_received)
 	{
+		kademlia::detail::enable_log_for("Network");
 		start_message_reception(on_message_received);
-		LOG_DEBUG(Network, this) << "created at '" << socket_ipv4_.local_endpoint()
+		LOG_DEBUG(Network, this) << "Network created at '" << socket_ipv4_.local_endpoint()
 			<< "' and '" << socket_ipv6_.local_endpoint() << "'." << std::endl;
 	}
 
@@ -76,7 +77,7 @@ public:
 	template<typename Endpoint>
 	resolved_endpoints resolve_endpoint(Endpoint const& e)
 	{
-		return message_socket_type::resolve_endpoint(io_service_, e);
+		return message_socket_type::resolve_endpoint(e);
 	}
 
 private:
@@ -108,8 +109,8 @@ private:
 				throw std::system_error{failure};
 			}
 
-			on_message_received_( sender, i, e );
-			schedule_receive_on_socket( current_subnet );
+			on_message_received_(sender, i, e);
+			schedule_receive_on_socket(current_subnet);
 		};
 
 		current_subnet.async_receive( on_new_message );

@@ -88,14 +88,16 @@ public:
 			pending_tasks_()
 	{
 		kademlia::detail::enable_log_for("Engine");
-		LOG_DEBUG(Engine, this) << "Peerless Engine created." << std::endl;
+		LOG_DEBUG(Engine, this) << "Peerless Engine created (" <<
+			ipv4.address() << ':' << ipv4.service() << ", " <<
+			ipv6.address() << ':' << ipv6.service() << ')' << std::endl;
 	}
 
 	Engine(Poco::Net::SocketProactor& io_service, endpoint const& initial_peer,
 		endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}):
 			Engine(io_service, ipv4, ipv6, new_id)
 	{
-		LOG_DEBUG(Engine, this) << "bootstrapping using peer '" << initial_peer << "'." << std::endl;
+		LOG_DEBUG(Engine, this) << "Engine bootstrapping using peer '" << initial_peer << "'." << std::endl;
 		discover_neighbors(initial_peer);
 	}
 
