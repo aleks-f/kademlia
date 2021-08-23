@@ -43,9 +43,9 @@ int createSocket(std::string const& ip, std::uint16_t port)
 	Poco::Net::DatagramSocket sock(sa.family());
 	try
 	{
-		if (sa.family() == SocketAddress::IPv4)
+		if (sa.family() == Poco::Net::SocketAddress::IPv4)
 			sock.bind(sa, false);
-		else if (sa.family() == SocketAddress::IPv6)
+		else if (sa.family() == Poco::Net::SocketAddress::IPv6)
 			sock.bind6(sa, false, false, true);
 		else
 			throw Poco::InvalidArgumentException("createSocket()");
