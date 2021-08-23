@@ -87,7 +87,7 @@ TEST_F(SocketAdapterTest, send_to_recv_from_ipv4)
 		Poco::Net::SocketProactor ioService;
 
 		std::uint16_t port1 = getTemporaryListeningPort(SocketAddress::IPv4);
-		std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv4, port1);
+		std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv4, port1+1);
 		SocketAddress addr1("127.0.0.1", port1);
 		SocketAddress addr2("127.0.0.1", port2);
 
@@ -133,7 +133,7 @@ TEST_F(SocketAdapterTest, send_to_recv_from_ipv6)
 	Poco::Net::SocketProactor ioService;
 
 	std::uint16_t port1 = getTemporaryListeningPort(SocketAddress::IPv6);
-	std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv6, port1);
+	std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv6, port1+1);
 	SocketAddress addr1("::1", port1);
 	SocketAddress addr2("::1", port2);
 
