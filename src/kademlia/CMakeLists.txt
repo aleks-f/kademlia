@@ -25,8 +25,8 @@
 
 set(kademlia_sources
     constants.cpp
-        endpoint.cpp
-        error.cpp
+    endpoint.cpp
+    error.cpp
     error_impl.cpp
     id.cpp
     IPEndpoint.cpp

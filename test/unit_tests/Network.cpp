@@ -39,7 +39,8 @@ std::string resolveAddress(const std::string& address)
 	try
 	{
 		Poco::Net::HostEntry he = Poco::Net::DNS::resolve(address);
-		if (he.addresses().size() == 0) throw Poco::Net::HostNotFoundException();
+		if (he.addresses().size() == 0)
+			throw Poco::Net::HostNotFoundException();
 		return he.name();
 	}
 	catch (Poco::Net::HostNotFoundException&) {}

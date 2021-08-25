@@ -192,7 +192,7 @@ public:
 		std::unique_lock<std::mutex> l(*_pMutex);
 		_messageQueue.push_back(std::make_pair(Poco::Net::SocketAddress(to.address_, to.port_), message));
 
-		auto on_completion = [ this, callback ]
+		auto on_completion = [callback]
 			(std::error_code const& failure, std::size_t /* bytes_sent */)
 		{
 			callback(failure);

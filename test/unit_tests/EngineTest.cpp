@@ -155,7 +155,7 @@ TEST(EngineTest, two_engines_can_save_and_load)
 
 	std::string const expected_data{ "data" };
 
-	auto on_save = [ &expected_data ](std::error_code const& failure)
+	auto on_save = [](std::error_code const& failure)
 	{ if (failure) throw std::system_error{ failure }; };
 	e1->async_save("key", expected_data, on_save);
 

@@ -48,7 +48,7 @@ int createSocket(std::string const& ip, std::uint16_t port)
 		else if (sa.family() == Poco::Net::SocketAddress::IPv6)
 			sock.bind6(sa, false, false, true);
 		else
-			throw Poco::InvalidArgumentException("createSocket()");
+			throw Poco::InvalidArgumentException("createSocket()", sa.toString());
 	}
 	catch (Poco::IOException&)
 	{

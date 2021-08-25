@@ -71,11 +71,22 @@ endif()
 find_package(Threads REQUIRED)
 
 # Crypto
+if(APPLE)
+# on mac, unless user-installed openssl is specified,
+# the system headers/libraries are found and used,
+# leading to link errors (linking not allowed);
+# brew-installed openssl is usually in
+# /usr/local/opt/openssl/
+    set(OPENSSL_INCLUDE_DIR "/usr/local/opt/openssl/include")
+    set(OPENSSL_CRYPTO_LIBRARY "/usr/local/opt/openssl/lib/libcrypto.dylib")
+endif()
 find_package(OpenSSL REQUIRED)
 
 # Setup C++ definitions.
-add_definitions(-DPACKAGE_VERSION="0.0.0")
-add_definitions(-DPACKAGE_BUGREPORT="david.keller@litchis.fr")
+# conflicts with poco-embedded pcre, generating
+# an avalanche of warnings
+#add_definitions(-DPACKAGE_VERSION="0.0.0")
+#add_definitions(-DPACKAGE_BUGREPORT="david.keller@litchis.fr")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DKADEMLIA_ENABLE_DEBUG)
