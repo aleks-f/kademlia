@@ -34,7 +34,6 @@ namespace detail {
 
 ResponseCallbacks::ResponseCallbacks()
 {
-	kademlia::detail::enable_log_for("ResponseRouter");
 }
 
 void ResponseCallbacks::push_callback(id const& message_id, callback const& on_message_received)
@@ -53,16 +52,16 @@ bool ResponseCallbacks::remove_callback(id const& message_id)
 std::error_code ResponseCallbacks::dispatch_response(endpoint_type const& sender,
 	Header const& h, buffer::const_iterator i, buffer::const_iterator e )
 {
-	auto callback = callbacks_.find( h.random_token_ );
+	auto callback = callbacks_.find(h.random_token_);
 
-	if ( callback == callbacks_.end() )
+	if (callback == callbacks_.end())
 	{
 		LOG_DEBUG(ResponseCallbacks, this) << "dropping unknown response." << std::endl;
 		return make_error_code(UNASSOCIATED_MESSAGE_ID);
 	}
 
-	callback->second( sender, h, i, e );
-	callbacks_.erase( callback );
+	callback->second(sender, h, i, e);
+	callbacks_.erase(h.random_token_);
 
 	return std::error_code{};
 }

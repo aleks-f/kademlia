@@ -68,7 +68,7 @@ private:
 	{
 		LOG_DEBUG(StoreValueTask, this)
 				<< "create store value task for '"
-				<< key << "' value(" << to_string(data)
+				<< key << "' value(" << toString(data)
 				<< ")." << std::endl;
 	}
 
@@ -91,8 +91,10 @@ private:
 
 		FindPeerRequestBody const request{ task->get_key() };
 
-		auto const closest_candidates = task->select_new_closest_candidates
-				(concurrent_requests_count);
+		auto const closest_candidates = task->select_new_closest_candidates(concurrent_requests_count);
+
+		LOG_DEBUG(StoreValueTask, task.get()) << "inFlightRequests=" << task->inFlightRequests() <<
+		", closest candidates count: " << closest_candidates.size() << std::endl;
 
 		for (auto const& c : closest_candidates)
 			send_find_peer_to_store_request(request, c, task);
@@ -101,7 +103,7 @@ private:
 		// we know the closest peers hence ask
 		// them to store the value.
 		if (task->have_all_requests_completed())
-			send_store_requests(task); 
+			send_store_requests(task);
 	}
 
 	static void send_find_peer_to_store_request(FindPeerRequestBody const& request,
@@ -171,7 +173,11 @@ private:
 	{
 		auto const & candidates = task->select_closest_valid_candidates(REDUNDANT_SAVE_COUNT);
 
-		for (auto c : candidates) send_store_request(c, task);
+		LOG_DEBUG(StoreValueTask, task.get())
+				<< "sending store request to "
+				<< candidates.size() << " candidates" << std::endl;
+		for (auto c : candidates)
+			send_store_request(c, task);
 
 		if (candidates.empty())
 			task->notify_caller(make_error_code(INITIAL_PEER_FAILED_TO_RESPOND));

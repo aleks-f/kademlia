@@ -72,14 +72,12 @@ public:
 		const Poco::Net::SocketAddress& address, bool reuseAddress = true, bool ipV6Only = true):
 		io_service_(io_service), local_endpoint_(), pending_reads_()
 	{
-		//kademlia::detail::enable_log_for("FakeSocket");
 		bind(address);
 	}
 
 	FakeSocket(Poco::Net::SocketProactor* io_service):
 			io_service_(io_service), local_endpoint_(), pending_reads_()
 	{
-		//kademlia::detail::enable_log_for("FakeSocket");
 	}
 
 	FakeSocket(const FakeSocket& o)=delete;
@@ -90,7 +88,6 @@ public:
 		pending_reads_(std::move(o.pending_reads_)),
 		pending_writes_(std::move(o.pending_writes_))
 	{
-		//kademlia::detail::enable_log_for("FakeSocket");
 		add_route_to_socket(local_endpoint(), this);
 	}
 

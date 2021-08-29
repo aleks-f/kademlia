@@ -59,7 +59,7 @@ void checkListening(std::string const& ip, std::uint16_t port)
 
 	EXPECT_TRUE((POCO_EACCES == udp_failure) || (POCO_EADDRINUSE == udp_failure));
 }
-
+/*
 std::uint16_t getTemporaryListeningPort(IPAddress::Family family, std::uint16_t port)
 {
 	bool failed = false;
@@ -94,7 +94,7 @@ std::uint16_t getTemporaryListeningPort(IPAddress::Family family, std::uint16_t 
 	);
 	return port;
 }
-
+*/
 } // namespace test
 } // namespace kademlia
 

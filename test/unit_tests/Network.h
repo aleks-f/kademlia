@@ -62,8 +62,8 @@ int createSocket(std::string const& ip, std::uint16_t port)
 
 void checkListening(std::string const& ip, std::uint16_t port);
 
-std::uint16_t getTemporaryListeningPort(Poco::Net::IPAddress::Family family = Poco::Net::SocketAddress::IPv4,
-	std::uint16_t port = 1234);
+//std::uint16_t getTemporaryListeningPort(Poco::Net::IPAddress::Family family = Poco::Net::SocketAddress::IPv4,
+//	std::uint16_t port = 1234);
 
 } // namespace test
 } // namespace kademlia

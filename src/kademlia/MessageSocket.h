@@ -104,7 +104,6 @@ public:
 	template<typename EndpointType>
 	static MessageSocket ipv4(Poco::Net::SocketProactor& io_service, EndpointType const& e)
 	{
-		std::cout << "Resolving " << e.address() << ':' << e.service() << " ..." << std::endl;
 		auto endpoints = resolve_endpoint(e);
 		for (auto const& i : endpoints)
 		{
@@ -112,7 +111,6 @@ public:
 			{
 				if (i.address_.isV4())
 				{
-					std::cout << "Resolved: " << i << std::endl;
 					return MessageSocket(io_service, i);
 				}
 			}
@@ -212,7 +210,6 @@ private:
 			_ioService(io_service),
 			_pMutex(new std::mutex())
 	{
-		kademlia::detail::enable_log_for("MessageSocket");
 		LOG_DEBUG(MessageSocket, this) << "MessageSocket created for " << _socket.address().toString() << std::endl;
 	}
 

@@ -32,7 +32,6 @@ public:
 		_socket(addr, reuseAddress, ipV6Only),
 		_pIOService(pIOService)
 	{
-		kademlia::detail::enable_log_for("SocketAdapter");
 		LOG_DEBUG(SocketAdapter, this) << "Created SocketAdapter for " << _socket.address().toString() << std::endl;
 		_pIOService->addSocket(_socket, 3);
 	}

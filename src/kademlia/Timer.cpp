@@ -39,7 +39,6 @@ namespace detail {
 Timer::Timer(SocketProactor& ioService): _ioService(ioService),
 	timeouts_{}
 {
-	kademlia::detail::enable_log_for("Timer");
 	LOG_DEBUG(Timer, this) << "Timer created." << std::endl;
 }
 

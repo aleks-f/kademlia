@@ -27,6 +27,7 @@
 #include "Poco/Net/DatagramSocket.h"
 #include "kademlia/SocketAdapter.h"
 #include "kademlia/log.hpp"
+#include "kademlia/detail/Util.h"
 #include "Network.h"
 #include "gtest/gtest.h"
 #include "TaskFixture.h"
@@ -41,7 +42,6 @@ struct SocketAdapterTest : TaskFixture
 {
 	SocketAdapterTest(): TaskFixture()
 	{
-		kademlia::detail::enable_log_for("SocketAdapterTest");
 		LOG_DEBUG(SocketAdapterTest, this) << "Created SocketAdapterTest." << std::endl;
 	}
 };
@@ -49,7 +49,7 @@ struct SocketAdapterTest : TaskFixture
 
 TEST_F(SocketAdapterTest, copy_and_move)
 {
-	std::uint16_t port = getTemporaryListeningPort(SocketAddress::IPv4);
+	std::uint16_t port = getAvailablePort(SocketAddress::IPv4);
 	SocketAddress addr("127.0.0.1", port);
 	Poco::Net::SocketProactor ioService;
 	SocketAdapter<DatagramSocket> sock1(&ioService, addr, false, true);
@@ -86,8 +86,8 @@ TEST_F(SocketAdapterTest, send_to_recv_from_ipv4)
 
 		Poco::Net::SocketProactor ioService;
 
-		std::uint16_t port1 = getTemporaryListeningPort(SocketAddress::IPv4);
-		std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv4, port1+1);
+		std::uint16_t port1 = getAvailablePort(SocketAddress::IPv4);
+		std::uint16_t port2 = getAvailablePort(SocketAddress::IPv4, port1+1);
 		SocketAddress addr1("127.0.0.1", port1);
 		SocketAddress addr2("127.0.0.1", port2);
 
@@ -132,8 +132,8 @@ TEST_F(SocketAdapterTest, send_to_recv_from_ipv6)
 
 	Poco::Net::SocketProactor ioService;
 
-	std::uint16_t port1 = getTemporaryListeningPort(SocketAddress::IPv6);
-	std::uint16_t port2 = getTemporaryListeningPort(SocketAddress::IPv6, port1+1);
+	std::uint16_t port1 = getAvailablePort(SocketAddress::IPv6);
+	std::uint16_t port2 = getAvailablePort(SocketAddress::IPv6, port1+1);
 	SocketAddress addr1("::1", port1);
 	SocketAddress addr2("::1", port2);
 

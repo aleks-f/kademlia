@@ -59,6 +59,8 @@ public:
 			add_candidate(p);
 	}
 
+	std::size_t inFlightRequests() const;
+
 	bool have_all_requests_completed() const;
 
 	id const& get_key() const;
@@ -102,6 +104,10 @@ private:
 	candidates_type candidates_;
 };
 
+inline std::size_t LookupTask::inFlightRequests() const
+{
+	return in_flight_requests_count_;
+}
 
 } // namespace detail
 } // namespace kademlia

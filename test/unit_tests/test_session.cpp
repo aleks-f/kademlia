@@ -26,6 +26,7 @@
 
 #include "kademlia/error.hpp"
 #include "kademlia/session.hpp"
+#include "kademlia/detail/Util.h"
 #include "common.hpp"
 #include "Network.h"
 #include "gtest/gtest.h"
@@ -34,6 +35,7 @@
 namespace {
 
 namespace k = kademlia;
+namespace kd = kademlia::detail;
 using namespace Poco::Net;
 
 
@@ -50,8 +52,8 @@ TEST(SessionTest, session_opens_sockets_on_all_interfaces_by_default)
 TEST(SessionTest, session_opens_both_ipv4_ipv6_sockets)
 {
 	// Create listening socket.
-	std::uint16_t const port1 = k::test::getTemporaryListeningPort();
-	std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv6, port1);
+	std::uint16_t const port1 = kd::getAvailablePort();
+	std::uint16_t const port2 = kd::getAvailablePort(SocketAddress::IPv6, port1);
 	k::endpoint ipv4_endpoint{"127.0.0.1", port1};
 	k::endpoint ipv6_endpoint{"::1", port2};
 
@@ -65,8 +67,8 @@ TEST(SessionTest, session_opens_both_ipv4_ipv6_sockets)
 TEST(SessionTest, session_throw_on_invalid_ipv6_address)
 {
     // Create listening socket.
-    std::uint16_t const port1 = k::test::getTemporaryListeningPort();
-    std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv4, port1);
+    std::uint16_t const port1 = kd::getAvailablePort();
+    std::uint16_t const port2 = kd::getAvailablePort(SocketAddress::IPv4, port1);
     k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
     k::endpoint ipv6_endpoint{ "0.0.0.0", port2 };
 
@@ -77,8 +79,8 @@ TEST(SessionTest, session_throw_on_invalid_ipv6_address)
 TEST(SessionTest, session_throw_on_invalid_ipv4_address)
 {
     // Create listening socket.
-    std::uint16_t const port1 = k::test::getTemporaryListeningPort(SocketAddress::IPv6);
-    std::uint16_t const port2 = k::test::getTemporaryListeningPort(SocketAddress::IPv6, port1);
+    std::uint16_t const port1 = kd::getAvailablePort(SocketAddress::IPv6);
+    std::uint16_t const port2 = kd::getAvailablePort(SocketAddress::IPv6, port1);
     k::endpoint ipv4_endpoint{ "::", port1 };
     k::endpoint ipv6_endpoint{ "::1", port2 };
 

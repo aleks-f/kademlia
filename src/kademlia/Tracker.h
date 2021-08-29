@@ -61,7 +61,6 @@ public:
 			network_(network),
 			random_engine_(random_engine)
 	{
-		kademlia::detail::enable_log_for("Tracker");
 		LOG_DEBUG(Tracker, this) << "Tracker created" << std::endl;
 	}
 

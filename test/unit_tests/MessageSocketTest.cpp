@@ -27,6 +27,7 @@
 #include "kademlia/endpoint.hpp"
 #include "kademlia/MessageSocket.h"
 #include "kademlia/SocketAdapter.h"
+#include "kademlia/detail/Util.h"
 #include "Network.h"
 #include "gtest/gtest.h"
 
@@ -86,7 +87,7 @@ TEST(MessageSocketTest, ipv4_socket_can_be_created)
 {
 	Poco::Net::SocketProactor io_service;
 
-	k::endpoint const endpoint("127.0.0.1", k::test::getTemporaryListeningPort());
+	k::endpoint const endpoint("127.0.0.1", kd::getAvailablePort());
 
 	EXPECT_NO_THROW(MessageSocket_type::ipv4(io_service, endpoint););
 }
@@ -95,7 +96,7 @@ TEST(MessageSocketTest, ipv6_socket_can_be_created)
 {
 	Poco::Net::SocketProactor io_service;
 
-	k::endpoint const endpoint("::1", k::test::getTemporaryListeningPort());
+	k::endpoint const endpoint("::1", kd::getAvailablePort());
 
 	EXPECT_NO_THROW(MessageSocket_type::ipv6(io_service, endpoint););
 }

@@ -54,9 +54,9 @@ public:
 	using EngineType = detail::Engine<SocketType>;
 
 public:
-	SessionImpl(endpoint const& listen_on_ipv4, endpoint const& listen_on_ipv6);
+	SessionImpl(endpoint const& listen_on_ipv4, endpoint const& listen_on_ipv6, int ms = 300);
 
-	SessionImpl(endpoint const& initial_peer, endpoint const& listen_on_ipv4, endpoint const& listen_on_ipv6);
+	SessionImpl(endpoint const& initial_peer, endpoint const& listen_on_ipv4, endpoint const& listen_on_ipv6, int ms = 300);
 
 	template<typename HandlerType>
 	void async_save(KeyType const& key, DataType const& data, HandlerType && handler)

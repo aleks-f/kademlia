@@ -58,7 +58,6 @@ public:
 			socket_ipv6_(std::move(socket_ipv6)),
 			on_message_received_(on_message_received)
 	{
-		kademlia::detail::enable_log_for("Network");
 		start_message_reception(on_message_received);
 		LOG_DEBUG(Network, this) << "Network created at '" << socket_ipv4_.local_endpoint()
 			<< "' and '" << socket_ipv6_.local_endpoint() << "'." << std::endl;

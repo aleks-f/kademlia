@@ -3,14 +3,14 @@
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the University of California, Berkeley nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
+//	 * Redistributions of source code must retain the above copyright
+//	   notice, this list of conditions and the following disclaimer.
+//	 * Redistributions in binary form must reproduce the above copyright
+//	   notice, this list of conditions and the following disclaimer in the
+//	   documentation and/or other materials provided with the distribution.
+//	 * Neither the name of the University of California, Berkeley nor the
+//	   names of its contributors may be used to endorse or promote products
+//	   derived from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY DAVID KELLER AND CONTRIBUTORS ``AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -24,70 +24,113 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "kademlia/log.hpp"
+#include "Poco/AutoPtr.h"
+#include "Poco/ConsoleChannel.h"
+#include "Poco/Message.h"
+#include "Poco/PatternFormatter.h"
+#include "Poco/FormattingChannel.h"
 
 #include <iostream>
 #include <iomanip>
 #include <set>
 
+using Poco::Logger;
+using Poco::LogStream;
+using Poco::ColorConsoleChannel;
+using Poco::AutoPtr;
+using Poco::Message;
+using Poco::PatternFormatter;
+using Poco::FormattingChannel;
+
 namespace kademlia {
 namespace detail {
 
+
 namespace {
 
-using enabled_modules_log_type = std::set< std::string >;
+using enabled_modules_log_type = std::set<std::string>;
 
-enabled_modules_log_type &
-get_enabled_modules
-    ( void )
+enabled_modules_log_type& get_enabled_modules()
 {
-    static enabled_modules_log_type enabled_modules_;
-    return enabled_modules_;
+	static enabled_modules_log_type enabled_modules_;
+	return enabled_modules_;
 }
 
 } // anonymous namespace
 
-std::ostream &
-get_debug_log
-    ( char const * module,
-      void const * thiz,
-      std::tm* pTM)
+
+std::ostream& getDebugLog(const char* module, const void* thiz, std::tm* pTM)
 {
-    if (!pTM)
+	if (!pTM)
 	{
 		std::time_t t = std::time(nullptr);
-    	pTM = std::localtime(&t);
+		pTM = std::localtime(&t);
 	}
-    return std::cout << "[debug] " << std::put_time(pTM, "%F %H:%M:%S") << " (" << module << " @ "
-                     << std::hex << ( std::uintptr_t( thiz ) & 0xffffff )
-                     << std::dec << ") ";
+	return std::cout << "[debug] " << std::put_time(pTM, "%F %H:%M:%S") << " (" << module << " @ "
+					 << std::hex << ( std::uintptr_t( thiz ) & 0xffffff )
+					 << std::dec << ") ";
 }
 
-/**
- *
- */
-void
-enable_log_for
-    ( std::string const& module )
-{ get_enabled_modules().insert( module ); }
-
-/**
- *
- */
-void
-disable_log_for
-    ( std::string const& module )
-{ get_enabled_modules().erase( module ); }
-
-/**
- *
- */
-bool
-is_log_enabled
-    ( std::string const& module )
+Poco::LogStream& getPocoLog(char const * module)
 {
-    return get_enabled_modules().count( "*" ) > 0
-            || get_enabled_modules().count( module ) > 0;
+	static std::vector<Poco::LogStream*> logStream;
+	logStream.emplace_back(new Poco::LogStream(Poco::Logger::get(module)));
+	return *logStream.back();
 }
+
+
+void enableLogFor(std::string const& module)
+{
+	get_enabled_modules().insert( module );
+}
+
+
+void disableLogFor(std::string const& module)
+{
+	get_enabled_modules().erase( module );
+}
+
+
+bool isLogEnabled(std::string const& module)
+{
+	return get_enabled_modules().count("*") > 0
+			|| get_enabled_modules().count(module) > 0;
+}
+
+struct LogInitializer
+{
+	AutoPtr<FormattingChannel> _pChannel;
+	LogInitializer():
+		_pChannel(new FormattingChannel(new PatternFormatter("%Y-%m-%d %H:%M:%S.%i [%p] %s<%I>: %t")))
+	{
+		_pChannel->setChannel(new ColorConsoleChannel);
+		Logger& root = Logger::root();
+		root.setChannel(_pChannel);
+		root.setLevel(Message::PRIO_DEBUG);
+		//enableLogFor("DiscoverNeighborsTask");
+		//enableLogFor("DiscoverNeighborsTaskTest");
+		//enableLogFor("Engine");
+		//enableLogFor("EngineTest");
+		//enableLogFor("FakeSocket");
+		//enableLogFor("FindValueTask");
+		//enableLogFor("LookupTask");
+		//enableLogFor("MessageSocket");
+		//enableLogFor("Network");
+		//enableLogFor("ResponseCallbacks");
+		//enableLogFor("ResponseRouter");
+		//enableLogFor("Session");
+		//enableLogFor("SessionImpl");
+		//enableLogFor("SocketAdapter");
+		//enableLogFor("SocketAdapterTest");
+		enableLogFor("StoreValueTask");
+		//enableLogFor("Timer");
+		//enableLogFor("TimerTest");
+		//enableLogFor("Tracker");
+		//enableLogFor("TrackerMock");
+	}
+};
+
+const LogInitializer logInitializer;
 
 } // namespace detail
 } // namespace kademlia

@@ -41,7 +41,8 @@ set(kademlia_sources
     SessionImpl.cpp
     session_base.cpp
     first_session.cpp
-    Timer.cpp)
+    Timer.cpp
+    Util.cpp)
 
 # Kademlia shared
 add_library(kademlia SHARED

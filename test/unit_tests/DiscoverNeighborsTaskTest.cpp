@@ -44,7 +44,6 @@ struct DiscoverNeighborsTaskTest : k::test::TaskFixture
 {
 	DiscoverNeighborsTaskTest(): k::test::TaskFixture()
 	{
-		//kademlia::detail::enable_log_for("DiscoverNeighborsTaskTest");
 		LOG_DEBUG(DiscoverNeighborsTaskTest, this) << "create DiscoverNeighborsTaskTest." << std::endl;
 	}
     void

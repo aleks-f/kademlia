@@ -11,7 +11,6 @@ namespace detail {
 
 	ResponseRouter::ResponseRouter(SocketProactor &io_service): timer_(io_service)
 	{
-		kademlia::detail::enable_log_for("ResponseRouter");
 	}
 
 

@@ -59,7 +59,6 @@ create_test_engine(SocketProactor& io_service
 
 TEST(EngineTest, isolated_bootstrap_engine_cannot_save)
 {
-	//kademlia::detail::enable_log_for("EngineTest");
 	Poco::Net::SocketProactor io_service;
 
 	k::endpoint ipv4_endpoint{ "127.0.0.1", k::session_base::DEFAULT_PORT };

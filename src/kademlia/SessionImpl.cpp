@@ -27,19 +27,19 @@
 #include "SessionImpl.h"
 #include "kademlia/error.hpp"
 #include "error_impl.hpp"
-
+#include "Poco/Timespan.h"
 
 namespace kademlia {
 namespace detail {
 
 
-SessionImpl::SessionImpl(endpoint const& ipv4, endpoint const& ipv6):
-	_ioService(300000),
+SessionImpl::SessionImpl(endpoint const& ipv4, endpoint const& ipv6, int ms):
+	_ioService(Poco::Timespan(ms*1000)),
 	_engine{ _ioService, ipv4, ipv6 }
 { }
 
-SessionImpl::SessionImpl(endpoint const& initPeer, endpoint const& ipv4, endpoint const& ipv6):
-	_ioService(300000),
+SessionImpl::SessionImpl(endpoint const& initPeer, endpoint const& ipv4, endpoint const& ipv6, int ms):
+	_ioService(Poco::Timespan(ms*1000)),
 	_engine{ _ioService, initPeer, ipv4, ipv6 }
 { }
 

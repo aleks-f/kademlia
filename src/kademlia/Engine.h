@@ -87,7 +87,6 @@ public:
 			is_connected_(),
 			pending_tasks_()
 	{
-		kademlia::detail::enable_log_for("Engine");
 		LOG_DEBUG(Engine, this) << "Peerless Engine created (" <<
 			ipv4.address() << ':' << ipv4.service() << ", " <<
 			ipv6.address() << ':' << ipv6.service() << ')' << std::endl;
@@ -114,7 +113,7 @@ public:
 		if (! is_connected_)
 		{
 			LOG_DEBUG(Engine, this) << "delaying async save of key '"
-					<< to_string(key) << "'." << std::endl;
+					<< toString(key) << "'." << std::endl;
 
 			auto t = [this, key, data, handler] () mutable
 			{ async_save(key, data, std::move(handler)); };
@@ -123,7 +122,7 @@ public:
 		}
 		else
 		{
-			LOG_DEBUG(Engine, this) << "executing async save of key '" << to_string(key) << "'." << std::endl;
+			LOG_DEBUG(Engine, this) << "executing async save of key '" << toString(key) << "'." << std::endl;
 			start_store_value_task(id(key), data, tracker_, routing_table_, std::forward<HandlerType>(handler));
 		}
 	}
@@ -136,7 +135,7 @@ public:
 		// the routing table will be filled.
 		if (!is_connected_)
 		{
-			LOG_DEBUG(Engine, this) << "delaying async load of key '" << to_string(key) << "'." << std::endl;
+			LOG_DEBUG(Engine, this) << "delaying async load of key '" << toString(key) << "'." << std::endl;
 
 			auto t = [this, key, handler] () mutable
 			{ async_load(key, std::move(handler)); };
@@ -145,7 +144,7 @@ public:
 		}
 		else
 		{
-			LOG_DEBUG(Engine, this) << "executing async load of key '" << to_string(key) << "'." << std::endl;
+			LOG_DEBUG(Engine, this) << "executing async load of key '" << toString(key) << "'." << std::endl;
 			start_find_value_task<data_type>(id(key), tracker_, routing_table_, std::forward<HandlerType>(handler));
 		}
 	}
@@ -184,7 +183,7 @@ private:
 	void handle_ping_request(IPEndpoint const& sender, Header const& h)
 	{
 		LOG_DEBUG(Engine, this) << "handling ping request." << std::endl;
-		//log_access(sender, h);
+		//logAccess(sender, h);
 		tracker_.send_response(h.random_token_, Header::PING_RESPONSE, sender);
 	}
 
@@ -192,7 +191,7 @@ private:
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling store request." << std::endl;
-		//log_access(sender, h);
+		//logAccess(sender, h);
 		StoreValueRequestBody request;
 		if (auto failure = deserialize(i, e, request))
 		{
@@ -207,7 +206,7 @@ private:
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling find peer request." << std::endl;
-		//log_access(sender, h);
+		//logAccess(sender, h);
 
 		// Ensure the request is valid.
 		FindPeerRequestBody request;
@@ -245,7 +244,7 @@ private:
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling find value request." << std::endl;
-		//log_access(sender, h);
+		//logAccess(sender, h);
 
 		FindValueRequestBody request;
 		if (auto failure = deserialize(i, e, request))

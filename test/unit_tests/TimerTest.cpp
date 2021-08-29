@@ -72,8 +72,6 @@ protected:
 
 TEST_F(TimerTest, multiple_associations_can_be_added)
 {
-	//kademlia::detail::enable_log_for("Timer");
-	//kademlia::detail::enable_log_for("TimerTest");
     EXPECT_EQ(0, io_service_.poll());
     EXPECT_EQ(0, timeouts_received_);
 

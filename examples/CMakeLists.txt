@@ -35,3 +35,10 @@ add_executable(kademlia_bootstrap
 target_link_libraries(kademlia_bootstrap
     kademlia
     Threads::Threads)
+
+add_executable(kademlia_stress
+    stress.cpp)
+
+target_link_libraries(kademlia_stress
+    kademlia
+    Threads::Threads)

@@ -3,14 +3,14 @@
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the University of California, Berkeley nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
+//	 * Redistributions of source code must retain the above copyright
+//	   notice, this list of conditions and the following disclaimer.
+//	 * Redistributions in binary form must reproduce the above copyright
+//	   notice, this list of conditions and the following disclaimer in the
+//	   documentation and/or other materials provided with the distribution.
+//	 * Neither the name of the University of California, Berkeley nor the
+//	   names of its contributors may be used to endorse or promote products
+//	   derived from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVLOGED BY DAVLOG KELLER AND CONTRIBUTORS ``AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -26,10 +26,6 @@
 #ifndef KADEMLIA_LOG_HPP
 #define KADEMLIA_LOG_HPP
 
-#ifdef _MSC_VER
-#   pragma once
-#endif
-
 #include <cstdio>
 #include <cctype>
 #include <cstdint>
@@ -39,86 +35,60 @@
 #include <iostream>
 #include "kademlia/IPEndpoint.h"
 #include "kademlia/Message.h"
+#include "Poco/Logger.h"
+#include "Poco/LogStream.h"
 
 namespace kademlia {
 namespace detail {
 
-/**
- *
- */
-std::ostream &
-get_debug_log
-    ( char const * module,
-      void const * thiz,
-      std::tm* tm = 0 );
 
-/**
- *
- */
-void
-enable_log_for
-    ( std::string const& module );
+std::ostream& getDebugLog(char const * module, void const * thiz, std::tm* tm = 0 );
+Poco::LogStream& getPocoLog(char const * module);
 
-/**
- *
- */
-void
-disable_log_for
-    ( std::string const& module );
-
-
-/**
- *
- */
-bool
-is_log_enabled
-    ( std::string const& module );
+void enableLogFor(std::string const& module);
+void disableLogFor(std::string const& module);
+bool isLogEnabled(std::string const& module);
 
 /**
  *  This macro deserves some explanation.
  *  The goal here is to provide a macro that can be called like:
- *      LOG_DEBUG( my_module ) << "my content" << std::endl;
+ *	  LOG_DEBUG( my_module ) << "my content" << std::endl;
  *  Depending on 'my_module' string, the code may or may not be executed.
  *  To achieve this, the call to an actual stream is made inside
  *  a for loop whose condition checks if the module associated with
- *  my_module is enabled. Because the call to is_log_enabled()
+ *  my_module is enabled. Because the call to isLogEnabled()
  *  can be costly, its result is cached in a static variable.
  */
 
 #ifdef KADEMLIA_ENABLE_DEBUG
-#   define LOG_DEBUG( module, thiz )                                           \
-    for ( bool used = false; ! used; used = true )                             \
-        for ( static bool enabled = kademlia::detail::is_log_enabled( #module )\
-            ; enabled && ! used; used = true )                                 \
-            kademlia::detail::get_debug_log( #module, thiz )
+#   define LOG_DEBUG(module, thiz)											\
+	for (bool used = false; ! used; used = true)							\
+		for ( static bool enabled = kademlia::detail::isLogEnabled(#module) \
+			; enabled && ! used; used = true)								\
+			Poco::LogStream(Poco::Logger::get(#module)).debug()
 #else
-#   define LOG_DEBUG( module, thiz )                                           \
-    while ( false )                                                            \
-        kademlia::detail::get_debug_log( #module, thiz )
+#   define LOG_DEBUG( module, thiz ) \
+	while ( false )					 \
+		kademlia::detail::getDebugLog( #module, thiz )
 #endif
 
-/**
- *
- */
 template< typename Container >
-inline std::string
-to_string
-    ( const Container & c )
+inline std::string toString(const Container & c)
 {
-    std::ostringstream out;
+	std::ostringstream out;
 
-    for ( auto const& v : c )
-    {
-        if ( std::isprint( v ) )
-            out << v;
-        else
-            out << '\\' << uint16_t( v );
-    }
+	for (auto const& v : c)
+	{
+		if (std::isprint(v))
+			out << v;
+		else
+			out << '\\' << uint16_t( v );
+	}
 
-    return out.str();
+	return out.str();
 }
 
-inline void log_access(kademlia::detail::IPEndpoint const& sender, kademlia::detail::Header const& h)
+inline void logAccess(kademlia::detail::IPEndpoint const& sender, kademlia::detail::Header const& h)
 {
 	static int cnt;
 	std::cout << cnt++ << ' ';
@@ -126,6 +96,7 @@ inline void log_access(kademlia::detail::IPEndpoint const& sender, kademlia::det
 	std::cout << "source:[" << h.source_id_ << ']' << std::endl;
 	std::cout << "random:[" << h.random_token_ << ']' << std::endl;
 }
+
 
 } // namespace detail
 } // namespace kademlia

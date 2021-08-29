@@ -23,18 +23,19 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <kademlia/error.hpp>
-#include <kademlia/first_session.hpp>
+#include "kademlia/error.hpp"
+#include "kademlia/first_session.hpp"
+#include "kademlia/detail/Util.h"
 #include "common.hpp"
 #include "Network.h"
 #include "gtest/gtest.h"
 #include <cstdint>
-#include <future>
 
 
 namespace {
 
 namespace k = kademlia;
+namespace kd = kademlia::detail;
 using namespace Poco::Net;
 
 TEST(FirstSessionTest, opens_sockets_on_all_interfaces_by_default)
@@ -48,8 +49,8 @@ TEST(FirstSessionTest, opens_sockets_on_all_interfaces_by_default)
 TEST(FirstSessionTest, opens_both_ipv4_ipv6_sockets)
 {
 	// Create listening socket.
-	std::uint16_t const port1 = k::test::getTemporaryListeningPort(IPAddress::IPv4);
-	std::uint16_t const port2 = k::test::getTemporaryListeningPort(IPAddress::IPv6);
+	std::uint16_t const port1 = kd::getAvailablePort(SocketAddress::IPv4);
+	std::uint16_t const port2 = kd::getAvailablePort(SocketAddress::IPv6);
 	k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
 	k::endpoint ipv6_endpoint{ "::1", port2 };
 
@@ -62,8 +63,8 @@ TEST(FirstSessionTest, opens_both_ipv4_ipv6_sockets)
 TEST(FirstSessionTest, throw_on_invalid_ipv6_address)
 {
 	// Create listening socket.
-	std::uint16_t const port1 = k::test::getTemporaryListeningPort(IPAddress::IPv4);
-	std::uint16_t const port2 = k::test::getTemporaryListeningPort(IPAddress::IPv6);
+	std::uint16_t const port1 = kd::getAvailablePort(SocketAddress::IPv4);
+	std::uint16_t const port2 = kd::getAvailablePort(SocketAddress::IPv6);
 	k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
 	k::endpoint ipv6_endpoint{ "0.0.0.0", port2 };
 
@@ -73,8 +74,8 @@ TEST(FirstSessionTest, throw_on_invalid_ipv6_address)
 TEST(FirstSessionTest, throw_on_invalid_ipv4_address)
 {
 	// Create listening socket.
-	std::uint16_t const port1 = k::test::getTemporaryListeningPort(IPAddress::IPv4);
-	std::uint16_t const port2 = k::test::getTemporaryListeningPort(IPAddress::IPv6);
+	std::uint16_t const port1 = kd::getAvailablePort(SocketAddress::IPv4);
+	std::uint16_t const port2 = kd::getAvailablePort(SocketAddress::IPv6);
 	k::endpoint ipv4_endpoint{ "::", port1 };
 	k::endpoint ipv6_endpoint{ "::1", port2 };
 
