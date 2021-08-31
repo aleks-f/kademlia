@@ -57,62 +57,6 @@ create_test_engine(SocketProactor& io_service
 }
 
 
-TEST(EngineTest, isolated_bootstrap_engine_cannot_save)
-{
-	Poco::Net::SocketProactor io_service;
-
-	k::endpoint ipv4_endpoint{ "127.0.0.1", k::session_base::DEFAULT_PORT };
-	k::endpoint ipv6_endpoint{ "::1", k::session_base::DEFAULT_PORT };
-
-
-	auto e1 = create_test_engine(io_service, d::id{ "0" });
-
-	EXPECT_EQ(0, io_service.poll());
-
-	bool save_executed = false;
-	auto on_save = [ &save_executed ](std::error_code const& failure)
-	{
-		save_executed = true;
-	};
-	e1->async_save("key", "data", on_save);
-
-	EXPECT_EQ(0, io_service.poll());
-	EXPECT_TRUE(!save_executed);
-
-	auto e2 = create_test_engine(io_service, d::id{ "1" }, e1->ipv4());
-
-	while (!io_service.poll()) Thread::sleep(10);
-	EXPECT_TRUE(save_executed);
-}
-
-TEST(EngineTest, isolated_bootstrap_engine_cannot_load)
-{
-	Poco::Net::SocketProactor io_service;
-
-	auto e1 = create_test_engine(io_service, d::id{ "0" });
-
-	EXPECT_EQ(0, io_service.poll());
-
-	bool load_executed = false;
-	auto on_load = [ &load_executed ](std::error_code const& failure
-									 , std::string const& data)
-	{
-		load_executed = true;
-	};
-	e1->async_load("key", on_load);
-
-	EXPECT_EQ(0, io_service.poll());
-
-	EXPECT_TRUE(!load_executed);
-
-	auto e2 = create_test_engine(io_service
-								, d::id{ "1" }
-								, e1->ipv4());
-
-	EXPECT_GT(io_service.poll(), 0);
-	EXPECT_TRUE(load_executed);
-}
-
 TEST(EngineTest, isolated_engine_cannot_be_constructed)
 {
 	Poco::Net::SocketProactor io_service;
@@ -136,8 +80,6 @@ TEST(EngineTest, two_engines_can_find_themselves)
   
 	d::id const id2{ "4000000000000000000000000000000000000000" };
 	auto e2 = create_test_engine(io_service, id2, e1->ipv4());
-
-	EXPECT_GT(io_service.poll(), 0);
 }
 
 TEST(EngineTest, two_engines_can_save_and_load)
@@ -149,8 +91,6 @@ TEST(EngineTest, two_engines_can_save_and_load)
 
 	d::id const id2{ "4000000000000000000000000000000000000000" };
 	auto e2 = create_test_engine(io_service, id2, e1->ipv4());
-
-	EXPECT_GT(io_service.poll(), 0);
 
 	std::string const expected_data{ "data" };
 

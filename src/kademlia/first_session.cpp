@@ -58,6 +58,21 @@ first_session::~first_session
 	wait();
 }
 
+
+void first_session::async_save(key_type const& key,
+	data_type const& data,
+	save_handler_type handler)
+{
+	impl_->async_save( key, data, std::move( handler ) );
+}
+
+
+void first_session::async_load(key_type const& key,
+	load_handler_type handler)
+{
+	impl_->async_load( key, std::move( handler ) );
+}
+
 std::error_code
 first_session::runImpl
     ( void )

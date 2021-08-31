@@ -1,17 +1,15 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include <future>
 #include <iostream>
-#include <iterator>
-#include <thread>
 
 #include "kademlia/endpoint.hpp"
 #include "kademlia/session.hpp"
 #include "kademlia/first_session.hpp"
 #include "kademlia/error.hpp"
 #include "kademlia/detail/Util.h"
-#include "Poco/NumberParser.h"
+#include "Poco/Timestamp.h"
+#include "Poco/Timespan.h"
 #include "Poco/Thread.h"
 #include "Poco/ThreadPool.h"
 
@@ -20,40 +18,32 @@ namespace k = kademlia;
 namespace kd = kademlia::detail;
 using Poco::Thread;
 using Poco::ThreadPool;
+using Poco::Timestamp;
+using Poco::Timespan;
+using Poco::Net::SocketAddress;
 
 
 namespace {
 
 
-int saved = 0, loaded = 0;
+int _saved = 0, _loaded = 0;
 
-const char HELP[] =
-"save <KEY> <VALUE>\n\tSave <VALUE> as <KEY>\n\n"
-"load <KEY>\n\tLoad value associated with <KEY>\n\n"
-"exit\n\tExit the program\n\n"
-"help\n\tPrint this message\n\n";
-
-std::vector<std::string> split(std::string const& line)
-{
-	std::istringstream in{ line };
-
-	using iterator = std::istream_iterator<std::string>;
-	return std::vector<std::string>{ iterator{ in }, iterator{} };
-}
 
 template <typename S>
 void load(S& session, std::string const& key)
 {
 	std::vector<uint8_t> key_vec(key.begin(), key.end());
-	auto on_load = [key] (std::error_code const& error, k::session::data_type const& data)
+	Timestamp ts;
+	auto on_load = [key, ts] (std::error_code const& error, k::session::data_type const& data)
 	{
 		if (error)
 			std::cerr << "Failed to load \"" << key << "\", error: " << error.message() << std::endl;
 		else
 		{
-			++loaded;
+			Timespan elapsed = Timestamp() - ts;
+			++_loaded;
 			std::string const& str{ data.begin(), data.end() };
-			std::cout << "Loaded \"" << key << "\" as \"" << str << "\"" << std::endl;
+			std::cout << "Loaded \"" << key << "\" as \"" << str << "\" in " << elapsed.microseconds() << " us" << std::endl;
 		}
 	};
 
@@ -66,26 +56,23 @@ void save(S& session, std::string const& key, std::string const& val)
 {
 	std::vector<uint8_t> key_vec(key.begin(), key.end());
 	std::vector<uint8_t> val_vec(val.begin(), val.end());
-	auto on_save = [key] (std::error_code const& error)
+	Timestamp ts;
+	auto on_save = [key, ts] (std::error_code const& error)
 	{
 		if (error)
 			std::cerr << "Failed to save \"" << key << "\", error: " << error.message() << std::endl;
 		else
 		{
-			++saved;
-			std::cout << "Saved \"" << key << "\"" << std::endl;
+			Timespan elapsed = Timestamp() - ts;
+			++_saved;
+			std::cout << "Saved \"" << key << "\" in " << elapsed.microseconds() << " us" << std::endl;
 		}
 	};
 
 	session.async_save(key_vec, val_vec, std::move(on_save));
 	std::cout << "Async saving \"" << key << "\": \"" << val << "\"" << std::endl;
 }
-/*
-void print_interactive_help()
-{
-	std::cout << HELP << std::flush;
-}
-*/
+
 template <typename S>
 void abortSession(S& sess)
 {
@@ -96,7 +83,6 @@ void abortSession(S& sess)
 	auto failure = sess.wait();
 	if (failure != k::RUN_ABORTED)
 		std::cerr << failure.message() << std::endl;
-	std::cout << " session aborted" << std::endl;
 }
 
 } // anonymous namespace
@@ -107,27 +93,30 @@ int main(int argc, char** argv)
 
 	std::string bootAddr4 = "0.0.0.0";
 	std::string bootAddr6 = "::";
-	std::string port = "1234";
-	if (argc >= 2) port = argv[1];
+	std::uint16_t bootPort4 = kd::getAvailablePort(SocketAddress::IPv4);
+	std::uint16_t bootPort6 = kd::getAvailablePort(SocketAddress::IPv6);
+
 	int reps = 5;
-	if (argc >= 3) reps = atoi(argv[1]);
 	pool.addCapacity(reps);
-	uint16_t bootPort = static_cast<uint16_t>(Poco::NumberParser::parse(port));
-	k::first_session firstSession{k::endpoint{bootAddr4, bootPort}, k::endpoint{bootAddr6, bootPort}};
-	std::cout << "bootstrap session listening on " << bootAddr4 << ':' << bootPort << ", " <<
-		'[' << bootAddr6 << "]:" << bootPort << std::endl;
-	uint16_t sessPort = bootPort + 1;
+
+	k::first_session firstSession{k::endpoint{bootAddr4, bootPort4}, k::endpoint{bootAddr6, bootPort6}};
+	std::cout << "bootstrap session listening on " << bootAddr4 << ':' << bootPort4 << ", " <<
+		'[' << bootAddr6 << "]:" << bootPort6 << std::endl;
+
+	uint16_t sessPort4 = kd::getAvailablePort(SocketAddress::IPv4, bootPort4 + 1);
+	uint16_t sessPort6 = kd::getAvailablePort(SocketAddress::IPv4, bootPort6 + 1);
 
 	std::vector<k::session*> sessions;
 	for (int i = 0; i < reps; ++i)
 	{
-		sessions.push_back(new k::session { k::endpoint{ bootAddr4, bootPort }
-					  , k::endpoint{ bootAddr4, sessPort }
-					  , k::endpoint{ bootAddr6, sessPort } });
-		std::cout << "peer session connected to " << bootAddr4 << ':' << bootPort <<
-			", listening on " << bootAddr4 << ':' << sessPort << ", " <<
-		'[' << bootAddr6 << "]:" << sessPort << std::endl;
-		++sessPort;
+		sessions.push_back(new k::session { k::endpoint{ bootAddr4, bootPort4 }
+					  , k::endpoint{ bootAddr4, sessPort4 }
+					  , k::endpoint{ bootAddr6, sessPort6 } });
+		std::cout << "peer session connected to " << bootAddr4 << ':' << bootPort4 <<
+			", listening on " << bootAddr4 << ':' << sessPort4 << ", " <<
+		'[' << bootAddr6 << "]:" << sessPort6 << std::endl;
+		sessPort4 = kd::getAvailablePort(SocketAddress::IPv4, sessPort4 + 1);
+		sessPort6 = kd::getAvailablePort(SocketAddress::IPv4, sessPort6 + 1);
 	}
 	Thread::sleep(100);
 	for (int i = 0; i < reps; ++i)
@@ -136,25 +125,35 @@ int main(int argc, char** argv)
 		k += std::to_string(i);
 		v += std::to_string(i);
 		save(*sessions[0], k, v);
-		while (saved < i+1) Thread::sleep(10);
+		while (_saved < i+1) Thread::sleep(1);
 	}
 
+	_loaded = 0;
 	for (int i = 0; i < reps; ++i)
 	{
 		std::string k("k");
 		k += std::to_string(i);
 		load(*sessions[i], k);
-		while (loaded < i+1) Thread::sleep(10);
+		while (_loaded < i+1) Thread::sleep(1);
+	}
+
+	_loaded = 0;
+	for (int i = 0; i < reps; ++i)
+	{
+		std::string k("k");
+		k += std::to_string(i);
+		load(firstSession, k);
+		while (_loaded < i+1) Thread::sleep(1);
 	}
 
 	abortSession(firstSession);
-	loaded = 0;
+	_loaded = 0;
 	for (int i = 0; i < reps; ++i)
 	{
 		std::string k("k");
 		k += std::to_string(i);
 		load(*sessions[i], k);
-		while (loaded < i+1) Thread::sleep(10);
+		while (_loaded < i+1) Thread::sleep(1);
 	}
 
 	for (auto& pS : sessions)

@@ -26,9 +26,6 @@
 #ifndef KADEMLIA_FIRST_SESSION_HPP
 #define KADEMLIA_FIRST_SESSION_HPP
 
-#ifdef _MSC_VER
-#   pragma once
-#endif
 
 #include <memory>
 #include <system_error>
@@ -43,8 +40,7 @@ namespace kademlia {
 /**
  *  @brief This object is used to bootstrap a network.
  */
-class first_session final
-        : public session_base
+class first_session final : public session_base
 {
 public:
     /**
@@ -69,23 +65,50 @@ public:
      *  @brief Destruct the first_session.
      */
     KADEMLIA_SYMBOL_VISIBILITY
-    ~first_session
-        ( void );
+    ~first_session();
 
     /**
      *  @brief Disabled copy constructor.
      */
-    first_session
-        ( first_session const& )
-        = delete;
+    first_session(const first_session& ) = delete;
 
     /**
      *  @brief Disabled assignment operator.
      */
-    first_session&
-    operator=
-        ( first_session const& )
-        = delete;
+    first_session& operator=(const first_session& ) = delete;
+
+    /**
+     *  @brief Async save a data into the network.
+     *
+     *  @param key The data to save key.
+     *  @param data The data to save.
+     *  @param handler Callback called to report call status.
+     */
+    KADEMLIA_SYMBOL_VISIBILITY
+    void async_save(key_type const& key, data_type const& data, save_handler_type handler);
+
+    template<typename KeyType, typename DataType>
+    void async_save(KeyType const& key, DataType const& data, save_handler_type handler)
+    {
+        async_save( key_type{std::begin(key), std::end(key)}
+                  , data_type{std::begin(data), std::end(data)}
+                  , std::move(handler));
+    }
+
+    /**
+     *  @brief Async load a data from the network.
+     *
+     *  @param key The data to save key.
+     *  @param handler Callback called to report call status.
+     */
+    KADEMLIA_SYMBOL_VISIBILITY
+    void async_load(key_type const& key, load_handler_type handler );
+
+    template< typename KeyType >
+    void async_load(KeyType const& key, load_handler_type handler)
+    {
+        async_load(key_type{std::begin(key), std::end(key)}, std::move(handler));
+    }
 
     /**
      *  @brief This <b>blocking call</b> execute the first_session main loop.
@@ -93,20 +116,16 @@ public:
      *  @return The exit reason of the call.
      */
     KADEMLIA_SYMBOL_VISIBILITY
-    std::error_code
-    runImpl
-        ( void );
+    std::error_code runImpl();
 
-	KADEMLIA_SYMBOL_VISIBILITY
+    KADEMLIA_SYMBOL_VISIBILITY
     std::error_code wait();
 
     /**
      *  @brief Abort the first_session main loop.
      */
     KADEMLIA_SYMBOL_VISIBILITY
-    void
-    abort
-        ( void );
+    void abort();
 
 private:
     /// Hidden implementation.

@@ -67,7 +67,7 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenRoutingTableIsEmpty)
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task didn't send any more message.
-    EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
+    EXPECT_TRUE(failure_ == k::MISSING_PEERS);
 
     // Task notified the error.
     EXPECT_TRUE(! tracker_.has_sent_message());
@@ -97,7 +97,7 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenUniquePeerFailsToRespond)
 
     // Task notified the error.
     EXPECT_EQ(1, callback_call_count_);
-    EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
+    EXPECT_EQ(failure_, k::MISSING_PEERS);
 }
 
 TEST_F(StoreValueTaskTest, CanNotifyErrorWhenAllPeersFailToRespond)
@@ -129,7 +129,7 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenAllPeersFailToRespond)
 
     // Task notified the error.
     EXPECT_EQ(1, callback_call_count_);
-    EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
+    EXPECT_EQ(failure_, k::MISSING_PEERS);
 }
 
 TEST_F(StoreValueTaskTest, CanStoreValueWhenAlreadyKnownPeerIsTheTarget)
@@ -249,7 +249,7 @@ TEST_F(StoreValueTaskTest, CanSkipWrongResponse)
 
     // the callback has been called.
     EXPECT_EQ(1, callback_call_count_);
-    EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
+    EXPECT_EQ(failure_, k::MISSING_PEERS);
 }
 
 TEST_F(StoreValueTaskTest, CanSkipCorruptedResponse)
@@ -274,7 +274,7 @@ TEST_F(StoreValueTaskTest, CanSkipCorruptedResponse)
 
     // the callback has been called.
     EXPECT_EQ(1, callback_call_count_);
-    EXPECT_TRUE(failure_ == k::INITIAL_PEER_FAILED_TO_RESPOND);
+    EXPECT_EQ(failure_, k::MISSING_PEERS);
 }
 
 }

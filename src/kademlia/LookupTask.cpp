@@ -21,14 +21,13 @@ void LookupTask::flag_candidate_as_invalid(id const& candidate_id)
 	if (i == candidates_.end()) return;
 
 	if (in_flight_requests_count_) --in_flight_requests_count_;
-	i->second.state_ = candidate::STATE_TIMEOUTED;
+	i->second.state_ = candidate::STATE_TIMEDOUT;
 }
 
 
 std::vector<Peer> LookupTask::select_new_closest_candidates(std::size_t max_count)
 {
 	std::vector<Peer> candidates;
-
 	// Iterate over all candidates until we picked
 	// candidates_max_count not-contacted candidates.
 	for (auto i = candidates_.begin(), e = candidates_.end()

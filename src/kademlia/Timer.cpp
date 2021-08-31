@@ -26,7 +26,6 @@
 #include "Timer.h"
 
 #include "kademlia/error_impl.hpp"
-#include "kademlia/log.hpp"
 #include "Poco/Clock.h"
 
 using namespace std::chrono;
@@ -62,7 +61,10 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 		auto end = timeouts_.upper_bound(begin->first);
 		// Call the user callbacks.
 		for (auto i = begin; i != end; ++i)
+		{
+			LOG_DEBUG(Timer, this) << "\tcallback()" << std::endl;
 			i->second();
+		}
 
 		// And remove the timeout.
 		timeouts_.erase(begin, end);
@@ -76,8 +78,14 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 	};
 
 	int tout = static_cast<int>(getTimeout(expiration_time));
+	if (tout < 0)
+	{
+		LOG_DEBUG(Timer, this) << "\tscheduled time is in the past: " << tout << " [ms]" << std::endl;
+		tout = 0;
+	}
 	LOG_DEBUG(Timer, this) << "\tscheduled timer in " << tout << " [ms]" << std::endl;
 	_ioService.addWork(on_fire, tout);
+
 }
 
 
