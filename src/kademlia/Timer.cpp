@@ -44,17 +44,9 @@ Timer::Timer(SocketProactor& ioService): _ioService(ioService),
 void Timer::schedule_next_tick(time_point const& expiration_time)
 {
 	LOG_DEBUG(Timer, this) << "\tscheduling next tick ..." << std::endl;
-	auto on_fire = [ this ](/*boost::system::error_code const& failure*/)
+	auto on_fire = [ this ]()
 	{
-		// The current timeout has been canceled
-		// hence stop right there.
-		/* TODO: since we handle the currently scheduled task cancellation differently, is there a reason to deal with error?
-		if (failure == boost::asio::error::operation_aborted)
-			return;
-
-		if (failure)
-			throw std::system_error{ make_error_code(TIMER_MALFUNCTION) };
-		*/
+		Poco::Mutex::ScopedLock l(_mutex);
 		// The callbacks to execute are the first
 		// n callbacks with the same keys.
 		auto begin = timeouts_.begin();
@@ -84,8 +76,7 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 		tout = 0;
 	}
 	LOG_DEBUG(Timer, this) << "\tscheduled timer in " << tout << " [ms]" << std::endl;
-	_ioService.addWork(on_fire, tout);
-
+	_ioService.addWork(std::move(on_fire), tout);
 }
 
 

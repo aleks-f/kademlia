@@ -32,6 +32,7 @@
 #include <functional>
 #include "Poco/Net/SocketProactor.h"
 #include "kademlia/log.hpp"
+#include "Poco/Mutex.h"
 
 
 namespace kademlia {
@@ -67,6 +68,7 @@ public:
 			_ioService.removePermanentWork(1);
 		};
 
+		Poco::Mutex::ScopedLock l(_mutex);
 		// If the current expiration time will be the sooner to expire
 		// then cancel any pending wait and schedule this one instead.
 		if (timeouts_.empty() || expiration_time < timeouts_.begin()->first)
@@ -93,6 +95,7 @@ private:
 private:
 	Poco::Net::SocketProactor& _ioService;
 	timeouts timeouts_;
+	Poco::Mutex _mutex;
 };
 
 } // namespace detail

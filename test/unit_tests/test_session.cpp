@@ -102,8 +102,8 @@ TEST(SessionTest, session_can_save_and_load)
     k::endpoint const first_session_endpoint{ "127.0.0.1", fs_port4 };
     k::first_session fs{first_session_endpoint, k::endpoint{"::1", fs_port6}};
 
-    auto const s_port4 = kd::getAvailablePort(SocketAddress::IPv4, fs_port4);
-    auto const s_port6 = kd::getAvailablePort(SocketAddress::IPv6, fs_port6);
+    auto const s_port4 = kd::getAvailablePort(SocketAddress::IPv4, fs_port4+1);
+    auto const s_port6 = kd::getAvailablePort(SocketAddress::IPv6, fs_port6+1);
     k::session s{first_session_endpoint
                 , k::endpoint{"127.0.0.1", s_port4}
                 , k::endpoint{"::1", s_port6}};

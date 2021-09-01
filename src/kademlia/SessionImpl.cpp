@@ -34,12 +34,12 @@ namespace detail {
 
 
 SessionImpl::SessionImpl(endpoint const& ipv4, endpoint const& ipv6, int ms):
-	_ioService(Poco::Timespan(ms*1000)),
+	_ioService(Poco::Timespan(Poco::Timespan::TimeDiff(ms)*1000)),
 	_engine{ _ioService, ipv4, ipv6 }
 { }
 
 SessionImpl::SessionImpl(endpoint const& initPeer, endpoint const& ipv4, endpoint const& ipv6, int ms):
-	_ioService(Poco::Timespan(ms*1000)),
+	_ioService(Poco::Timespan(Poco::Timespan::TimeDiff(ms)*1000)),
 	_engine{ _ioService, initPeer, ipv4, ipv6 }
 { }
 

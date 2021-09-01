@@ -43,7 +43,7 @@ namespace detail {
 struct IPEndpoint final
 {
 	Poco::Net::IPAddress address_;
-	uint16_t port_;
+	uint16_t port_ = 0;
 };
 
 
