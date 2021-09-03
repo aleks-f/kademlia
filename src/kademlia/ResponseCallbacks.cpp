@@ -38,6 +38,7 @@ ResponseCallbacks::ResponseCallbacks()
 
 void ResponseCallbacks::push_callback(id const& message_id, callback const& on_message_received)
 {
+	Poco::Mutex::ScopedLock l(_mutex);
 	auto i = callbacks_.emplace(message_id, on_message_received);
 	(void)i;
 	assert(i.second && "an id can't be registered twice");
@@ -45,6 +46,7 @@ void ResponseCallbacks::push_callback(id const& message_id, callback const& on_m
 
 bool ResponseCallbacks::remove_callback(id const& message_id)
 {
+	Poco::Mutex::ScopedLock l(_mutex);
 	std::size_t i = callbacks_.erase( message_id ) > 0;
 	return i;
 }
@@ -52,6 +54,7 @@ bool ResponseCallbacks::remove_callback(id const& message_id)
 std::error_code ResponseCallbacks::dispatch_response(endpoint_type const& sender,
 	Header const& h, buffer::const_iterator i, buffer::const_iterator e )
 {
+	Poco::Mutex::ScopedLock l(_mutex);
 	auto callback = callbacks_.find(h.random_token_);
 
 	if (callback == callbacks_.end())
@@ -61,7 +64,7 @@ std::error_code ResponseCallbacks::dispatch_response(endpoint_type const& sender
 	}
 
 	callback->second(sender, h, i, e);
-	callbacks_.erase(h.random_token_);
+	callbacks_.erase(callback);
 
 	return std::error_code{};
 }

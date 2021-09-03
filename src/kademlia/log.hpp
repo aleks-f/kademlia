@@ -65,7 +65,7 @@ bool isLogEnabled(std::string const& module);
 	for (bool used = false; ! used; used = true)							\
 		for ( static bool enabled = kademlia::detail::isLogEnabled(#module) \
 			; enabled && ! used; used = true)								\
-			Poco::LogStream(Poco::Logger::get(#module)).debug()
+			Poco::LogStream(Poco::Logger::get(#module)).debug() << thiz << ' '
 #else
 #   define LOG_DEBUG( module, thiz ) \
 	while ( false )					 \

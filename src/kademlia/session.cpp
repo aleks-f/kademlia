@@ -43,12 +43,22 @@ struct session::impl final: detail::SessionImpl
 
 session::session(endpoint const& initial_peer,
 	endpoint const& listen_on_ipv4,
-	endpoint const& listen_on_ipv6 ):
-		impl_{ new impl{ initial_peer, listen_on_ipv4, listen_on_ipv6 } }
+	endpoint const& listen_on_ipv6 )
+try :
+	impl_{ new impl{ initial_peer, listen_on_ipv4, listen_on_ipv6 } }
+	{
+		result();
+	}
+catch (std::exception& ex)
 {
-	result();
+	std::cerr << ex.what() << std::endl;
+	throw;
 }
-
+catch (...)
+{
+	std::cerr << "unknown exception" << std::endl;
+	throw;
+}
 
 session::~session()
 {
@@ -81,7 +91,16 @@ std::error_code session::wait()
 
 std::error_code session::runImpl()
 {
-	return impl_->run();
+	try
+	{
+		return impl_->run();
+	}
+	catch (std::exception& ex)
+	{
+		std::cerr << ex.what() << std::endl;
+		abort();
+	}
+	return kademlia::detail::make_error_code(RUN_ABORTED);
 }
 
 

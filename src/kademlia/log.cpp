@@ -116,13 +116,15 @@ struct LogInitializer
 		//enableLogFor("LookupTask");
 		//enableLogFor("MessageSocket");
 		//enableLogFor("Network");
+		//enableLogFor("NotifyPeerTask");
 		//enableLogFor("ResponseCallbacks");
 		//enableLogFor("ResponseRouter");
+		//enableLogFor("RoutingTable");
 		//enableLogFor("Session");
 		//enableLogFor("SessionImpl");
 		//enableLogFor("SocketAdapter");
 		//enableLogFor("SocketAdapterTest");
-		enableLogFor("StoreValueTask");
+		//enableLogFor("StoreValueTask");
 		//enableLogFor("Timer");
 		//enableLogFor("TimerTest");
 		//enableLogFor("Tracker");

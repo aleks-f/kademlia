@@ -32,6 +32,8 @@
 #include "kademlia/id.hpp"
 #include "IPEndpoint.h"
 #include "Message.h"
+#include "Poco/Mutex.h"
+
 
 namespace kademlia {
 namespace detail {
@@ -63,6 +65,7 @@ public:
 private:
 	using callbacks = std::map<id, callback>;
 	callbacks callbacks_;
+	Poco::Mutex _mutex;
 };
 
 } // namespace detail

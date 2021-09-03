@@ -31,6 +31,8 @@
 #include <chrono>
 #include <functional>
 #include "Poco/Net/SocketProactor.h"
+#include "kademlia/log.hpp"
+#include "Poco/Mutex.h"
 
 
 namespace kademlia {
@@ -59,10 +61,14 @@ public:
 		{
 			int schedComplHandlerCnt = _ioService.scheduledWork();
 			if (schedComplHandlerCnt > 0)
+			{
+				LOG_DEBUG(Timer, this) << "removing " << schedComplHandlerCnt << " scheduled handlers" << std::endl;
 				_ioService.removeScheduledWork(schedComplHandlerCnt-1);
+			}
 			_ioService.removePermanentWork(1);
 		};
 
+		Poco::Mutex::ScopedLock l(_mutex);
 		// If the current expiration time will be the sooner to expire
 		// then cancel any pending wait and schedule this one instead.
 		if (timeouts_.empty() || expiration_time < timeouts_.begin()->first)
@@ -89,6 +95,7 @@ private:
 private:
 	Poco::Net::SocketProactor& _ioService;
 	timeouts timeouts_;
+	Poco::Mutex _mutex;
 };
 
 } // namespace detail

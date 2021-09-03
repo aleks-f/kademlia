@@ -51,6 +51,7 @@ TEST(ErrorTest, error_message_follows_the_error_name)
     EXPECT_TRUE(compare_enum_to_message("UNKNOWN_ERROR", k::UNKNOWN_ERROR));
     EXPECT_TRUE(compare_enum_to_message("RUN_ABORTED", k::RUN_ABORTED));
     EXPECT_TRUE(compare_enum_to_message("INITIAL_PEER_FAILED_TO_RESPOND", k::INITIAL_PEER_FAILED_TO_RESPOND));
+    EXPECT_TRUE(compare_enum_to_message("MISSING_PEERS", k::MISSING_PEERS));
     EXPECT_TRUE(compare_enum_to_message("INVALID_ID", k::INVALID_ID));
     EXPECT_TRUE(compare_enum_to_message("TRUNCATED_ID", k::TRUNCATED_ID));
     EXPECT_TRUE(compare_enum_to_message("TRUNCATED_HEADER", k::TRUNCATED_HEADER));

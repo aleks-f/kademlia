@@ -99,7 +99,6 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 # Build everything.
 include(Poco)
 add_poco()
-add_subdirectory(include)
 add_subdirectory(src)
 enable_testing()
 if(WIN32)

@@ -58,6 +58,7 @@
 #include "Tracker.h"
 #include "Message.h"
 
+
 namespace kademlia {
 namespace detail {
 
@@ -84,8 +85,7 @@ public:
 			tracker_(io_service, my_id_, network_, random_engine_),
 			routing_table_(my_id_),
 			value_store_(),
-			is_connected_(),
-			pending_tasks_()
+			pending_notifications_count_()
 	{
 		LOG_DEBUG(Engine, this) << "Peerless Engine created (" <<
 			ipv4.address() << ':' << ipv4.service() << ", " <<
@@ -97,7 +97,16 @@ public:
 			Engine(io_service, ipv4, ipv6, new_id)
 	{
 		LOG_DEBUG(Engine, this) << "Engine bootstrapping using peer '" << initial_peer << "'." << std::endl;
-		discover_neighbors(initial_peer);
+		bool initialized = false;
+		auto on_initialized = [&initialized]
+		{
+			initialized = true;
+		};
+
+		discover_neighbors(initial_peer, on_initialized);
+
+		while (!initialized)
+			io_service.poll();
 	}
 
 	Engine(Engine const&) = delete;
@@ -107,46 +116,16 @@ public:
 	template<typename HandlerType>
 	void async_save(key_type const& key, data_type const& data, HandlerType && handler)
 	{
-		// If the routing table is empty, save the
-		// current request for processing when
-		// the routing table will be filled.
-		if (! is_connected_)
-		{
-			LOG_DEBUG(Engine, this) << "delaying async save of key '"
-					<< toString(key) << "'." << std::endl;
-
-			auto t = [this, key, data, handler] () mutable
-			{ async_save(key, data, std::move(handler)); };
-
-			pending_tasks_.push(std::move(t));
-		}
-		else
-		{
-			LOG_DEBUG(Engine, this) << "executing async save of key '" << toString(key) << "'." << std::endl;
-			start_store_value_task(id(key), data, tracker_, routing_table_, std::forward<HandlerType>(handler));
-		}
+		LOG_DEBUG( engine, this ) << "executing async save of key '" << toString(key) << "'." << std::endl;
+		start_store_value_task(id(key), data, tracker_, routing_table_, std::forward< HandlerType >(handler));
 	}
 
 	template<typename HandlerType>
 	void async_load(key_type const& key, HandlerType && handler)
 	{
-		// If the routing table is empty, save the
-		// current request for processing when
-		// the routing table will be filled.
-		if (!is_connected_)
-		{
-			LOG_DEBUG(Engine, this) << "delaying async load of key '" << toString(key) << "'." << std::endl;
+		LOG_DEBUG( engine, this ) << "executing async load of key '" << toString( key ) << "'." << std::endl;
 
-			auto t = [this, key, handler] () mutable
-			{ async_load(key, std::move(handler)); };
-
-			pending_tasks_.push(std::move(t));
-		}
-		else
-		{
-			LOG_DEBUG(Engine, this) << "executing async load of key '" << toString(key) << "'." << std::endl;
-			start_find_value_task<data_type>(id(key), tracker_, routing_table_, std::forward<HandlerType>(handler));
-		}
+		start_find_value_task< data_type >(id(key), tracker_, routing_table_, std::forward<HandlerType>(handler));
 	}
 
 private:
@@ -156,7 +135,6 @@ private:
 	using random_engine_type = std::default_random_engine;
 	using TrackerType = Tracker<random_engine_type, NetworkType>;
 
-private:
 	void process_new_message(IPEndpoint const& sender, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
@@ -264,17 +242,18 @@ private:
 		}
 	}
 
-	void discover_neighbors(endpoint const& initial_peer)
+	template<typename OnInitialized>
+	void discover_neighbors(endpoint const& initial_peer, OnInitialized on_initialized)
 	{
 		// Initial peer should know our neighbors, hence ask
 		// him which peers are close to our own id.
 
 		auto endpoints_to_query = network_.resolve_endpoint(initial_peer);
 
-		auto on_discovery = [this] (std::error_code const& failure)
+		auto on_discovery = [this, on_initialized] (std::error_code const& failure)
 		{
 			if (failure) throw std::system_error{failure};
-			notify_neighbors();
+			notify_neighbors(on_initialized);
 		};
 
 		start_discover_neighbors_task(my_id_, tracker_, routing_table_, std::move(endpoints_to_query), on_discovery);
@@ -289,7 +268,8 @@ private:
 		return closest_neighbor->first;
 	}
 
-	void notify_neighbors()
+	template<typename OnInitialized>
+	void notify_neighbors(OnInitialized on_initialized)
 		/// Refresh each bucket.
 	{
 		auto closest_neighbor_id = get_closest_neighbor_id();
@@ -298,12 +278,21 @@ private:
 		// Skip empty buckets.
 		while (i && closest_neighbor_id[i] == my_id_[i]) --i;
 
-		// Send refresh from closest neighbor bucket to farest bucket.
+		pending_notifications_count_ += i;
+		auto on_notification_complete = [ this, on_initialized ]
+		{
+			if (pending_notifications_count_) --pending_notifications_count_;
+
+			if (!pending_notifications_count_)
+				on_initialized();
+		};
+
+		// Send refresh from the closest neighbor bucket to the farthest bucket.
 		auto refresh_id = my_id_;
 		while (i)
 		{
 			refresh_id[i] = ! refresh_id[i];
-			start_notify_peer_task(refresh_id, tracker_, routing_table_);
+			start_notify_peer_task(refresh_id, tracker_, routing_table_, on_notification_complete);
 			--i;
 		}
 	}
@@ -323,27 +312,6 @@ private:
 		routing_table_.push(h.source_id_, sender);
 
 		process_new_message(sender, h, i, e);
-
-		// A message has been received, hence the connection
-		// is up. Check if it was down before.
-		if (!is_connected_)
-		{
-			is_connected_ = true;
-			execute_pending_tasks();
-		}
-	}
-
-	void execute_pending_tasks()
-	{
-		LOG_DEBUG(Engine, this) << "execute '" << pending_tasks_.size() << "' pending task(s)." << std::endl;
-
-		// Some store/find requests may be pending
-		// while the initial peer was contacted.
-		while (! pending_tasks_.empty())
-		{
-			pending_tasks_.front()();
-			pending_tasks_.pop();
-		}
 	}
 
 private:
@@ -353,8 +321,7 @@ private:
 	TrackerType tracker_;
 	routing_table_type routing_table_;
 	value_store_type value_store_;
-	bool is_connected_;
-	std::queue<pending_task_type> pending_tasks_;
+	std::size_t pending_notifications_count_;
 };
 
 } // namespace detail

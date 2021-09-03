@@ -70,9 +70,9 @@ protected:
 
 	template<typename Iterator>
 	LookupTask(id const & key, Iterator i, Iterator e)
-        : key_{ key }
-        , in_flight_requests_count_{ 0 }
-        , candidates_{}
+		: key_{ key },
+		  in_flight_requests_count_{ 0 },
+		  candidates_{}
 	{
 		for (; i != e; ++i)
 			add_candidate(Peer{ i->first, i->second });
@@ -87,7 +87,7 @@ private:
 			STATE_UNKNOWN,
 			STATE_CONTACTED,
 			STATE_RESPONDED,
-			STATE_TIMEOUTED,
+			STATE_TIMEDOUT,
 		} state_;
 	};
 

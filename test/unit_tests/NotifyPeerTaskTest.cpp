@@ -61,9 +61,10 @@ TEST_F(NotifyPeerTaskTest, can_query_known_peer_for_specific_id)
                                    , p3.id_
                                    , kd::FindPeerResponseBody{});
 
+    bool finished = false;
+    auto on_finish = [ &finished ] { finished = true; };
 
-
-    kd::start_notify_peer_task(my_id, tracker_, routing_table_);
+    kd::start_notify_peer_task(my_id, tracker_, routing_table_, on_finish);
 
     io_service_.poll();
 
@@ -78,6 +79,7 @@ TEST_F(NotifyPeerTaskTest, can_query_known_peer_for_specific_id)
 
     // Task didn't send any more message.
     EXPECT_TRUE(! tracker_.has_sent_message());
+    EXPECT_TRUE (finished);
 }
 
 }

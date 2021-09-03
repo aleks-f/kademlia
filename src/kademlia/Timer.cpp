@@ -26,7 +26,6 @@
 #include "Timer.h"
 
 #include "kademlia/error_impl.hpp"
-#include "kademlia/log.hpp"
 #include "Poco/Clock.h"
 
 using namespace std::chrono;
@@ -45,30 +44,27 @@ Timer::Timer(SocketProactor& ioService): _ioService(ioService),
 void Timer::schedule_next_tick(time_point const& expiration_time)
 {
 	LOG_DEBUG(Timer, this) << "\tscheduling next tick ..." << std::endl;
-	auto on_fire = [ this ](/*boost::system::error_code const& failure*/)
+	auto on_fire = [this]()
 	{
-		// The current timeout has been canceled
-		// hence stop right there.
-		/* TODO: since we handle the currently scheduled task cancellation differently, is there a reason to deal with error?
-		if (failure == boost::asio::error::operation_aborted)
-			return;
+		Poco::Mutex::ScopedLock l(_mutex);
+		if (!timeouts_.empty())
+		{
+			// The callbacks to execute are the first
+			// n callbacks with the same keys.
+			auto begin = timeouts_.begin();
+			auto end = timeouts_.upper_bound(begin->first);
+			// Call the user callbacks.
+			for (auto i = begin; i != end; ++i)
+			{
+				LOG_DEBUG(Timer, this) << "\tcallback()" << std::endl;
+				i->second();
+			}
 
-		if (failure)
-			throw std::system_error{ make_error_code(TIMER_MALFUNCTION) };
-		*/
-		// The callbacks to execute are the first
-		// n callbacks with the same keys.
-		auto begin = timeouts_.begin();
-		auto end = timeouts_.upper_bound(begin->first);
-		// Call the user callbacks.
-		for (auto i = begin; i != end; ++i)
-			i->second();
-
-		// And remove the timeout.
-		timeouts_.erase(begin, end);
-
+			// And remove the timeout.
+			timeouts_.erase(begin, end);
+		}
 		// If there is a remaining timeout, schedule it.
-		if (! timeouts_.empty())
+		if (!timeouts_.empty())
 		{
 			LOG_DEBUG(Timer, this) << "\tschedule remaining timers" << std::endl;
 			schedule_next_tick(timeouts_.begin()->first);
@@ -76,8 +72,11 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 	};
 
 	int tout = static_cast<int>(getTimeout(expiration_time));
+	if (tout < 0)
+		LOG_DEBUG(Timer, this) << "\ttimer expired: " << tout << " [ms]" << std::endl;
+
+	_ioService.addWork(std::move(on_fire), tout);
 	LOG_DEBUG(Timer, this) << "\tscheduled timer in " << tout << " [ms]" << std::endl;
-	_ioService.addWork(on_fire, tout);
 }
 
 
