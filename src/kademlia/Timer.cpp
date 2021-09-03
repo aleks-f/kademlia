@@ -47,22 +47,24 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 	auto on_fire = [this]()
 	{
 		Poco::Mutex::ScopedLock l(_mutex);
-		// The callbacks to execute are the first
-		// n callbacks with the same keys.
-		auto begin = timeouts_.begin();
-		auto end = timeouts_.upper_bound(begin->first);
-		// Call the user callbacks.
-		for (auto i = begin; i != end; ++i)
+		if (!timeouts_.empty())
 		{
-			LOG_DEBUG(Timer, this) << "\tcallback()" << std::endl;
-			i->second();
+			// The callbacks to execute are the first
+			// n callbacks with the same keys.
+			auto begin = timeouts_.begin();
+			auto end = timeouts_.upper_bound(begin->first);
+			// Call the user callbacks.
+			for (auto i = begin; i != end; ++i)
+			{
+				LOG_DEBUG(Timer, this) << "\tcallback()" << std::endl;
+				i->second();
+			}
+
+			// And remove the timeout.
+			timeouts_.erase(begin, end);
 		}
-
-		// And remove the timeout.
-		timeouts_.erase(begin, end);
-
 		// If there is a remaining timeout, schedule it.
-		if (! timeouts_.empty())
+		if (!timeouts_.empty())
 		{
 			LOG_DEBUG(Timer, this) << "\tschedule remaining timers" << std::endl;
 			schedule_next_tick(timeouts_.begin()->first);
