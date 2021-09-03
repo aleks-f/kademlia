@@ -62,7 +62,7 @@ public:
 			int schedComplHandlerCnt = _ioService.scheduledWork();
 			if (schedComplHandlerCnt > 0)
 			{
-				LOG_DEBUG(Timer, this) << "removing " << schedComplHandlerCnt-1 << " scheduled handlers" << std::endl;
+				LOG_DEBUG(Timer, this) << "removing " << schedComplHandlerCnt << " scheduled handlers" << std::endl;
 				_ioService.removeScheduledWork(schedComplHandlerCnt-1);
 			}
 			_ioService.removePermanentWork(1);

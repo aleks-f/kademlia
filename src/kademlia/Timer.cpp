@@ -44,7 +44,7 @@ Timer::Timer(SocketProactor& ioService): _ioService(ioService),
 void Timer::schedule_next_tick(time_point const& expiration_time)
 {
 	LOG_DEBUG(Timer, this) << "\tscheduling next tick ..." << std::endl;
-	auto on_fire = [ this ]()
+	auto on_fire = [this]()
 	{
 		Poco::Mutex::ScopedLock l(_mutex);
 		// The callbacks to execute are the first
@@ -71,12 +71,10 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 
 	int tout = static_cast<int>(getTimeout(expiration_time));
 	if (tout < 0)
-	{
-		LOG_DEBUG(Timer, this) << "\tscheduled time is in the past: " << tout << " [ms]" << std::endl;
-		tout = 0;
-	}
-	LOG_DEBUG(Timer, this) << "\tscheduled timer in " << tout << " [ms]" << std::endl;
+		LOG_DEBUG(Timer, this) << "\ttimer expired: " << tout << " [ms]" << std::endl;
+
 	_ioService.addWork(std::move(on_fire), tout);
+	LOG_DEBUG(Timer, this) << "\tscheduled timer in " << tout << " [ms]" << std::endl;
 }
 
 

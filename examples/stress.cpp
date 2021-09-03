@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 			'[' << bootAddr6 << "]:" << bootPort6 << std::endl;
 
 		uint16_t sessPort4 = kd::getAvailablePort(SocketAddress::IPv4, bootPort4 + 1);
-		uint16_t sessPort6 = kd::getAvailablePort(SocketAddress::IPv4, bootPort6 + 1);
+		uint16_t sessPort6 = kd::getAvailablePort(SocketAddress::IPv6, bootPort6 + 1);
 
 		std::vector<k::session*> sessions;
 		for (int i = 0; i < reps; ++i)
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 				", listening on 127.0.0.1:" << sessPort4 << ", " <<
 				"[::1]:" << sessPort6 << std::endl;
 			sessPort4 = kd::getAvailablePort(SocketAddress::IPv4, ++sessPort4);
-			sessPort6 = kd::getAvailablePort(SocketAddress::IPv4, ++sessPort6);
+			sessPort6 = kd::getAvailablePort(SocketAddress::IPv6, ++sessPort6);
 		}
 		Thread::sleep(100);
 		for (int i = 0; i < reps; ++i)

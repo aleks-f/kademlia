@@ -98,18 +98,15 @@ public:
 	{
 		LOG_DEBUG(Engine, this) << "Engine bootstrapping using peer '" << initial_peer << "'." << std::endl;
 		bool initialized = false;
-		auto on_initialized = [&initialized] { initialized = true; };
+		auto on_initialized = [&initialized]
+		{
+			initialized = true;
+		};
 
 		discover_neighbors(initial_peer, on_initialized);
 
-		int handled = 0;
 		while (!initialized)
-		{
-			io_service.poll(&handled);
-			if (!handled)
-				Poco::Thread::sleep(1);
-			else handled = 0;
-		}
+			io_service.poll();
 	}
 
 	Engine(Engine const&) = delete;
