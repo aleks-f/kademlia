@@ -37,10 +37,11 @@ set(kademlia_sources
     Peer.cpp
     ResponseCallbacks.cpp
     ResponseRouter.cpp
-    session.cpp
-    SessionImpl.cpp
-    session_base.cpp
-    first_session.cpp
+#    session.cpp
+#    SessionImpl.cpp
+#    session_base.cpp
+#    first_session.cpp
+    Session.cpp
     Timer.cpp
     Util.cpp)
 

@@ -25,8 +25,7 @@
 
 
 #include "kademlia/error.hpp"
-#include "kademlia/session.hpp"
-#include "kademlia/first_session.hpp"
+#include "kademlia/Session.h"
 #include "kademlia/detail/Util.h"
 #include "common.hpp"
 #include "Network.h"
@@ -38,14 +37,14 @@ namespace {
 namespace k = kademlia;
 namespace kd = kademlia::detail;
 using namespace Poco::Net;
-
+using Session = Kademlia::Session;
 
 TEST(SessionTest, session_opens_sockets_on_all_interfaces_by_default)
 {
-	k::first_session s;
+	Session s;
 
-	k::test::checkListening("0.0.0.0", k::first_session::DEFAULT_PORT);
-	k::test::checkListening("::", k::first_session::DEFAULT_PORT);
+	k::test::checkListening("0.0.0.0", Session::DEFAULT_PORT);
+	k::test::checkListening("::", Session::DEFAULT_PORT);
 }
 
 TEST(SessionTest, session_opens_both_ipv4_ipv6_sockets)
@@ -56,7 +55,7 @@ TEST(SessionTest, session_opens_both_ipv4_ipv6_sockets)
 	k::endpoint ipv4_endpoint{"127.0.0.1", port1};
 	k::endpoint ipv6_endpoint{"::1", port2};
 
-	k::first_session s{ ipv4_endpoint, ipv6_endpoint };
+	Session s{ ipv4_endpoint, ipv6_endpoint };
 
 	k::test::checkListening("127.0.0.1", port1);
 	k::test::checkListening("::1", port2);
@@ -70,7 +69,7 @@ TEST(SessionTest, session_throw_on_invalid_ipv6_address)
     k::endpoint ipv4_endpoint{ "127.0.0.1", port1 };
     k::endpoint ipv6_endpoint{ "0.0.0.0", port2 };
 
-   EXPECT_THROW(k::first_session s(ipv4_endpoint, ipv6_endpoint), std::exception);
+   EXPECT_THROW(Session s(ipv4_endpoint, ipv6_endpoint), std::exception);
 }
 
 TEST(SessionTest, session_throw_on_invalid_ipv4_address)
@@ -81,13 +80,13 @@ TEST(SessionTest, session_throw_on_invalid_ipv4_address)
     k::endpoint ipv4_endpoint{ "::", port1 };
     k::endpoint ipv6_endpoint{ "::1", port2 };
 
-    EXPECT_THROW(k::first_session s(ipv4_endpoint, ipv6_endpoint), std::exception);
+    EXPECT_THROW(Session s(ipv4_endpoint, ipv6_endpoint), std::exception);
 }
 
 
 TEST(SessionTest, session_run_can_be_aborted)
 {
-    k::first_session s{};
+    Session s{};
 
     s.abort();
     auto result = s.wait();
@@ -100,11 +99,11 @@ TEST(SessionTest, session_can_save_and_load)
     auto const fs_port4 = kd::getAvailablePort(SocketAddress::IPv4);
     auto const fs_port6 = kd::getAvailablePort(SocketAddress::IPv6);
     k::endpoint const first_session_endpoint{ "127.0.0.1", fs_port4 };
-    k::first_session fs{first_session_endpoint, k::endpoint{"::1", fs_port6}};
+    Session fs{first_session_endpoint, k::endpoint{"::1", fs_port6}};
 
     auto const s_port4 = kd::getAvailablePort(SocketAddress::IPv4, fs_port4+1);
     auto const s_port6 = kd::getAvailablePort(SocketAddress::IPv6, fs_port6+1);
-    k::session s{first_session_endpoint
+    Session s{first_session_endpoint
                 , k::endpoint{"127.0.0.1", s_port4}
                 , k::endpoint{"::1", s_port6}};
 
@@ -114,7 +113,7 @@ TEST(SessionTest, session_can_save_and_load)
     std::string actual_value;
     auto on_load = [ &s, &actual_value ]
             ( std::error_code const& failure
-            , k::session::data_type const& data )
+            , Session::DataType const& data )
     {
         if ( ! failure )
             actual_value.assign( data.begin(), data.end() );
@@ -127,10 +126,10 @@ TEST(SessionTest, session_can_save_and_load)
         if ( failure )
             s.abort();
         else
-            s.async_load( key, on_load );
+            s.asyncLoad( key, on_load );
     };
 
-    s.async_save( key, expected_value, on_save );
+    s.asyncSave( key, expected_value, on_save );
 
     auto s_result = s.wait();
 

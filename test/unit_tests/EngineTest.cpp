@@ -37,6 +37,7 @@ namespace t = k::test;
 
 using Poco::Net::SocketProactor;
 using Poco::Thread;
+using Session = Kademlia::Session;
 
 template<typename ... InitialPeer >
 std::unique_ptr< t::TestEngine >
@@ -44,8 +45,8 @@ create_test_engine(SocketProactor& io_service
 				  , d::id const& id
 				  , InitialPeer &&... initial_peer)
 {
-	k::endpoint ipv4_endpoint{ "127.0.0.1", k::session_base::DEFAULT_PORT };
-	k::endpoint ipv6_endpoint{ "::1", k::session_base::DEFAULT_PORT };
+	k::endpoint ipv4_endpoint{ "127.0.0.1", Session::DEFAULT_PORT };
+	k::endpoint ipv6_endpoint{ "::1", Session::DEFAULT_PORT };
 
 	using engine_ptr = std::unique_ptr< t::TestEngine >;
 
@@ -61,7 +62,7 @@ TEST(EngineTest, isolated_engine_cannot_be_constructed)
 {
 	Poco::Net::SocketProactor io_service;
 
-	k::endpoint initial_peer{ "172.18.1.2", k::session_base::DEFAULT_PORT };
+	k::endpoint initial_peer{ "172.18.1.2", Session::DEFAULT_PORT };
 
 	EXPECT_THROW(create_test_engine(io_service
 										   , d::id{}
@@ -96,7 +97,7 @@ TEST(EngineTest, two_engines_can_save_and_load)
 
 	auto on_save = [](std::error_code const& failure)
 	{ if (failure) throw std::system_error{ failure }; };
-	e1->async_save("key", expected_data, on_save);
+	e1->asyncSave("key", expected_data, on_save);
 
 	EXPECT_GT(io_service.poll(), 0);
 
@@ -106,7 +107,7 @@ TEST(EngineTest, two_engines_can_save_and_load)
 		if (expected_data != actual_data)
 			throw std::runtime_error{ "Unexpected data" };
 	};
-	e2->async_load("key", on_load);
+	e2->asyncLoad("key", on_load);
 
 	EXPECT_GT(io_service.poll(), 0);
 }

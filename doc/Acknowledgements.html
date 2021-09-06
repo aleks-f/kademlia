@@ -1,5 +1,27 @@
-// Copyright (c) 2013-2014, David Keller
-// All rights reserved.
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+<title>POCO Kademlia Library - Acknowledgements</title>
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+<meta NAME="author" CONTENT="Applied Informatics">
+<meta NAME="copyright" CONTENT="Applied Informatics">
+<meta NAME="language" CONTENT="en">
+<meta NAME="date" CONTENT="2005-02-21">
+</head>
+
+<body text="black" bgcolor="white">
+
+<h1>Acknowledgements</h1>
+
+<p>Portions of the POCO Kademlia Library utilize the
+following copyrighted material, the use of which is hereby acknowledged.</p>
+
+<h3>C++11 distributed hash table library</h3>
+
+<pre>Copyright (c) 2013-2014, David Keller
+
+All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
@@ -22,40 +44,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</pre>
 
-
-#include "SessionImpl.h"
-#include "kademlia/error.hpp"
-#include "error_impl.hpp"
-#include "Poco/Timespan.h"
-
-namespace kademlia {
-namespace detail {
-
-
-SessionImpl::SessionImpl(endpoint const& ipv4, endpoint const& ipv6, int ms):
-	_ioService(Poco::Timespan(Poco::Timespan::TimeDiff(ms)*1000)),
-	_engine{ _ioService, ipv4, ipv6 }
-{ }
-
-SessionImpl::SessionImpl(endpoint const& initPeer, endpoint const& ipv4, endpoint const& ipv6, int ms):
-	_ioService(Poco::Timespan(Poco::Timespan::TimeDiff(ms)*1000)),
-	_engine{ _ioService, initPeer, ipv4, ipv6 }
-{ }
-
-std::error_code SessionImpl::run()
-{
-	Poco::FastMutex::ScopedLock l(_mutex);
-	_ioService.run();
-	return make_error_code(RUN_ABORTED);
-}
-
-
-void SessionImpl::abort()
-{
-	_ioService.stop();
-	_ioService.wakeUp();
-}
-
-} // namespace detail
-} // namespace kademlia
+</body>
+</html>

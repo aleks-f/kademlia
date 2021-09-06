@@ -22,7 +22,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#if 0
 #include <kademlia/first_session.hpp>
 #include "SessionImpl.h"
 
@@ -59,18 +59,18 @@ first_session::~first_session
 }
 
 
-void first_session::async_save(key_type const& key,
+void first_session::asyncSave(key_type const& key,
 	data_type const& data,
 	save_handler_type handler)
 {
-	impl_->async_save( key, data, std::move( handler ) );
+	impl_->asyncSave( key, data, std::move( handler ) );
 }
 
 
-void first_session::async_load(key_type const& key,
+void first_session::asyncLoad(key_type const& key,
 	load_handler_type handler)
 {
-	impl_->async_load( key, std::move( handler ) );
+	impl_->asyncLoad( key, std::move( handler ) );
 }
 
 std::error_code
@@ -90,4 +90,4 @@ first_session::abort
 { impl_->abort(); }
 
 } // namespace kademlia
-
+#endif

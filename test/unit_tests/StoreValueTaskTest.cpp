@@ -195,10 +195,7 @@ TEST_F(StoreValueTaskTest, CanStoreValueWhenDiscoveredPeerIsTheTarget)
                                            , tracker_
                                            , routing_table_
                                            , std::ref(*this));
-    while (!callback_call_count_)
-	{
-    	io_service_.poll();
-	}
+    io_service_.poll();
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);

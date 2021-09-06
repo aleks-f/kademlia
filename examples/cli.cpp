@@ -42,7 +42,7 @@ void load(k::session & session, std::string const& key)
 		}
 	};
 
-	session.async_load(key_vec, std::move(on_load));
+	session.asyncLoad(key_vec, std::move(on_load));
 }
 
 void save(k::session & session, std::string const& key, std::string const& val)
@@ -57,7 +57,7 @@ void save(k::session & session, std::string const& key, std::string const& val)
 			std::cout << "Saved \"" << key << "\"" << std::endl;
 	};
 
-	session.async_save(key_vec, val_vec, std::move(on_save));
+	session.asyncSave(key_vec, val_vec, std::move(on_save));
 }
 
 void print_interactive_help()
