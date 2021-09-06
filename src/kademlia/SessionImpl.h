@@ -33,12 +33,12 @@
 
 #include <utility>
 #include "SocketAdapter.h"
+#include "Poco/Mutex.h"
 #include "Poco/Net/DatagramSocket.h"
 #include "Poco/Net/SocketProactor.h"
 #include "MessageSocket.h"
 #include "kademlia/endpoint.hpp"
 #include "Engine.h"
-#include "kademlia/concurrent_guard.hpp"
 
 
 namespace kademlia {
@@ -77,7 +77,7 @@ public:
 private:
 	Poco::Net::SocketProactor _ioService;
 	EngineType _engine;
-	detail::concurrent_guard _concurrentGuard;
+	Poco::FastMutex _mutex;
 };
 
 } // namespace detail

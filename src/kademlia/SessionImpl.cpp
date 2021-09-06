@@ -45,9 +45,7 @@ SessionImpl::SessionImpl(endpoint const& initPeer, endpoint const& ipv4, endpoin
 
 std::error_code SessionImpl::run()
 {
-	// Protect against concurrent invocation of this method.
-	detail::concurrent_guard::sentry s{ _concurrentGuard };
-	if (!s) return make_error_code(ALREADY_RUNNING);
+	Poco::FastMutex::ScopedLock l(_mutex);
 	_ioService.run();
 	return make_error_code(RUN_ABORTED);
 }

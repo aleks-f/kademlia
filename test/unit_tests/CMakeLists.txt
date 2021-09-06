@@ -95,7 +95,6 @@ build_test(unit_tests_lib
         RoutingTableTest.cpp
         test_session.cpp
         test_first_session.cpp
-        test_concurrent_guard.cpp
         EngineTest.cpp
         SocketAdapterTest.cpp
     LIBRARIES 
