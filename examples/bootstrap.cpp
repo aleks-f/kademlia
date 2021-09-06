@@ -8,9 +8,10 @@
 
 #include <kademlia/endpoint.hpp>
 #include <kademlia/error.hpp>
-#include <kademlia/first_session.hpp>
+#include "kademlia/Session.h"
 
-namespace k = kademlia;
+using Session = Kademlia::Session;
+using Endpoint = kademlia::endpoint;
 
 int main(int argc, char** argv )
 {
@@ -25,7 +26,7 @@ int main(int argc, char** argv )
 	std::uint16_t const port = std::atoi( argv[1] );
 
 	// Create the session
-	k::first_session session{k::endpoint{"0.0.0.0", port}, k::endpoint{"::", port}};
+	Session session{Endpoint{"0.0.0.0", port}, Endpoint{"::", port}};
 
 	// Wait for exit request
 	std::cout << "Press any key to exit" << std::endl;
@@ -36,6 +37,6 @@ int main(int argc, char** argv )
 
 	// Wait for the main loop thread termination
 	auto failure = session.wait();
-	if ( failure != k::RUN_ABORTED )
+	if ( failure != kademlia::RUN_ABORTED )
 		std::cerr << failure.message() << std::endl;
 }

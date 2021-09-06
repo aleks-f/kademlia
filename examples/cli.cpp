@@ -7,10 +7,11 @@
 #include <thread>
 
 #include <kademlia/endpoint.hpp>
-#include <kademlia/session.hpp>
+#include "kademlia/Session.h"
 #include <kademlia/error.hpp>
 
-namespace k = kademlia;
+using Session = Kademlia::Session;
+using Endpoint = kademlia::endpoint;
 
 namespace {
 
@@ -28,10 +29,10 @@ std::vector<std::string> split(std::string const& line)
 	return std::vector<std::string>{ iterator{ in }, iterator{} };
 }
 
-void load(k::session & session, std::string const& key)
+void load(Session & session, std::string const& key)
 {
 	std::vector<uint8_t> key_vec(key.begin(), key.end());
-	auto on_load = [key] (std::error_code const& error, k::session::data_type const& data)
+	auto on_load = [key] (std::error_code const& error, Session::DataType const& data)
 	{
 		if (error)
 			std::cerr << "Failed to load \"" << key << "\", error: " << error.message() << std::endl;
@@ -45,7 +46,7 @@ void load(k::session & session, std::string const& key)
 	session.asyncLoad(key_vec, std::move(on_load));
 }
 
-void save(k::session & session, std::string const& key, std::string const& val)
+void save(Session & session, std::string const& key, std::string const& val)
 {
 	std::vector<uint8_t> key_vec(key.begin(), key.end());
 	std::vector<uint8_t> val_vec(val.begin(), val.end());
@@ -90,9 +91,9 @@ int main(int argc, char** argv)
 	auto boot_port = boot_ep.substr(sep_idx+1);
 
 	// Create the session (runs in its own thread)
-	k::session session{ k::endpoint{ boot_addr, boot_port }
-					  , k::endpoint{ "0.0.0.0", port }
-					  , k::endpoint{ "::", port } };
+	Session session{ Endpoint{ boot_addr, boot_port }
+					  , Endpoint{ "0.0.0.0", port }
+					  , Endpoint{ "::", port } };
 
 	// Parse stdin until EOF (CTRL-D in Unix, CTRL-Z-Enter on Windows))
 	std::cout << "Enter \"help\" to see available actions" << std::endl;
@@ -131,7 +132,7 @@ int main(int argc, char** argv)
 
 	// Wait for the session termination
 	auto failure = session.wait();
-	if (failure != k::RUN_ABORTED)
+	if (failure != kademlia::RUN_ABORTED)
 		std::cerr << failure.message() << std::endl;
 	std::cout << "Goodbye!" << std::endl;
 }
