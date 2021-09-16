@@ -23,7 +23,7 @@ Initialization:
     // If an error occurs, this will throw.
     // Following runtime errors will be reported
     // through an std::error_code.
-    kademlia::session s{ initial_peer };
+    kademlia::Session s{ initial_peer };
 
     // Run the library main loop in a dedicated thread.
     auto main_loop_result = std::async( std::launch::async
@@ -46,7 +46,7 @@ Searching for value associated with "key1":
     };
 
     // Schedule an asynchronous load.
-    s.async_load( "key1", on_load );
+    s.asyncLoad( "key1", on_load );
 
     // [...]
 ```
@@ -64,7 +64,7 @@ Saving a data into the table is similar:
     }
 
     // And perform the saving.
-    s.async_save( "key2", data, on_save );
+    s.asyncSave( "key2", data, on_save );
 
     // [...]
 ```

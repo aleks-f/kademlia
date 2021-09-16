@@ -25,7 +25,7 @@
 
 #include <memory>
 #include "Poco/Net/SocketProactor.h"
-#include <kademlia/session_base.hpp>
+#include "kademlia/Session.h"
 #include <kademlia/endpoint.hpp>
 #include "kademlia/log.hpp"
 #include "kademlia/buffer.hpp"
@@ -35,32 +35,34 @@
 namespace kademlia {
 namespace test {
 
+using Session = Kademlia::Session;
+
 class TestEngine final
 {
 public:
 	TestEngine(Poco::Net::SocketProactor& service,endpoint const & ipv4,endpoint const & ipv6,
 		detail::id const& new_id): engine_(service, ipv4, ipv6, new_id),
-			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), session_base::DEFAULT_PORT),
-			listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), session_base::DEFAULT_PORT)
+			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), Session::DEFAULT_PORT),
+			listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), Session::DEFAULT_PORT)
 	{ }
 
 	TestEngine(Poco::Net::SocketProactor& service, endpoint const & initial_peer
 		, endpoint const & ipv4, endpoint const & ipv6, detail::id const& new_id)
 			: engine_(service, initial_peer, ipv4, ipv6, new_id),
-			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), session_base::DEFAULT_PORT),
-			listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), session_base::DEFAULT_PORT)
+			listen_ipv4_(FakeSocket::get_last_allocated_ipv4(), Session::DEFAULT_PORT),
+			listen_ipv6_(FakeSocket::get_last_allocated_ipv6(), Session::DEFAULT_PORT)
 	{ }
 
 	template< typename Callable >
-	void async_save(std::string const& key, std::string const& data, Callable & callable)
+	void asyncSave(std::string const& key, std::string const& data, Callable & callable)
 	{
 		impl::key_type const k{ key.begin(), key.end() };
 		impl::data_type const d{ data.begin(), data.end() };
-		engine_.async_save(k, d, callable);
+		engine_.asyncSave(k, d, callable);
 	}
 
 	template< typename Callable >
-	void async_load(std::string const& key, Callable & callable)
+	void asyncLoad(std::string const& key, Callable & callable)
 	{
 		impl::key_type const k{ key.begin(), key.end() };
 		auto c = [ callable ](std::error_code const& failure, impl::data_type const& data)
@@ -68,7 +70,7 @@ public:
 			callable(failure, std::string{ data.begin(), data.end() });
 		};
 
-		engine_.async_load(k, c);
+		engine_.asyncLoad(k, c);
 	}
 
 	endpoint

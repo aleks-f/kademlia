@@ -4,8 +4,7 @@
 #include <iostream>
 
 #include "kademlia/endpoint.hpp"
-#include "kademlia/session.hpp"
-#include "kademlia/first_session.hpp"
+#include "kademlia/Session.h"
 #include "kademlia/error.hpp"
 #include "kademlia/detail/Util.h"
 #include "Poco/Timestamp.h"
@@ -24,6 +23,7 @@ using Poco::Timespan;
 using Poco::Logger;
 using Poco::LogStream;
 using Poco::Net::SocketAddress;
+using Session = Kademlia::Session;
 
 
 namespace {
@@ -38,7 +38,7 @@ void load(S& session, std::string const& key)
 {
 	std::vector<uint8_t> key_vec(key.begin(), key.end());
 	Timestamp ts;
-	auto on_load = [key, ts] (std::error_code const& error, k::session::data_type const& data)
+	auto on_load = [key, ts] (std::error_code const& error, Session::DataType const& data)
 	{
 		if (error)
 			_logger.error() << "Failed to load \"" << key << "\", error: " << error.message() << std::endl;
@@ -51,7 +51,7 @@ void load(S& session, std::string const& key)
 		}
 	};
 
-	session.async_load(key_vec, std::move(on_load));
+	session.asyncLoad(key_vec, std::move(on_load));
 	_logger.debug() << "Async loading \"" << key << "\" ..." << std::endl;
 }
 
@@ -73,7 +73,7 @@ void save(S& session, std::string const& key, std::string const& val)
 		}
 	};
 
-	session.async_save(key_vec, val_vec, std::move(on_save));
+	session.asyncSave(key_vec, val_vec, std::move(on_save));
 	_logger.debug() << "Async saving \"" << key << "\": \"" << val << "\"" << std::endl;
 }
 
@@ -105,17 +105,17 @@ int main(int argc, char** argv)
 		int reps = 50;
 		pool.addCapacity(reps*2);
 
-		k::first_session firstSession{ k::endpoint{bootAddr4, bootPort4}, k::endpoint{bootAddr6, bootPort6} };
+		Session firstSession{ k::endpoint{bootAddr4, bootPort4}, k::endpoint{bootAddr6, bootPort6} };
 		_logger.information() << "bootstrap session listening on " << bootAddr4 << ':' << bootPort4 << ", " <<
 			'[' << bootAddr6 << "]:" << bootPort6 << std::endl;
 
 		uint16_t sessPort4 = kd::getAvailablePort(SocketAddress::IPv4, bootPort4 + 1);
 		uint16_t sessPort6 = kd::getAvailablePort(SocketAddress::IPv6, bootPort6 + 1);
 
-		std::vector<k::session*> sessions;
+		std::vector<Session*> sessions;
 		for (int i = 0; i < reps; ++i)
 		{
-			sessions.push_back(new k::session{ k::endpoint{ "127.0.0.1", bootPort4 }
+			sessions.push_back(new Session{ k::endpoint{ "127.0.0.1", bootPort4 }
 						  , k::endpoint{ "127.0.0.1", sessPort4 }
 						  , k::endpoint{ "::1", sessPort6} });
 			_logger.information() << "peer session connected to 127.0.0.1:" << bootPort4 <<
