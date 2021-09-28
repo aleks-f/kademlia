@@ -47,7 +47,7 @@ void load(S& session, std::string const& key)
 			Timespan elapsed = Timestamp() - ts;
 			++_loaded;
 			std::string const& str{ data.begin(), data.end() };
-			_logger.information() << "Loaded \"" << key << "\" as \"" << str << "\" in " << elapsed.microseconds() << " us" << std::endl;
+			_logger.information() << "Loaded \"" << key << /*"\" as \"" << str << */"\" in " << elapsed.microseconds() << " us" << std::endl;
 		}
 	};
 
@@ -73,8 +73,8 @@ void save(S& session, std::string const& key, std::string const& val)
 		}
 	};
 
-	session.asyncSave(key_vec, val_vec, std::move(on_save));
-	_logger.debug() << "Async saving \"" << key << "\": \"" << val << "\"" << std::endl;
+	session.asyncSave(key_vec, std::move(val_vec), std::move(on_save));
+	_logger.debug() << "Async saving \"" << key << /*"\": \"" << val <<*/ "\"" << std::endl;
 }
 
 template <typename S>
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 		std::uint16_t bootPort4 = kd::getAvailablePort(SocketAddress::IPv4);
 		std::uint16_t bootPort6 = kd::getAvailablePort(SocketAddress::IPv6);
 
-		int reps = 50;
+		int reps = 5;
 		pool.addCapacity(reps*2);
 
 		Session firstSession{ k::endpoint{bootAddr4, bootPort4}, k::endpoint{bootAddr6, bootPort6} };
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 		Thread::sleep(100);
 		for (int i = 0; i < reps; ++i)
 		{
-			std::string k("k"), v("v");
+			std::string k("k"), v(65000, 'v');
 			k += std::to_string(i);
 			v += std::to_string(i);
 			save(*sessions[0], k, v);

@@ -46,10 +46,10 @@ public:
 
 	~Session();
 
-	void asyncSave(KeyType const& key, DataType const& data, SaveHandlerType handler);
+	void asyncSave(KeyType const& key, DataType&& data, SaveHandlerType&& handler);
 
 	template<typename K, typename D>
-	void asyncSave(K const& key, D const& data, SaveHandlerType && handler)
+	void asyncSave(K const& key, const D& data, SaveHandlerType&& handler)
 	{
 		asyncSave(KeyType(std::begin(key), std::end(key)),
 			DataType(std::begin(data), std::end(data)), std::move(handler));

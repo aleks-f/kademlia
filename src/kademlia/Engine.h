@@ -114,17 +114,16 @@ public:
 	Engine & operator = (Engine const&) = delete;
 
 	template<typename HandlerType>
-	void asyncSave(key_type const& key, data_type const& data, HandlerType && handler)
+	void asyncSave(key_type const& key, data_type&& data, HandlerType&& handler)
 	{
 		LOG_DEBUG( engine, this ) << "executing async save of key '" << toString(key) << "'." << std::endl;
-		start_store_value_task(id(key), data, tracker_, routing_table_, std::forward< HandlerType >(handler));
+		start_store_value_task(id(key), std::move(data), tracker_, routing_table_, std::forward<HandlerType>(handler));
 	}
 
 	template<typename HandlerType>
-	void asyncLoad(key_type const& key, HandlerType && handler)
+	void asyncLoad(key_type const& key, HandlerType&& handler)
 	{
 		LOG_DEBUG( engine, this ) << "executing async load of key '" << toString( key ) << "'." << std::endl;
-
 		start_find_value_task< data_type >(id(key), tracker_, routing_table_, std::forward<HandlerType>(handler));
 	}
 

@@ -56,12 +56,12 @@ struct StoreValueTaskTest : k::test::TaskFixture
 TEST_F(StoreValueTaskTest, CanNotifyErrorWhenRoutingTableIsEmpty)
 {
     kd::id const chosen_key{"a"};
-    kd::buffer const data{1, 2, 3, 4};
+    kd::buffer data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     EXPECT_EQ(0, routing_table_.find_call_count_);
 
-    kd::start_store_value_task<data_type>(chosen_key, data, tracker_, routing_table_, std::ref(*this));
+    kd::start_store_value_task<data_type>(chosen_key, std::move(data), tracker_, routing_table_, std::ref(*this));
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
@@ -77,12 +77,12 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenRoutingTableIsEmpty)
 TEST_F(StoreValueTaskTest, CanNotifyErrorWhenUniquePeerFailsToRespond)
 {
     kd::id const chosen_key{"a"};
-    kd::buffer const data{1, 2, 3, 4};
+    kd::buffer data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
 
-    kd::start_store_value_task<data_type>(chosen_key, data, tracker_, routing_table_, std::ref(*this));
+    kd::start_store_value_task<data_type>(chosen_key, std::move(data), tracker_, routing_table_, std::ref(*this));
     io_service_.poll();
 
     // Task queried routing table to find closest known peers.
@@ -103,14 +103,14 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenUniquePeerFailsToRespond)
 TEST_F(StoreValueTaskTest, CanNotifyErrorWhenAllPeersFailToRespond)
 {
     kd::id const chosen_key{"a"};
-    kd::buffer const data{1, 2, 3, 4};
+    kd::buffer data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
     auto p2 = create_and_add_peer("192.168.1.2", kd::id{"c"});
 
     kd::start_store_value_task<data_type>(chosen_key
-                                           , data
+                                           , std::move(data)
                                            , tracker_
                                            , routing_table_
                                            , std::ref(*this));
@@ -135,14 +135,14 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenAllPeersFailToRespond)
 TEST_F(StoreValueTaskTest, CanStoreValueWhenAlreadyKnownPeerIsTheTarget)
 {
     kd::id const chosen_key{"a"};
-    kd::buffer const data{1, 2, 3, 4};
+    kd::buffer data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
     kd::FindPeerResponseBody const b1{};
     tracker_.add_message_to_receive(p1.endpoint_, p1.id_, b1);
     kd::start_store_value_task<data_type>(chosen_key
-                                           , data
+                                           , kd::buffer(data)
                                            , tracker_
                                            , routing_table_
                                            , std::ref(*this));
@@ -171,7 +171,7 @@ TEST_F(StoreValueTaskTest, CanStoreValueWhenAlreadyKnownPeerIsTheTarget)
 TEST_F(StoreValueTaskTest, CanStoreValueWhenDiscoveredPeerIsTheTarget)
 {
     kd::id const chosen_key{"a"};
-    kd::buffer const data{1, 2, 3, 4};
+    kd::buffer data{1, 2, 3, 4};
     routing_table_.expected_ids_.emplace_back(chosen_key);
 
     // p1 is the only known peer atm.
@@ -191,7 +191,7 @@ TEST_F(StoreValueTaskTest, CanStoreValueWhenDiscoveredPeerIsTheTarget)
     tracker_.add_message_to_receive(e2, i2, fp2);
 
     kd::start_store_value_task<data_type>(chosen_key
-                                           , data
+                                           , kd::buffer(data)
                                            , tracker_
                                            , routing_table_
                                            , std::ref(*this));

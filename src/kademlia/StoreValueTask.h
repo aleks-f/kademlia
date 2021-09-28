@@ -49,21 +49,21 @@ class StoreValueTask final : public LookupTask
 public:
 	template< typename RoutingTableType >
 	static void
-	start(detail::id const & key, DataType const& data, TrackerType & tracker
+	start(detail::id const & key, DataType&& data, TrackerType & tracker
 		, RoutingTableType & routing_table, SaveHandlerType handler)
 	{
 		std::shared_ptr< StoreValueTask > c;
-		c.reset(new StoreValueTask(key, data, tracker, routing_table, std::move(handler)));
+		c.reset(new StoreValueTask(key, std::move(data), tracker, routing_table, std::move(handler)));
 		try_to_store_value(c);
 	}
 
 private:
 	template< typename RoutingTableType, typename HandlerType >
-	StoreValueTask(detail::id const & key, DataType const& data, TrackerType & tracker
+	StoreValueTask(detail::id const & key, DataType&& data, TrackerType & tracker
 		, RoutingTableType & routing_table, HandlerType && save_handler):
 			LookupTask(key, routing_table.find(key), routing_table.end())
 			, tracker_(tracker)
-			, data_(data)
+			, data_(std::move(data))
 			, save_handler_(std::forward< HandlerType >(save_handler))
 	{
 		LOG_DEBUG(StoreValueTask, this)
@@ -206,13 +206,13 @@ private:
  *
  */
 template< typename DataType, typename TrackerType, typename RoutingTableType, typename HandlerType >
-void start_store_value_task(id const& key, DataType const& data, TrackerType & tracker
-	, RoutingTableType & routing_table, HandlerType && save_handler)
+void start_store_value_task(id const& key, DataType&& data, TrackerType& tracker,
+	RoutingTableType& routing_table, HandlerType&& save_handler)
 {
 	using handler_type = typename std::decay< HandlerType >::type;
 	using task = StoreValueTask< handler_type, TrackerType, DataType >;
 
-	task::start(key, data, tracker, routing_table, std::forward< HandlerType >(save_handler));
+	task::start(key, std::move(data), tracker, routing_table, std::forward< HandlerType >(save_handler));
 }
 
 } // namespace detail
