@@ -97,7 +97,7 @@ TEST(EngineTest, two_engines_can_save_and_load)
 
 	auto on_save = [](std::error_code const& failure)
 	{ if (failure) throw std::system_error{ failure }; };
-	e1->asyncSave("key", expected_data, on_save);
+	e1->asyncSave("key", std::string(expected_data), on_save);
 
 	EXPECT_GT(io_service.poll(), 0);
 

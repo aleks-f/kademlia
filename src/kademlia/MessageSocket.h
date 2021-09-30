@@ -144,7 +144,6 @@ public:
 	MessageSocket(MessageSocket&& o): reception_buffer_(std::move(o.reception_buffer_)),
 		current_message_sender_(std::move(o.current_message_sender_)),
 		_socket(std::move(o._socket)),
-		_messageQueue(std::move(o._messageQueue)),
 		_ioService(o._ioService),
 		_pMutex(std::move(o._pMutex))
 	{
@@ -188,7 +187,6 @@ public:
 	{
 		using Poco::Net::SocketAddress;
 		std::unique_lock<std::mutex> l(*_pMutex);
-		_messageQueue.push_back(std::make_pair(Poco::Net::SocketAddress(to.address_, to.port_), message));
 
 		auto on_completion = [callback]
 			(std::error_code const& failure, std::size_t /* bytes_sent */)
@@ -235,7 +233,6 @@ private:
 	buffer reception_buffer_;
 	Poco::Net::SocketAddress current_message_sender_;
 	underlying_socket_type _socket;
-	std::deque<SendPacket> _messageQueue;
 	Poco::Net::SocketProactor& _ioService;
 	std::unique_ptr<std::mutex> _pMutex = nullptr;
 };

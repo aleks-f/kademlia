@@ -126,9 +126,9 @@ std::error_code Session::wait()
 	return result().data();
 }
 
-void Session::asyncSave(KeyType const& key, DataType const& data, SaveHandlerType handler)
+void Session::asyncSave(KeyType const& key, DataType&& data, SaveHandlerType&& handler)
 {
-	_pEngine->engine().asyncSave(key, data, std::move(handler));
+	_pEngine->engine().asyncSave(key, std::move(data), std::move(handler));
 }
 
 void Session::asyncLoad(KeyType const& key, LoadHandlerType handler )

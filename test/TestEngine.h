@@ -54,11 +54,10 @@ public:
 	{ }
 
 	template< typename Callable >
-	void asyncSave(std::string const& key, std::string const& data, Callable & callable)
+	void asyncSave(std::string const& key, std::string&& data, Callable & callable)
 	{
 		impl::key_type const k{ key.begin(), key.end() };
-		impl::data_type const d{ data.begin(), data.end() };
-		engine_.asyncSave(k, d, callable);
+		engine_.asyncSave(k, impl::data_type{data.begin(), data.end()}, callable);
 	}
 
 	template< typename Callable >
