@@ -281,7 +281,6 @@ private:
 		auto on_notification_complete = [ this, on_initialized ]
 		{
 			if (pending_notifications_count_) --pending_notifications_count_;
-			//std::cout << "pending_notifications_count_=" << pending_notifications_count_ << std::endl;
 			if (!pending_notifications_count_)
 				on_initialized();
 		};
