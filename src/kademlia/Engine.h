@@ -87,7 +87,7 @@ public:
 			value_store_(),
 			pending_notifications_count_()
 	{
-		LOG_DEBUG(Engine, this) << "Peerless Engine created (" <<
+		LOG_DEBUG(Engine, this) << "Peerless Engine (" << my_id_ << ") created(" <<
 			ipv4.address() << ':' << ipv4.service() << ", " <<
 			ipv6.address() << ':' << ipv6.service() << ')' << std::endl;
 	}
@@ -281,7 +281,7 @@ private:
 		auto on_notification_complete = [ this, on_initialized ]
 		{
 			if (pending_notifications_count_) --pending_notifications_count_;
-
+			//std::cout << "pending_notifications_count_=" << pending_notifications_count_ << std::endl;
 			if (!pending_notifications_count_)
 				on_initialized();
 		};

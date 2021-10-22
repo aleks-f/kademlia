@@ -111,9 +111,36 @@ public:
 	 */
 	bool push(const id& peer_id, const peer_type& new_peer )
 	{
-		LOG_DEBUG( routing_table, this ) << "pushing peer '"
-				<< new_peer << "' as '"
-				<< peer_id << "'." << std::endl;
+		//LOG_DEBUG(routing_table, this) << "pushing peer (" << peer_count() << ")'"
+		//	<< new_peer << "' as '"
+		//	<< peer_id << "' ..." << std::endl;
+
+		/**************************************/
+		// prevent entries in the routing table
+		// - no self ID
+		// - no duplicate IDs
+		// - no duplicate IP:PORT endpoints
+		if (peer_id == my_id_) return false;
+		auto peerIt = _knownPeers.find(peer_id);
+		// we already know this peer, do nothing
+		if (peerIt != _knownPeers.end()) return false;
+
+		// remove all duplicate peers
+		auto was_peer_known = [&new_peer](value_type const& entry)
+		{
+			return (entry.second == new_peer);
+		};
+		auto it = k_buckets_.begin();
+		for (; it != k_buckets_.end(); ++it)
+		{
+			auto fIt = std::find_if(it->begin(), it->end(), was_peer_known);
+			while (fIt != it->end())
+			{
+				remove(fIt->first);
+				fIt = std::find_if(it->begin(), it->end(), was_peer_known);
+			}
+		}
+		/**************************************/
 
 		auto k_bucket_index = find_k_bucket_index( peer_id );
 		auto & bucket = k_buckets_[ k_bucket_index ];
@@ -127,17 +154,13 @@ public:
 				return false;
 		}
 
-		auto const end = bucket.end();
-
-		// Check if the peer is not already known.
-		auto is_peer_known = [ &peer_id ] ( value_type const& entry )
-		{ return entry.first == peer_id; };
-
-		if ( std::find_if( bucket.begin(), end, is_peer_known ) != end )
-			return false;
-
-		bucket.insert( end, value_type{ peer_id, new_peer } );
+		bucket.insert(bucket.end(), value_type{ peer_id, new_peer } );
 		++ peer_count_;
+		_knownPeers[peer_id] = k_bucket_index;
+
+		LOG_DEBUG(routing_table, this) << "pushed peer (" << peer_count() << ")'"
+			<< new_peer << "' as '"
+			<< peer_id << "'." << std::endl;
 
 		return true;
 	}
@@ -149,8 +172,8 @@ public:
 	 */
 	bool remove(const id& peer_id)
 	{
-		LOG_DEBUG( routing_table, this ) << "removing peer '"
-				<< peer_id << "'." << std::endl;
+		LOG_DEBUG(routing_table, this) << "removing peer '"
+			<< peer_id << "' ..." << std::endl;
 
 		// Find the closer bucket.
 		auto & bucket = k_buckets_[ find_k_bucket_index( peer_id ) ];
@@ -168,6 +191,7 @@ public:
 		// Remove it.
 		bucket.erase( i );
 		--peer_count_;
+		_knownPeers.erase(peer_id);
 
 		return true;
 	}
@@ -179,8 +203,7 @@ public:
 	 */
 	iterator find(const id& id_to_find )
 	{
-		LOG_DEBUG( routing_table, this ) << "finding peer near '"
-				<< id_to_find << "'." << std::endl;
+		//LOG_DEBUG( routing_table, this ) << "finding peer near '" << id_to_find << "'." << std::endl;
 
 		auto index = std::max( get_lowest_k_bucket_index()
 							 , find_k_bucket_index( id_to_find ) );
@@ -199,8 +222,7 @@ public:
 	 */
 	iterator end()
 	{
-		assert( k_buckets_.size() > 0
-			  && "routing_table must always contains k_buckets" );
+		assert( k_buckets_.size() > 0 && "routing_table must always contains k_buckets" );
 		auto const first_k_bucket = k_buckets_.begin();
 
 		return iterator( &k_buckets_, first_k_bucket, first_k_bucket->end() );
@@ -251,8 +273,7 @@ private:
 			  && id_to_find[ bit_index ] == my_id_[ bit_index ] )
 			++ bit_index;
 
-		LOG_DEBUG( routing_table, this ) << "found bucket at index '"
-				<< bit_index << "'." << std::endl;
+		//LOG_DEBUG( routing_table, this ) << "found bucket at index '" << bit_index << "'." << std::endl;
 
 		return bit_index;
 	}
@@ -266,8 +287,7 @@ private:
 			; ++ i )
 			peer_count += k_buckets_[ i ].size();
 
-		LOG_DEBUG( routing_table, this ) << "bottom bucket is at index '"
-				<< i << "'." << std::endl;
+		//LOG_DEBUG( routing_table, this ) << "bottom bucket is at index '" << i << "'." << std::endl;
 
 		return i;
 	}
@@ -289,6 +309,7 @@ private:
 	std::size_t k_bucket_size_;
 	/// This keeps the index of the largest subtree.
 	std::size_t largest_k_bucket_index_;
+	std::map<id, size_t> _knownPeers;
 };
 
 
