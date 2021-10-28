@@ -6,12 +6,14 @@
 #include <iterator>
 #include <thread>
 
-#include <kademlia/endpoint.hpp>
+#include "kademlia/endpoint.hpp"
 #include "kademlia/Session.h"
-#include <kademlia/error.hpp>
+#include "kademlia/error.hpp"
+#include "Poco/NumberParser.h"
 
 using Session = Kademlia::Session;
 using Endpoint = kademlia::endpoint;
+using Poco::NumberParser;
 
 namespace {
 
@@ -58,7 +60,19 @@ void save(Session & session, std::string const& key, std::string const& val)
 			std::cout << "Saved \"" << key << "\"" << std::endl;
 	};
 
-	session.asyncSave(key_vec, val_vec, std::move(on_save));
+	session.asyncSave(key_vec, std::move(val_vec), std::move(on_save));
+}
+
+void runSave(Session& session, const std::string& cntStr, const std::string& szStr)
+{
+	int count = NumberParser::parse(cntStr);
+	int size = NumberParser::parse(szStr);
+	std::cout << "Saving " << count << ' ' << size << " bytes values ..." << std::endl;
+	for (int i = 0; i < count; ++i)
+	{
+		save(session, std::to_string(i), std::string(size, '0'));
+		Poco::Thread::sleep(20);
+	}
 }
 
 void print_interactive_help()
@@ -121,6 +135,13 @@ int main(int argc, char** argv)
 				print_interactive_help();
 			else
 				load(session, tokens[1]);
+		}
+		else if (tokens[0] == "run")
+		{
+			if (tokens.size() != 3)
+				print_interactive_help();
+			else
+				runSave(session, tokens[1], tokens[2]);
 		}
 		else if (tokens[0] == "exit") break;
 		else
