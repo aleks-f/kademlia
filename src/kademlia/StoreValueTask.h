@@ -57,6 +57,13 @@ public:
 		try_to_store_value(c);
 	}
 
+	~StoreValueTask()
+	{
+		//std::cout << "destroy store value task for '"
+			//<< get_key() << "' value(" << toString(data_)
+			//<< ")." << std::endl;
+	}
+
 private:
 	template< typename RoutingTableType, typename HandlerType >
 	StoreValueTask(detail::id const & key, DataType&& data, TrackerType & tracker
@@ -67,11 +74,12 @@ private:
 			, save_handler_(std::forward< HandlerType >(save_handler))
 	{
 		LOG_DEBUG(StoreValueTask, this)
+		//std::cout
 				<< "create store value task for '"
-				<< key << "' value(" << toString(data)
+				<< key << "' value(" << toString(data_)
 				<< ")." << std::endl;
 	}
-
+	
 	void notify_caller(std::error_code const& failure)
 	{
 		save_handler_(failure);
@@ -150,7 +158,6 @@ private:
 			task->flag_candidate_as_invalid(h.source_id_);
 			try_to_store_value(task);
 			return;
-
 		};
 
 		FindPeerResponseBody response;

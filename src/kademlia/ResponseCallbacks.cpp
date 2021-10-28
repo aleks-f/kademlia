@@ -38,10 +38,13 @@ ResponseCallbacks::ResponseCallbacks()
 
 void ResponseCallbacks::push_callback(id const& message_id, callback const& on_message_received)
 {
+	static int counter;
 	Poco::Mutex::ScopedLock l(_mutex);
 	auto i = callbacks_.emplace(message_id, on_message_received);
 	(void)i;
-	assert(i.second && "an id can't be registered twice");
+	++counter;
+	//std::cout << ++counter << '[' << callbacks_.size() << "] = (" << message_id << ')' << std::endl;
+	//assert(i.second && "an id can't be registered twice");
 }
 
 bool ResponseCallbacks::remove_callback(id const& message_id)

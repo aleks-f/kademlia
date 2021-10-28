@@ -69,6 +69,7 @@ to_block
 id::id
     ( std::default_random_engine & random_engine )
 {
+    static blocks_type blocks;
     // The output of the generator is treated as boolean value.
     std::uniform_int_distribution<> distribution
             ( std::numeric_limits< block_type >::min()
@@ -76,6 +77,8 @@ id::id
 
     std::generate( blocks_.begin(), blocks_.end()
                  , std::bind( distribution, std::ref( random_engine ) ) );
+    assert(blocks_ != blocks);
+    blocks = blocks_;
 }
 
 id::id

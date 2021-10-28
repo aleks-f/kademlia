@@ -75,7 +75,7 @@ public:
 
 public:
 	Engine(Poco::Net::SocketProactor& io_service, endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}):
-			random_engine_(std::random_device{}()),
+			random_engine_(std::random_device()()),
 			my_id_(new_id == id{} ? id{ random_engine_ } : new_id),
 			network_(io_service,
 				MessageSocketType::ipv4(io_service, ipv4),

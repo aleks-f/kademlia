@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 add_executable(kademlia_cli
-    cli.cpp)
+    cli.cpp StackWalker.cpp)
 
 target_link_libraries(kademlia_cli
     kademlia
