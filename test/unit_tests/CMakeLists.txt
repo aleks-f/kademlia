@@ -73,7 +73,6 @@ build_test(unit_tests_helpers
 build_test(unit_tests_lib
     SOURCES
         test_id.cpp
-        test_endpoint.cpp
         EndpointTest.cpp
         MessageTest.cpp
         MessageSerializerTest.cpp
