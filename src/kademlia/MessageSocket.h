@@ -62,6 +62,8 @@ template<typename SocketType>
 class MessageSocket final
 {
 public:
+	static const std::size_t INPUT_BUFFER_SIZE = UINT16_MAX;
+
 	using SocketAddress = Poco::Net::SocketAddress;
 	using SocketAddressList = std::vector<SocketAddress>;
 	using SocketProactor = Poco::Net::SocketProactor;
@@ -200,6 +202,7 @@ public:
 
 private:
 	MessageSocket(SocketProactor& io_service, SocketAddress const& e):
+			reception_buffer_(INPUT_BUFFER_SIZE),
 			current_message_sender_(),
 			_socket(&io_service, e, false, true),
 			_ioService(io_service),
