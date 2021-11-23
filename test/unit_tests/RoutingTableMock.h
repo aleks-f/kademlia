@@ -32,7 +32,7 @@
 #include <stdexcept>
 
 #include "kademlia/Message.h"
-#include "kademlia/IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/Peer.h"
 
 namespace kademlia {
@@ -40,7 +40,7 @@ namespace test {
 
 struct RoutingTableMock
 {
-	using peer_type = std::pair< detail::id, detail::IPEndpoint >;
+	using peer_type = std::pair< detail::id, Poco::Net::SocketAddress >;
 	using peers_type = std::vector< peer_type >;
 	using expected_ids_type = std::deque< detail::id >;
 
@@ -61,7 +61,7 @@ struct RoutingTableMock
 		return peers_.begin();
 	}
 
-	void push(detail::id const& id, detail::IPEndpoint const& endpoint)
+	void push(detail::id const& id, Poco::Net::SocketAddress const& endpoint)
 	{
 		peers_.emplace_back(id, endpoint);
 	}

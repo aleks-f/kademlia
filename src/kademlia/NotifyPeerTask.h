@@ -30,6 +30,7 @@
 #   pragma once
 #endif
 
+#include "Poco/Net/SocketAddress.h"
 #include <memory>
 #include <system_error>
 
@@ -45,9 +46,6 @@ namespace detail {
 template<typename TrackerType, typename OnFinishType>
 class NotifyPeerTask final : public LookupTask
 {
-public:
-	using endpoint_type = typename TrackerType::endpoint_type;
-
 public:
 	template<typename RoutingTableType>
 	static void start(detail::id const & key, TrackerType & tracker, RoutingTableType & routing_table, OnFinishType on_finish)
@@ -88,7 +86,7 @@ private:
 		LOG_DEBUG(NotifyPeerTask, task.get()) << "sending peer notification to '"
 				<< current_peer << "'." << std::endl;
 
-		auto on_message_received = [ task, current_peer ] (endpoint_type const& s, Header const& h
+		auto on_message_received = [ task, current_peer ] (Poco::Net::SocketAddress const& s, Header const& h
 			, buffer::const_iterator i, buffer::const_iterator e)
 		{
 			LOG_DEBUG(NotifyPeerTask, task.get()) << "valid peer: '" << current_peer << "'." << std::endl;
@@ -113,10 +111,10 @@ private:
 			on_finish_();
     }
 
-	static void handle_notify_peer_response(endpoint_type const& s, Header const& h
+	static void handle_notify_peer_response(Poco::Net::SocketAddress const& s, Header const& h
 		, buffer::const_iterator i, buffer::const_iterator e, std::shared_ptr<NotifyPeerTask> task)
 	{
-		LOG_DEBUG(NotifyPeerTask, task.get()) << "handle notify Peer response from '" << s
+		LOG_DEBUG(NotifyPeerTask, task.get()) << "handle notify Peer response from '" << s.toString()
 				<< "'." << std::endl;
 
 		assert(h.type_ == Header::FIND_PEER_RESPONSE);

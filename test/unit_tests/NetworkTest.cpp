@@ -28,6 +28,7 @@
 #include "kademlia/MessageSocket.h"
 #include "SocketMock.h"
 #include "Poco/Net/SocketProactor.h"
+#include "Poco/Net/SocketAddress.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -36,8 +37,8 @@ namespace k = kademlia;
 namespace kd = k::detail;
 namespace kt = k::test;
 
-using socket_type = kd::MessageSocket< kt::SocketMock >;
-using network_type = kd::Network< socket_type >;
+using SocketType = kd::MessageSocket<kt::SocketMock>;
+using NetworkType = kd::Network<SocketType>;
 
 struct NetworkTest: public ::testing::Test
 {
@@ -50,7 +51,7 @@ struct NetworkTest: public ::testing::Test
 
     void
     on_message_received
-        (network_type::endpoint_type const&
+        (NetworkType::SocketAddress const&
         , kd::buffer::const_iterator
         , kd::buffer::const_iterator)
     { };
@@ -77,9 +78,9 @@ protected:
 TEST_F(NetworkTest, schedule_receive_on_construction)
 {
     using namespace std::placeholders;
-    network_type m{ io_service_
-                  , socket_type::ipv4(io_service_, ipv4_)
-                  , socket_type::ipv6(io_service_, ipv6_)
+    NetworkType m{ io_service_
+                  , SocketType::ipv4(io_service_, ipv4_)
+                  , SocketType::ipv6(io_service_, ipv6_)
                   , std::bind(&NetworkTest::on_message_received
                              , this
                              , _1, _2, _3) };

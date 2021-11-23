@@ -48,7 +48,7 @@
 #include <kademlia/detail/cxx11_macros.hpp>
 #include "kademlia/buffer.hpp"
 #include "Message.h"
-#include "IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/log.hpp"
 #include "Poco/Net/DNS.h"
 #include "Poco/Net/HostEntry.h"
@@ -62,23 +62,23 @@ template<typename SocketType>
 class MessageSocket final
 {
 public:
-	using endpoint_type = IPEndpoint;
-	using resolved_endpoints = std::vector<endpoint_type>;
-	using underlying_socket_type = SocketType;
-	using underlying_endpoint_type = Poco::Net::SocketAddress;
-	using SendPacket = std::pair<Poco::Net::SocketAddress, buffer>;
+	static const std::size_t INPUT_BUFFER_SIZE = UINT16_MAX;
+
+	using SocketAddress = Poco::Net::SocketAddress;
+	using SocketAddressList = std::vector<SocketAddress>;
+	using SocketProactor = Poco::Net::SocketProactor;
  
 	template<typename EndpointType>
-	static resolved_endpoints resolve_endpoint(EndpointType const& e)
+	static SocketAddressList resolve_endpoint(EndpointType const& e)
 	{
 		using Poco::Net::IPAddress;
-		resolved_endpoints re;
+		SocketAddressList re;
 		try
 		{
 			IPAddress addr;
 			if (IPAddress::tryParse(e.address(), addr))
 			{
-				re.emplace_back(toIPEndpoint(addr.toString(),
+				re.emplace_back(SocketAddress(addr.toString(),
 					static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
 			}
 			else
@@ -88,28 +88,28 @@ public:
 				re.reserve(he.addresses().size());
 				for (const auto& addr : he.addresses())
 				{
-					re.emplace_back(toIPEndpoint(addr.toString(),
+					re.emplace_back(SocketAddress(addr.toString(),
 						static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
 				}
 			}
 		}
 		catch (Poco::Net::HostNotFoundException&)
 		{
-			re.emplace_back(toIPEndpoint(e.address(),
+			re.emplace_back(SocketAddress(e.address(),
 				static_cast<std::uint16_t>(Poco::NumberParser::parse(e.service()))));
 		}
 		return re;
 	}
 
 	template<typename EndpointType>
-	static MessageSocket ipv4(Poco::Net::SocketProactor& io_service, EndpointType const& e)
+	static MessageSocket ipv4(SocketProactor& io_service, EndpointType const& e)
 	{
 		auto endpoints = resolve_endpoint(e);
 		for (auto const& i : endpoints)
 		{
 			try
 			{
-				if (i.address_.isV4())
+				if (i.host().isV4())
 				{
 					return MessageSocket(io_service, i);
 				}
@@ -123,14 +123,14 @@ public:
 	}
 
 	template<typename EndpointType>
-	static MessageSocket ipv6(Poco::Net::SocketProactor& io_service, EndpointType const& e)
+	static MessageSocket ipv6(SocketProactor& io_service, EndpointType const& e)
 	{
 		auto endpoints = resolve_endpoint(e);
 		for (auto const& i : endpoints)
 		{
 			try
 			{
-				if (i.address_.isV6())
+				if (i.host().isV6())
 					return MessageSocket(io_service, i);
 			}
 			catch (Poco::Net::NetException& ex)
@@ -176,16 +176,15 @@ public:
 #endif
 			auto i = reception_buffer_.begin(), e = i;
 			if (!failure) std::advance(e, bytes_received);
-			callback(failure, convert_endpoint(current_message_sender_), i, e);
+			callback(failure, current_message_sender_, i, e);
 		};
 
 		_socket.asyncReceiveFrom(reception_buffer_, current_message_sender_, std::move(on_completion));
 	}
 
 	template<typename SendCallback>
-	void async_send(buffer&& message, const endpoint_type& to, SendCallback const& callback)
+	void async_send(buffer&& message, const SocketAddress& to, SendCallback const& callback)
 	{
-		using Poco::Net::SocketAddress;
 		std::unique_lock<std::mutex> l(*_pMutex);
 
 		auto on_completion = [callback]
@@ -193,47 +192,38 @@ public:
 		{
 			callback(failure);
 		};
-		_socket.asyncSendTo(std::move(message), convert_endpoint(to), std::move(on_completion));
+		_socket.asyncSendTo(std::move(message), to, std::move(on_completion));
 	}
 
-	endpoint_type local_endpoint() const
+	SocketAddress local_endpoint() const
 	{
 		return { _socket.address().host(), _socket.address().port() };
 	}
 
 private:
-	MessageSocket(Poco::Net::SocketProactor& io_service, endpoint_type const& e):
+	MessageSocket(SocketProactor& io_service, SocketAddress const& e):
+			reception_buffer_(INPUT_BUFFER_SIZE),
 			current_message_sender_(),
-			_socket(&io_service, convert_endpoint(e), false, true),
+			_socket(&io_service, e, false, true),
 			_ioService(io_service),
 			_pMutex(new std::mutex())
 	{
 		LOG_DEBUG(MessageSocket, this) << "MessageSocket created for " << _socket.address().toString() << std::endl;
 	}
 
-	static underlying_socket_type create_underlying_socket(Poco::Net::SocketProactor& io_service, endpoint_type const& endpoint)
+	static SocketType create_underlying_socket(SocketProactor& io_service, SocketAddress const& endpoint)
 	{
 
-		auto const e = convert_endpoint(endpoint);
-		underlying_socket_type new_socket(e.family());
+		auto const e = endpoint;
+		SocketType new_socket(e.family());
 		new_socket.bind();
 		return new_socket;
 	}
 
-	static endpoint_type convert_endpoint(underlying_endpoint_type const& e)
-	{
-		return endpoint_type{ e.host(), e.port() };
-	}
-
-	static underlying_endpoint_type convert_endpoint(endpoint_type const& e)
-	{
-		return underlying_endpoint_type(e.address_, e.port_);
-	}
-
 	buffer reception_buffer_;
-	Poco::Net::SocketAddress current_message_sender_;
-	underlying_socket_type _socket;
-	Poco::Net::SocketProactor& _ioService;
+	SocketAddress current_message_sender_;
+	SocketType _socket;
+	SocketProactor& _ioService;
 	std::unique_ptr<std::mutex> _pMutex = nullptr;
 };
 

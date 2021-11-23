@@ -73,14 +73,12 @@ build_test(unit_tests_helpers
 build_test(unit_tests_lib
     SOURCES
         test_id.cpp
-        test_endpoint.cpp
         EndpointTest.cpp
         MessageTest.cpp
         MessageSerializerTest.cpp
         LookupTaskTest.cpp
         StoreValueTaskTest.cpp
         FindValueTaskTest.cpp
-        IPEndpointTest.cpp
         PeerTest.cpp
         test_error.cpp
         DiscoverNeighborsTaskTest.cpp

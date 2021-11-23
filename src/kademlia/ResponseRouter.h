@@ -29,7 +29,7 @@
 
 #include "Poco/Net/SocketProactor.h"
 #include "kademlia/error.hpp"
-#include "IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "ResponseCallbacks.h"
 #include "kademlia/Timer.h"
 #include "kademlia/log.hpp"
@@ -42,15 +42,13 @@ namespace detail {
 class ResponseRouter final
 {
 public:
-	using endpoint_type = IPEndpoint;
-
 	explicit ResponseRouter(Poco::Net::SocketProactor& io_service);
 
 	ResponseRouter(ResponseRouter const&) = delete;
 
 	ResponseRouter& operator = (ResponseRouter const&) = delete;
 
-	void handle_new_response(endpoint_type const& sender, Header const& h,
+	void handle_new_response(Poco::Net::SocketAddress const& sender, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e );
 
 	template< typename OnResponseReceived, typename OnError >

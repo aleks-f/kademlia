@@ -29,7 +29,7 @@
 #include "TaskFixture.h"
 #include "kademlia/id.hpp"
 #include "kademlia/Peer.h"
-#include "kademlia/IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/StoreValueTask.h"
 #include "Poco/Thread.h"
 #include "gtest/gtest.h"
@@ -40,7 +40,7 @@ namespace {
 
 namespace k = kademlia;
 namespace kd = k::detail;
-
+using Poco::Net::SocketAddress;
 using data_type = std::vector<std::uint8_t>;
 
 struct StoreValueTaskTest : k::test::TaskFixture
@@ -179,7 +179,7 @@ TEST_F(StoreValueTaskTest, CanStoreValueWhenDiscoveredPeerIsTheTarget)
 
     // p2 is unknown atm.
     auto i2 = kd::id{chosen_key};
-    auto e2 = kd::toIPEndpoint("192.168.1.2", 5555);
+    auto e2 = SocketAddress("192.168.1.2", 5555);
     kd::Peer const p2{i2, e2};
 
     // p1 knows p2.

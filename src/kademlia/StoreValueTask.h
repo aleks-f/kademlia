@@ -30,6 +30,7 @@
 #   pragma once
 #endif
 
+#include "Poco/Net/SocketAddress.h"
 #include <memory>
 #include <type_traits>
 #include <system_error>
@@ -115,7 +116,7 @@ private:
 				<< current_candidate << "'." << std::endl;
 
 		// On message received, process it.
-		auto on_message_received = [ task ] (IPEndpoint const& s
+		auto on_message_received = [ task ] (Poco::Net::SocketAddress const& s
 			, Header const& h, buffer::const_iterator i, buffer::const_iterator e)
 		{
 			handle_find_peer_to_store_response(s, h, i, e, task);
@@ -134,12 +135,12 @@ private:
 			PEER_LOOKUP_TIMEOUT, on_message_received, on_error);
 	}
 
-	static void handle_find_peer_to_store_response(IPEndpoint const& s, Header const& h,
+	static void handle_find_peer_to_store_response(Poco::Net::SocketAddress const& s, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e, std::shared_ptr< StoreValueTask > task)
 	{
 		LOG_DEBUG(StoreValueTask, task.get())
 				<< "handle find Peer to store response from '"
-				<< s << "'." << std::endl;
+				<< s.toString() << "'." << std::endl;
 
 		if (h.type_ != Header::FIND_PEER_RESPONSE)
 		{

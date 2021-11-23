@@ -32,8 +32,8 @@
 
 #include <functional>
 #include "Poco/Net/SocketProactor.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/log.hpp"
-#include "IPEndpoint.h"
 #include "MessageSocket.h"
 #include "kademlia/buffer.hpp"
 
@@ -45,22 +45,21 @@ template<typename MessageSocketType>
 class Network final
 {
 public:
-	using message_socket_type = MessageSocketType;
-	using endpoint_type = IPEndpoint;
-	using resolved_endpoints = std::vector<endpoint_type>;
-	using on_message_received_type = std::function<void (endpoint_type const&, buffer::const_iterator, buffer::const_iterator)>;
+	using SocketAddressList = std::vector<Poco::Net::SocketAddress>;
+	using SocketAddress = Poco::Net::SocketAddress;
+	using on_message_received_type = std::function<void (Poco::Net::SocketAddress const&, buffer::const_iterator, buffer::const_iterator)>;
 
 	Network(Poco::Net::SocketProactor& io_service,
-		message_socket_type&& socket_ipv4,
-		message_socket_type&& socket_ipv6,
+		MessageSocketType&& socket_ipv4,
+		MessageSocketType&& socket_ipv6,
 		on_message_received_type on_message_received): io_service_(io_service),
 			socket_ipv4_(std::move(socket_ipv4)),
 			socket_ipv6_(std::move(socket_ipv6)),
 			on_message_received_(on_message_received)
 	{
 		start_message_reception(on_message_received);
-		LOG_DEBUG(Network, this) << "Network created at '" << socket_ipv4_.local_endpoint()
-			<< "' and '" << socket_ipv6_.local_endpoint() << "'." << std::endl;
+		LOG_DEBUG(Network, this) << "Network created at '" << socket_ipv4_.local_endpoint().toString()
+			<< "' and '" << socket_ipv6_.local_endpoint().toString() << "'." << std::endl;
 	}
 
 	Network(Network const&) = delete;
@@ -68,15 +67,15 @@ public:
 	Network& operator = (Network const&) = delete;
 
 	template<typename Message, typename OnMessageSent>
-	void send(Message&& message, const endpoint_type& e, OnMessageSent const& on_message_sent)
+	void send(Message&& message, const Poco::Net::SocketAddress& e, OnMessageSent const& on_message_sent)
 	{
 		get_socket_for(e).async_send(std::move(message), e, on_message_sent);
 	}
 
 	template<typename Endpoint>
-	resolved_endpoints resolve_endpoint(Endpoint const& e)
+	SocketAddressList resolve_endpoint(Endpoint const& e)
 	{
-		return message_socket_type::resolve_endpoint(e);
+		return MessageSocketType::resolve_endpoint(e);
 	}
 
 private:
@@ -86,18 +85,18 @@ private:
 		schedule_receive_on_socket(socket_ipv6_);
 	}
 
-	message_socket_type& get_socket_for(endpoint_type const& e)
+	MessageSocketType& get_socket_for(Poco::Net::SocketAddress const& e)
 	{
-		if (e.address_.isV4()) return socket_ipv4_;
+		if (e.host().isV4()) return socket_ipv4_;
 		return socket_ipv6_;
 	}
 
 private:
-	void schedule_receive_on_socket(message_socket_type & current_subnet)
+	void schedule_receive_on_socket(MessageSocketType & current_subnet)
 	{
 		auto on_new_message = [ this, &current_subnet ]
 			( std::error_code const& failure
-			, endpoint_type const& sender
+			, Poco::Net::SocketAddress const& sender
 			, buffer::const_iterator i
 			, buffer::const_iterator e )
 		{
@@ -116,8 +115,8 @@ private:
 	}
 
 	Poco::Net::SocketProactor& io_service_;
-	message_socket_type socket_ipv4_;
-	message_socket_type socket_ipv6_;
+	MessageSocketType socket_ipv4_;
+	MessageSocketType socket_ipv6_;
 	on_message_received_type on_message_received_;
 };
 

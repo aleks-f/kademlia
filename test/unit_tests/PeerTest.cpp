@@ -25,6 +25,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+#include "Poco/Net/SocketAddress.h"
 #include "common.hpp"
 #include "kademlia/Peer.h"
 #include "gtest/gtest.h"
@@ -34,16 +35,17 @@
 namespace {
 
 namespace kd = kademlia::detail;
+using Poco::Net::SocketAddress;
 
 struct PeerTest: public ::testing::Test
 {
     PeerTest()
             : id_{}
-            , ip_endpoint_(kd::toIPEndpoint("127.0.0.1", 1234))
+            , ip_endpoint_(SocketAddress("127.0.0.1", 1234))
     { }
 
     kd::id id_;
-    kd::IPEndpoint ip_endpoint_;
+    SocketAddress ip_endpoint_;
 
 protected:
     ~PeerTest() override

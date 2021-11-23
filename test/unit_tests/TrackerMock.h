@@ -28,6 +28,7 @@
 
 
 #include "Poco/Net/SocketProactor.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/error_impl.hpp"
 #include "kademlia/Message.h"
 #include "kademlia/MessageSerializer.h"
@@ -40,9 +41,6 @@ namespace test {
 class TrackerMock
 {
 public:
-	using endpoint_type = detail::IPEndpoint;
-
-public:
 	TrackerMock(Poco::Net::SocketProactor& io_service): io_service_(io_service),
 		id_(),
 		message_serializer_(id_),
@@ -53,7 +51,7 @@ public:
 	}
 
 	template<typename MessageType>
-	void add_message_to_receive(endpoint_type const& endpoint,
+	void add_message_to_receive(Poco::Net::SocketAddress const& endpoint,
 		detail::id const& source_id, MessageType const& message)
 	{
 		message_to_receive m{ endpoint, detail::message_traits<MessageType>::TYPE_ID, source_id };
@@ -62,7 +60,7 @@ public:
 	}
 
 	template<typename MessageType>
-	bool has_sent_message(endpoint_type const& endpoint, MessageType const& message)
+	bool has_sent_message(Poco::Net::SocketAddress const& endpoint, MessageType const& message)
 	{
 		if (sent_messages_.empty()) return false;
 		auto const c = sent_messages_.front();
@@ -121,13 +119,13 @@ public:
 private:
 	struct sent_message final
 	{
-		endpoint_type endpoint;
+		Poco::Net::SocketAddress endpoint;
 		detail::buffer message;
 	};
 
 	struct message_to_receive final
 	{
-		endpoint_type endpoint;
+		Poco::Net::SocketAddress endpoint;
 		detail::Header::type message_type;
 		detail::id source_id;
 		detail::buffer body;

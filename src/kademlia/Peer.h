@@ -33,7 +33,7 @@
 #include <iosfwd>
 
 #include "kademlia/id.hpp"
-#include "IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 
 namespace kademlia {
 namespace detail {
@@ -42,7 +42,7 @@ namespace detail {
 struct Peer final
 {
     id id_;
-    IPEndpoint endpoint_;
+    Poco::Net::SocketAddress endpoint_;
 };
 
 

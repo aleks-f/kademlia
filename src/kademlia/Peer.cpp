@@ -31,7 +31,7 @@ namespace detail {
 
 std::ostream & operator << (std::ostream & out, Peer const& p)
 {
-	return out << p.id_ << "@" << p.endpoint_;
+	return out << p.id_ << "@" << p.endpoint_.toString();
 }
 
 
