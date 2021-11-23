@@ -31,6 +31,7 @@
 #endif
 
 #include "Poco/Net/SocketProactor.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/log.hpp"
 #include "MessageSerializer.h"
 #include "ResponseRouter.h"
@@ -49,13 +50,11 @@ template< typename RandomEngineType, typename NetworkType >
 class Tracker final
 {
 public:
-	using network_type = NetworkType;
-	using endpoint_type = typename network_type::endpoint_type;
 	using random_engine_type = RandomEngineType;
 
 public:
 	Tracker(Poco::Net::SocketProactor& io_service, id const& my_id,
-		network_type & network, random_engine_type & random_engine):
+		NetworkType & network, random_engine_type & random_engine):
 			response_router_(io_service),
 			message_serializer_(my_id),
 			network_(network),
@@ -68,7 +67,7 @@ public:
 	Tracker& operator = (Tracker const&) = delete;
 
 	template< typename Request, typename OnResponseReceived, typename OnError >
-	void send_request(Request const& request, const endpoint_type& e, Timer::duration const& timeout
+	void send_request(Request const& request, const Poco::Net::SocketAddress& e, Timer::duration const& timeout
 		, OnResponseReceived const& on_response_received, OnError const& on_error)
 	{
 		id const response_id(random_engine_);
@@ -93,14 +92,14 @@ public:
 	}
 
 	template<typename Request>
-	void send_request(Request const& request, endpoint_type const& e)
+	void send_request(Request const& request, Poco::Net::SocketAddress const& e)
 	{
 		id const response_id(random_engine_);
 		send_response(response_id, request, e);
 	}
 
 	template< typename Response >
-	void send_response(id const& response_id, Response const& response, const endpoint_type& e)
+	void send_response(id const& response_id, Response const& response, const Poco::Net::SocketAddress& e)
 	{
 		auto message = message_serializer_.serialize(response, response_id);
 
@@ -110,7 +109,7 @@ public:
 		network_.send(std::move(message), e, on_response_sent);
 	}
 
-	void handle_new_response(endpoint_type const& s, Header const& h,
+	void handle_new_response(Poco::Net::SocketAddress const& s, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		response_router_.handle_new_response(s, h, i, e);
@@ -119,7 +118,7 @@ public:
 private:
 	ResponseRouter response_router_;
 	MessageSerializer message_serializer_;
-	network_type & network_;
+	NetworkType & network_;
 	random_engine_type & random_engine_;
 };
 

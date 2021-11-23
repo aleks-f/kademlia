@@ -29,15 +29,15 @@
 #include <cstdlib>
 
 #include "kademlia/id.hpp"
-#include "kademlia/IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/Peer.h"
 
-inline kademlia::detail::IPEndpoint
+inline Poco::Net::SocketAddress
 createEndpoint
     ( std::string const& ip = std::string{ "127.0.0.1" }
     , std::uint16_t const& service = 12345 )
 {
-    using endpoint_type = kademlia::detail::IPEndpoint;
+    using endpoint_type = Poco::Net::SocketAddress;
 
     return endpoint_type{ Poco::Net::IPAddress(ip), service };
 }
@@ -45,7 +45,7 @@ createEndpoint
 inline kademlia::detail::Peer
 createPeer
     ( kademlia::detail::id const& id = kademlia::detail::id()
-    , kademlia::detail::IPEndpoint const& endpoint = createEndpoint() )
+    , Poco::Net::SocketAddress const& endpoint = createEndpoint() )
 {
     using peer_type = kademlia::detail::Peer;
 

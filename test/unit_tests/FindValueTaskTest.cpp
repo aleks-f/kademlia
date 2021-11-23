@@ -25,7 +25,7 @@
 
 #include "TaskFixture.h"
 #include "kademlia/id.hpp"
-#include "kademlia/IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/FindValueTask.h"
 #include "gtest/gtest.h"
 #include <vector>

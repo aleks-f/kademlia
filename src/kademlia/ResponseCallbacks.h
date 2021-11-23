@@ -30,7 +30,7 @@
 #include <functional>
 
 #include "kademlia/id.hpp"
-#include "IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "Message.h"
 #include "Poco/Mutex.h"
 
@@ -42,9 +42,7 @@ namespace detail {
 class ResponseCallbacks final
 {
 public:
-	using endpoint_type = IPEndpoint;
-
-	using callback = std::function< void (endpoint_type const& sender, Header const& h,
+	using callback = std::function< void (Poco::Net::SocketAddress const& sender, Header const& h,
 			buffer::const_iterator i, buffer::const_iterator e) >;
 
 public:
@@ -54,7 +52,7 @@ public:
 
 	bool remove_callback(id const& message_id);
 
-	std::error_code dispatch_response(endpoint_type const& sender, Header const& h
+	std::error_code dispatch_response(Poco::Net::SocketAddress const& sender, Header const& h
 		, buffer::const_iterator i, buffer::const_iterator e );
 
 	bool has(id const& message_id) const

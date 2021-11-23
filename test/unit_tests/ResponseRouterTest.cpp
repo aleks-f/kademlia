@@ -25,6 +25,7 @@
 
 #include "common.hpp"
 #include "Poco/Net/SocketProactor.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/ResponseRouter.h"
 #include "gtest/gtest.h"
 
@@ -32,7 +33,7 @@ namespace {
 
 namespace k = kademlia;
 namespace kd = k::detail;
-
+using Poco::Net::SocketAddress;
 
 TEST(ResponseRouterNoThrowTest, can_be_constructed_using_a_reactor)
 {
@@ -74,7 +75,7 @@ TEST_F(ResponseRouterTest, known_messages_are_forwarded)
 {
     // Create the callbacks.
     auto on_message_received = [ this ]
-            ( kd::ResponseCallbacks::endpoint_type const& s
+            ( SocketAddress const& s
             , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator )
@@ -96,7 +97,7 @@ TEST_F(ResponseRouterTest, known_messages_are_forwarded)
     EXPECT_EQ(0ULL, messages_received_count_ );
     EXPECT_EQ(0ULL, error_count_ );
 
-    kd::ResponseCallbacks::endpoint_type const s{};
+    Poco::Net::SocketAddress const s{};
     kd::buffer const b;
 
     // Send the expected message.
@@ -111,7 +112,7 @@ TEST_F(ResponseRouterTest, known_messages_are_not_forwarded_when_late)
 {
     // Create the callbacks.
     auto on_message_received = [ this ]
-            ( kd::ResponseCallbacks::endpoint_type const& s
+            ( Poco::Net::SocketAddress const& s
             , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator )
@@ -133,7 +134,7 @@ TEST_F(ResponseRouterTest, known_messages_are_not_forwarded_when_late)
     EXPECT_EQ(0ULL, messages_received_count_ );
     EXPECT_EQ(1ULL, error_count_ );
 
-    kd::ResponseCallbacks::endpoint_type const s{};
+    Poco::Net::SocketAddress const s{};
     kd::buffer const b;
 
     // Send the expected message.

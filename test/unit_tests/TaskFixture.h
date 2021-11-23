@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <system_error>
 #include "Poco/Net/SocketProactor.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/Peer.h"
 #include "common.hpp"
 #include "TrackerMock.h"
@@ -51,7 +52,7 @@ struct TaskFixture: public ::testing::Test
 
 	detail::Peer create_peer(std::string const& ip, detail::id const& id)
 	{
-		auto e = detail::toIPEndpoint(ip, 5555);
+		auto e = Poco::Net::SocketAddress(ip, 5555);
 		return detail::Peer{ id, e };
 	}
 

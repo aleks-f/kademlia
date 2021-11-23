@@ -30,6 +30,7 @@
 #   pragma once
 #endif
 
+#include "Poco/Net/SocketAddress.h"
 #include <system_error>
 #include <memory>
 #include <type_traits>
@@ -81,7 +82,7 @@ private:
 		task->endpoints_to_query_.pop_back();
 
 		// On message received, process it.
-		auto on_message_received = [task] (IPEndpoint const& s, Header const& h, buffer::const_iterator i, buffer::const_iterator e)
+		auto on_message_received = [task] (Poco::Net::SocketAddress const& s, Header const& h, buffer::const_iterator i, buffer::const_iterator e)
 		{
 			handle_initial_contact_response(task, s, h, i, e);
 		};
@@ -92,14 +93,14 @@ private:
 			search_ourselves(task);
 		};
 
-		LOG_DEBUG(DiscoverNeighborsTask, task.get()) << "query '" << endpoint_to_query 
+		LOG_DEBUG(DiscoverNeighborsTask, task.get()) << "query '" << endpoint_to_query.toString()
 				<< "'." << std::endl;
 
 		task->tracker_.send_request(FindPeerRequestBody{ task->my_id_ }, endpoint_to_query,
 			INITIAL_CONTACT_RECEIVE_TIMEOUT, on_message_received, on_error);
 	}
 
-	static void handle_initial_contact_response(std::shared_ptr<DiscoverNeighborsTask> task, IPEndpoint const& s,
+	static void handle_initial_contact_response(std::shared_ptr<DiscoverNeighborsTask> task, Poco::Net::SocketAddress const& s,
 		Header const& h, buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(DiscoverNeighborsTask, task.get()) << "handling initial contact response." << std::endl;

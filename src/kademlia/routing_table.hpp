@@ -3,14 +3,14 @@
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of the University of California, Berkeley nor the
-//       names of its contributors may be used to endorse or promote products
-//       derived from this software without specific prior written permission.
+//	 * Redistributions of source code must retain the above copyright
+//	   notice, this list of conditions and the following disclaimer.
+//	 * Redistributions in binary form must reproduce the above copyright
+//	   notice, this list of conditions and the following disclaimer in the
+//	   documentation and/or other materials provided with the distribution.
+//	 * Neither the name of the University of California, Berkeley nor the
+//	   names of its contributors may be used to endorse or promote products
+//	   derived from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY DAVID KELLER AND CONTRIBUTORS ``AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -45,10 +45,10 @@
 
 #ifdef _MSC_VER
 #   ifdef max
-#      undef max
+#	  undef max
 #   endif
 #   ifdef min
-#      undef min
+#	  undef min
 #   endif
 #endif
 
@@ -111,39 +111,8 @@ public:
 	 */
 	bool push(const id& peer_id, const peer_type& new_peer )
 	{
-		//LOG_DEBUG(routing_table, this) << "pushing peer (" << peer_count() << ")'"
-		//	<< new_peer << "' as '"
-		//	<< peer_id << "' ..." << std::endl;
-
-		/**************************************/
-		// prevent entries in the routing table
-		// - no self ID
-		// - no duplicate IDs
-		// - no duplicate IP:PORT endpoints
-		if (peer_id == my_id_) return false;
-		auto peerIt = _knownPeers.find(peer_id);
-		// we already know this peer, do nothing
-		if (peerIt != _knownPeers.end()) return false;
-
-		// remove all duplicate peers
-		auto was_peer_known = [&new_peer](value_type const& entry)
-		{
-			return (entry.second == new_peer);
-		};
-		auto it = k_buckets_.begin();
-		for (; it != k_buckets_.end(); ++it)
-		{
-			auto fIt = std::find_if(it->begin(), it->end(), was_peer_known);
-			while (fIt != it->end())
-			{
-				remove(fIt->first);
-				fIt = std::find_if(it->begin(), it->end(), was_peer_known);
-			}
-		}
-		/**************************************/
-
-		auto k_bucket_index = find_k_bucket_index( peer_id );
-		auto & bucket = k_buckets_[ k_bucket_index ];
+		auto k_bucket_index = find_k_bucket_index(peer_id);
+		auto& bucket = k_buckets_[ k_bucket_index ];
 
 		// If there is room in the bucket.
 		if ( bucket.size() == k_bucket_size_ )
@@ -154,13 +123,44 @@ public:
 				return false;
 		}
 
-		bucket.insert(bucket.end(), value_type{ peer_id, new_peer } );
-		++ peer_count_;
-		_knownPeers[peer_id] = k_bucket_index;
+		// prevent entries in the routing table
+		// - no self ID
+		// - no duplicate IDs
+		// - no duplicate IP:PORT endpoints
 
-		LOG_DEBUG(routing_table, this) << "pushed peer (" << peer_count() << ")'"
-			<< new_peer << "' as '"
-			<< peer_id << "'." << std::endl;
+		// don't add self
+		if (peer_id == my_id_) return false;
+
+		// If the peer ID is already known, do nothing.
+		auto isPeerKnown = [&peer_id] (value_type const& entry)
+		{ return entry.first == peer_id; };
+		auto const end = bucket.end();
+		if (std::find_if(bucket.begin(), end, isPeerKnown) != end)
+			return false;
+
+		// If this is a known endpoint (IP:PORT), coming under a
+		// different ID, then the old entry needs to be removed.
+		auto ipIt = _knownPeers.find(new_peer);
+		if (ipIt != _knownPeers.end())
+		{
+			std::size_t bIdx = find_k_bucket_index(ipIt->second);
+			auto& b = k_buckets_[bIdx];
+			auto isIPKnown = [&new_peer](value_type const &entry)
+			{ return entry.second == new_peer; };
+
+			auto it = std::find_if(b.begin(), b.end(), isIPKnown);
+			while (b.end() != it)
+			{
+				remove(it->first);
+				it = std::find_if(b.begin(), b.end(), isIPKnown);
+			}
+		}
+		bucket.insert(end, value_type{peer_id, new_peer});
+		++ peer_count_;
+		_knownPeers[new_peer] = peer_id;
+		LOG_DEBUG( routing_table, this ) << "pushed peer '"
+				<< new_peer.toString() << "' as '"
+				<< peer_id << "'." << std::endl;
 
 		return true;
 	}
@@ -172,27 +172,21 @@ public:
 	 */
 	bool remove(const id& peer_id)
 	{
-		LOG_DEBUG(routing_table, this) << "removing peer '"
-			<< peer_id << "' ..." << std::endl;
+		// Find the closest bucket.
+		auto & bucket = k_buckets_[find_k_bucket_index(peer_id)];
 
-		// Find the closer bucket.
-		auto & bucket = k_buckets_[ find_k_bucket_index( peer_id ) ];
-
-		// Check if the peer is inside.
 		auto is_peer_known = [&peer_id] ( value_type const& entry )
 		{ return entry.first == peer_id; };
 
 		auto i = std::find_if( bucket.begin(), bucket.end(), is_peer_known );
+		if (i == bucket.end()) return false;
 
-		// If the peer wasn't inside.
-		if ( i == bucket.end() )
-			return false;
-
-		// Remove it.
-		bucket.erase( i );
+		_knownPeers.erase(i->second);
+		bucket.erase(i);
 		--peer_count_;
-		_knownPeers.erase(peer_id);
 
+		LOG_DEBUG(routing_table, this) << "removed peer '"
+			<< peer_id << "' ..." << std::endl;
 		return true;
 	}
 
@@ -299,17 +293,26 @@ private:
 	}
 
 private:
-	/// This contains buckets up to id bit count.
 	k_buckets k_buckets_;
-	/// Own id.
+		/// Cntains buckets up to id bit count.
+
 	id const my_id_;
-	/// Keep a track of peer count to make size() complexity O(1).
+		/// Own id.
+
 	std::size_t peer_count_;
-	/// This is max number of peers stored per k_bucket.
+		/// Keep a track of peer count to make size() complexity O(1).
+
 	std::size_t k_bucket_size_;
-	/// This keeps the index of the largest subtree.
+		/// Max number of peers stored per k_bucket.
+
 	std::size_t largest_k_bucket_index_;
-	std::map<id, size_t> _knownPeers;
+		/// Keeps the index of the largest subtree.
+
+	using KnownPeerMap = std::map<Poco::Net::SocketAddress, id>;
+	KnownPeerMap _knownPeers;
+		/// Keeps a cache of known peers
+		/// Used to purge provably dead (ie. peers
+		/// with known IP:PORT showing under a new ID)
 };
 
 

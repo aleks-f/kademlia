@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "kademlia/id.hpp"
-#include "kademlia/IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/DiscoverNeighborsTask.h"
 #include "gtest/gtest.h"
 #include "TaskFixture.h"
@@ -38,7 +38,8 @@ namespace kd = k::detail;
 
 namespace {
 
-using endpoints_type = std::vector< kd::IPEndpoint >;
+using Poco::Net::SocketAddress;
+using SocketAddressList = std::vector<SocketAddress>;
 
 struct DiscoverNeighborsTaskTest : k::test::TaskFixture
 {
@@ -59,8 +60,8 @@ TEST_F(DiscoverNeighborsTaskTest, can_notify_error_when_initial_endpoints_fail_t
     kd::id const my_id{ "a" };
 
     // Assume initial peer resolves to 2 IPv4 addresses.
-    endpoints_type const endpoints{ kd::toIPEndpoint("192.168.1.2", 5555)
-            , kd::toIPEndpoint("192.168.1.3", 5555) };
+    SocketAddressList const endpoints{ SocketAddress("192.168.1.2", 5555)
+            , SocketAddress("192.168.1.3", 5555) };
 
     kd::start_discover_neighbors_task(my_id
             , tracker_
@@ -83,10 +84,10 @@ TEST_F(DiscoverNeighborsTaskTest, can_contact_endpoints_until_one_respond)
     kd::id const my_id{ "a" };
 
     // Assume initial peer resolves to 2 IPv4 addresses.
-    auto const e1 = kd::toIPEndpoint("192.168.1.2", 5555);
-    auto const e2 = kd::toIPEndpoint("192.168.1.3", 5555);
-    auto const e3 = kd::toIPEndpoint("::4", 5555);
-    endpoints_type const endpoints{ e1, e2, e3 };
+    auto const e1 = SocketAddress("192.168.1.2", 5555);
+    auto const e2 = SocketAddress("192.168.1.3", 5555);
+    auto const e3 = SocketAddress("::4", 5555);
+    SocketAddressList const endpoints{ e1, e2, e3 };
 
     auto p1 = create_peer("192.168.1.4", kd::id{ "b" });
     auto p2 = create_peer("192.168.1.5", kd::id{ "b" });
@@ -134,8 +135,8 @@ TEST_F(DiscoverNeighborsTaskTest, can_skip_wrong_response)
     kd::id const my_id{ "a" };
 
     // Assume initial peer resolves to 2 IPv4 addresses.
-    auto const e1 = kd::toIPEndpoint("192.168.1.2", 5555);
-    endpoints_type const endpoints{ e1 };
+    auto const e1 = SocketAddress("192.168.1.2", 5555);
+    SocketAddressList const endpoints{ e1 };
 
     kd::FindValueResponseBody const req{};
     tracker_.add_message_to_receive(e1, my_id, req);
@@ -158,8 +159,8 @@ TEST_F(DiscoverNeighborsTaskTest, can_skip_corrupted_response)
     kd::id const my_id{ "a" };
 
     // Assume initial peer resolves to 2 IPv4 addresses.
-    auto const e1 = kd::toIPEndpoint("192.168.1.2", 5555);
-    endpoints_type const endpoints{ e1 };
+    auto const e1 = SocketAddress("192.168.1.2", 5555);
+    SocketAddressList const endpoints{ e1 };
 
     k::test::CorruptedMessage< kd::Header::FIND_PEER_RESPONSE > const req{};
     tracker_.add_message_to_receive(e1, my_id, req);

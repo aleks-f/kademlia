@@ -32,6 +32,8 @@
 namespace kademlia {
 namespace detail {
 
+using Poco::Net::SocketAddress;
+
 ResponseCallbacks::ResponseCallbacks()
 {
 }
@@ -51,7 +53,7 @@ bool ResponseCallbacks::remove_callback(id const& message_id)
 	return i;
 }
 
-std::error_code ResponseCallbacks::dispatch_response(endpoint_type const& sender,
+std::error_code ResponseCallbacks::dispatch_response(SocketAddress const& sender,
 	Header const& h, buffer::const_iterator i, buffer::const_iterator e )
 {
 	Poco::Mutex::ScopedLock l(_mutex);

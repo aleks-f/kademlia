@@ -79,7 +79,6 @@ build_test(unit_tests_lib
         LookupTaskTest.cpp
         StoreValueTaskTest.cpp
         FindValueTaskTest.cpp
-        IPEndpointTest.cpp
         PeerTest.cpp
         test_error.cpp
         DiscoverNeighborsTaskTest.cpp

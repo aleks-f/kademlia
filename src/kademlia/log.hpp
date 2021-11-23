@@ -33,7 +33,7 @@
 #include <sstream>
 #include <ctime>
 #include <iostream>
-#include "kademlia/IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "kademlia/Message.h"
 #include "Poco/Logger.h"
 #include "Poco/LogStream.h"
@@ -60,6 +60,7 @@ bool isLogEnabled(std::string const& module);
  *  can be costly, its result is cached in a static variable.
  */
 
+#define KADEMLIA_ENABLE_DEBUG
 #ifdef KADEMLIA_ENABLE_DEBUG
 #   define LOG_DEBUG(module, thiz)											\
 	for (bool used = false; ! used; used = true)							\
@@ -88,11 +89,11 @@ inline std::string toString(const Container & c)
 	return out.str();
 }
 
-inline void logAccess(kademlia::detail::IPEndpoint const& sender, kademlia::detail::Header const& h)
+inline void logAccess(const Poco::Net::SocketAddress& sender, kademlia::detail::Header const& h)
 {
 	static int cnt;
 	std::cout << cnt++ << ' ';
-	std::cout << h << " from " << sender.address_.toString() << ':' << sender.port_ << std::endl;
+	std::cout << h << " from " << sender.toString() << std::endl;
 	std::cout << "source:[" << h.source_id_ << ']' << std::endl;
 	std::cout << "random:[" << h.random_token_ << ']' << std::endl;
 }

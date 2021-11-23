@@ -26,7 +26,7 @@
 #include "common.hpp"
 #include "PeerFactory.h"
 #include "kademlia/routing_table.hpp"
-#include "kademlia/IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -34,7 +34,7 @@ namespace {
 namespace k = kademlia;
 namespace kd = k::detail;
 
-using test_routing_table = kd::routing_table< kd::IPEndpoint >;
+using test_routing_table = kd::routing_table< Poco::Net::SocketAddress >;
 
 
 TEST(RoutingTableTest, is_empty_on_construction)

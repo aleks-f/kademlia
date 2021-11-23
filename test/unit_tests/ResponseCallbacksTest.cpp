@@ -24,6 +24,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+#include "Poco/Net/SocketAddress.h"
 #include "common.hpp"
 #include "kademlia/error_impl.hpp"
 #include "kademlia/ResponseCallbacks.h"
@@ -35,7 +36,7 @@ namespace {
 
 namespace k = kademlia;
 namespace kd = k::detail;
-
+using Poco::Net::SocketAddress;
 
 TEST(ResponseCallbackTest, can_be_constructed_using_a_reactor)
 {
@@ -65,7 +66,7 @@ protected:
 
 TEST_F(ResponseCallbacksTest, unknown_message_are_dropped)
 {
-    kd::ResponseCallbacks::endpoint_type const s{};
+    SocketAddress const s{};
     kd::Header const h{ kd::Header::V1, kd::Header::PING_REQUEST };
     kd::buffer const b;
     auto result = callbacks_.dispatch_response(s, h, b.begin(), b.end());
@@ -83,7 +84,7 @@ TEST_F(ResponseCallbacksTest, known_messages_are_forwarded)
 
     // Create the callback.
     auto on_message_received = [ this ]
-            (kd::ResponseCallbacks::endpoint_type const& s
+            (SocketAddress const& s
             , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator)
@@ -92,7 +93,7 @@ TEST_F(ResponseCallbacksTest, known_messages_are_forwarded)
                                 , on_message_received);
     EXPECT_EQ(0, messages_received_.size());
 
-    kd::ResponseCallbacks::endpoint_type const s{};
+    SocketAddress const s{};
 
     // Send an unexpected message.
     auto result = callbacks_.dispatch_response(s, h2, b.begin(), b.end());
@@ -122,7 +123,7 @@ TEST_F(ResponseCallbacksTest, multiple_callbacks_can_be_added)
     EXPECT_EQ(0, messages_received_.size());
     // Create the callback.
     auto on_message_received = [ this ]
-            (kd::ResponseCallbacks::endpoint_type const& s
+            (SocketAddress const& s
             , kd::Header const& h
             , kd::buffer::const_iterator
             , kd::buffer::const_iterator)
@@ -134,7 +135,7 @@ TEST_F(ResponseCallbacksTest, multiple_callbacks_can_be_added)
     callbacks_.push_callback(h2.random_token_
                             , on_message_received);
 
-    kd::ResponseCallbacks::endpoint_type const s{};
+    SocketAddress const s{};
     auto result = callbacks_.dispatch_response(s, h1, b.begin(), b.end());
     EXPECT_TRUE(! result);
     EXPECT_EQ(1, messages_received_.size());

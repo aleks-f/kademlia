@@ -23,6 +23,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "Poco/Net/SocketAddress.h"
 #include "common.hpp"
 #include "PeerFactory.h"
 #include "kademlia/id.hpp"
@@ -35,6 +36,7 @@ namespace {
 
 namespace k = kademlia;
 namespace kd = k::detail;
+using Poco::Net::SocketAddress;
 
 struct test_task : kd::LookupTask {
     template< typename Iterator >
@@ -46,7 +48,7 @@ struct test_task : kd::LookupTask {
 };
 
 using routing_table_peer = std::pair< kd::id
-                                    , kd::IPEndpoint >;
+                                    , Poco::Net::SocketAddress >;
 
 TEST(LookupTaskTest, can_be_constructed_without_candidates)
 {
@@ -64,7 +66,7 @@ TEST(LookupTaskTest, can_be_constructed_without_candidates)
 TEST(LookupTaskTest, can_be_constructed_with_candidates)
 {
     std::vector< routing_table_peer > candidates;
-    kd::IPEndpoint const default_address{};
+    Poco::Net::SocketAddress const default_address{};
     candidates.emplace_back(kd::id{ "1" }, default_address);
     kd::id const key{};
     test_task c{ key, candidates.begin(), candidates.end() };
@@ -73,7 +75,7 @@ TEST(LookupTaskTest, can_be_constructed_with_candidates)
 TEST(LookupTaskTest, can_select_candidates)
 {
     std::vector< routing_table_peer > candidates;
-    kd::IPEndpoint const default_address{};
+    Poco::Net::SocketAddress const default_address{};
     candidates.emplace_back(kd::id{ "7" }, default_address);
     candidates.emplace_back(kd::id{ "3" }, default_address);
     candidates.emplace_back(kd::id{ "6" }, default_address);
@@ -112,7 +114,7 @@ TEST(LookupTaskTest, can_select_candidates)
 TEST(LookupTaskTest, can_add_candidates)
 {
     std::vector< routing_table_peer > candidates;
-    kd::IPEndpoint const default_address{};
+    Poco::Net::SocketAddress const default_address{};
     candidates.emplace_back(kd::id{ "7" }, default_address);
 
     kd::id const our_id{};

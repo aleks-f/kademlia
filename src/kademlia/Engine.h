@@ -43,7 +43,7 @@
 #include "kademlia/endpoint.hpp"
 #include "kademlia/error_impl.hpp"
 #include "kademlia/log.hpp"
-#include "IPEndpoint.h"
+#include "Poco/Net/SocketAddress.h"
 #include "MessageSerializer.h"
 #include "ResponseRouter.h"
 #include "Network.h"
@@ -69,8 +69,7 @@ class Engine final
 public:
 	using key_type = std::vector<std::uint8_t>;
 	using data_type = std::vector<std::uint8_t>;
-	using endpoint_type = IPEndpoint;
-	using routing_table_type = routing_table<endpoint_type>;
+	using routing_table_type = routing_table<Poco::Net::SocketAddress>;
 	using value_store_type = value_store<id, data_type>;
 
 public:
@@ -134,7 +133,7 @@ private:
 	using random_engine_type = std::default_random_engine;
 	using TrackerType = Tracker<random_engine_type, NetworkType>;
 
-	void process_new_message(IPEndpoint const& sender, Header const& h,
+	void process_new_message(Poco::Net::SocketAddress const& sender, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		switch (h.type_)
@@ -157,14 +156,14 @@ private:
 		}
 	}
 
-	void handle_ping_request(IPEndpoint const& sender, Header const& h)
+	void handle_ping_request(Poco::Net::SocketAddress const& sender, Header const& h)
 	{
 		LOG_DEBUG(Engine, this) << "handling ping request." << std::endl;
 		//logAccess(sender, h);
 		tracker_.send_response(h.random_token_, Header::PING_RESPONSE, sender);
 	}
 
-	void handle_store_request(IPEndpoint const& sender, Header const& h,
+	void handle_store_request(Poco::Net::SocketAddress const& sender, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling store request." << std::endl;
@@ -179,7 +178,7 @@ private:
 		value_store_[request.data_key_hash_] = std::move(request.data_value_);
 	}
 
-	void handle_find_peer_request(IPEndpoint const& sender, Header const& h,
+	void handle_find_peer_request(Poco::Net::SocketAddress const& sender, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling find peer request." << std::endl;
@@ -196,7 +195,7 @@ private:
 		send_find_peer_response(sender, h.random_token_, request.peer_to_find_id_);
 	}
 
-	void send_find_peer_response(IPEndpoint const& sender, id const& random_token, id const& peer_to_find_id)
+	void send_find_peer_response(Poco::Net::SocketAddress const& sender, id const& random_token, id const& peer_to_find_id)
 	{
 		// Find X closest peers and save
 		// their location into the response..
@@ -211,13 +210,13 @@ private:
 		LOG_DEBUG(Engine, this) << "found " << response.peers_.size() << " peers:" << std::endl;
 		for (auto& p : response.peers_)
 		{
-			LOG_DEBUG(Engine, this) << p.endpoint_.address_.toString() << ':' << p.endpoint_.port_ << std::endl;
+			LOG_DEBUG(Engine, this) << p.endpoint_.toString() << std::endl;
 		}
 		// Now send the response.
 		tracker_.send_response(random_token, response, sender);
 	}
 
-	void handle_find_value_request(IPEndpoint const& sender, Header const& h,
+	void handle_find_value_request(Poco::Net::SocketAddress const& sender, Header const& h,
 		buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(Engine, this) << "handling find value request." << std::endl;
@@ -295,9 +294,9 @@ private:
 		}
 	}
 
-	void handle_new_message(IPEndpoint const& sender, buffer::const_iterator i, buffer::const_iterator e )
+	void handle_new_message(Poco::Net::SocketAddress const& sender, buffer::const_iterator i, buffer::const_iterator e )
 	{
-		LOG_DEBUG(Engine, this) << "received new message from '" << sender << "'." << std::endl;
+		LOG_DEBUG(Engine, this) << "received new message from '" << sender.toString() << "'." << std::endl;
 
 		detail::Header h;
 		// Try to deserialize Header.

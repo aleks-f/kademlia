@@ -30,6 +30,7 @@
 #   pragma once
 #endif
 
+#include "Poco/Net/SocketAddress.h"
 #include <system_error>
 #include <memory>
 #include <type_traits>
@@ -150,7 +151,7 @@ private:
 				<< current_candidate << "'." << std::endl;
 
 		// On message received, process it.
-		auto on_message_received = [ task, current_candidate ] (IPEndpoint const& s,
+		auto on_message_received = [ task, current_candidate ] (Poco::Net::SocketAddress const& s,
 			Header const& h, buffer::const_iterator i, buffer::const_iterator e)
 		{
 			if (task->is_caller_notified())
@@ -178,7 +179,7 @@ private:
 	 *  @brief This method is called while searching for
 	 *		 the Peer owner of the value.
 	 */
-	static void handle_find_value_response(IPEndpoint const& s, Header const& h
+	static void handle_find_value_response(Poco::Net::SocketAddress const& s, Header const& h
 		, buffer::const_iterator i, buffer::const_iterator e, std::shared_ptr<FindValueTask> task)
 	{
 		LOG_DEBUG(FindValueTask, task.get())
