@@ -55,6 +55,7 @@ public:
 public:
 	Tracker(Poco::Net::SocketProactor& io_service, id const& my_id,
 		NetworkType & network, random_engine_type & random_engine):
+			io_service_(io_service),
 			response_router_(io_service),
 			message_serializer_(my_id),
 			network_(network),
@@ -66,10 +67,16 @@ public:
 	Tracker(Tracker const&) = delete;
 	Tracker& operator = (Tracker const&) = delete;
 
+	void waitOnIO()
+	{
+		//while (!io_service_.isRunning()) Poco::Thread::sleep(10);
+	}
+
 	template< typename Request, typename OnResponseReceived, typename OnError >
 	void send_request(Request const& request, const Poco::Net::SocketAddress& e, Timer::duration const& timeout
 		, OnResponseReceived const& on_response_received, OnError const& on_error)
 	{
+		waitOnIO();
 		id const response_id(random_engine_);
 		// Generate the request buffer.
 		auto message = message_serializer_.serialize(request, response_id);
@@ -94,6 +101,7 @@ public:
 	template<typename Request>
 	void send_request(Request const& request, Poco::Net::SocketAddress const& e)
 	{
+		waitOnIO();
 		id const response_id(random_engine_);
 		send_response(response_id, request, e);
 	}
@@ -115,7 +123,18 @@ public:
 		response_router_.handle_new_response(s, h, i, e);
 	}
 
+	Poco::Net::SocketAddress addressV4()
+	{
+		return network_.addressV4();
+	}
+
+	Poco::Net::SocketAddress addressV6()
+	{
+		return network_.addressV6();
+	}
+
 private:
+	Poco::Net::SocketProactor& io_service_;
 	ResponseRouter response_router_;
 	MessageSerializer message_serializer_;
 	NetworkType & network_;

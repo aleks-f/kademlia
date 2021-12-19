@@ -62,15 +62,19 @@ private:
 	template< typename RoutingTableType, typename HandlerType >
 	StoreValueTask(detail::id const & key, DataType&& data, TrackerType & tracker
 		, RoutingTableType & routing_table, HandlerType && save_handler):
-			LookupTask(key, routing_table.find(key), routing_table.end())
+			LookupTask(key,
+				routing_table.find(key),
+				routing_table.end(),
+				tracker.addressV4(),
+				tracker.addressV6())
 			, tracker_(tracker)
 			, data_(std::move(data))
 			, save_handler_(std::forward< HandlerType >(save_handler))
 	{
 		LOG_DEBUG(StoreValueTask, this)
 				<< "create store value task for '"
-				<< key << "' value(" << toString(data)
-				<< ")." << std::endl;
+				<< key /*<< "' value(" << toString(data)
+				<< ")."*/ << std::endl;
 	}
 
 	void notify_caller(std::error_code const& failure)
@@ -173,17 +177,16 @@ private:
 	static void send_store_requests(std::shared_ptr<StoreValueTask> task)
 	{
 		auto const & candidates = task->select_closest_valid_candidates(REDUNDANT_SAVE_COUNT);
-
-		LOG_DEBUG(StoreValueTask, task.get())
-				<< "sending store request to "
-				<< candidates.size() << " candidates" << std::endl;
-		for (auto c : candidates)
-			send_store_request(c, task);
-
 		if (candidates.empty())
 			task->notify_caller(make_error_code(MISSING_PEERS));
 		else
+		{
+			LOG_DEBUG(StoreValueTask, task.get())
+				<< "sending store request to "
+				<< candidates.size() << " candidates" << std::endl;
+			for (auto c : candidates) send_store_request(c, task);
 			task->notify_caller(std::error_code{});
+		}
 	}
 
 	static void send_store_request(Peer const& current_candidate, std::shared_ptr<StoreValueTask> task)

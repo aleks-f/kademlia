@@ -30,6 +30,7 @@ namespace detail {
 
 std::size_t const ROUTING_TABLE_BUCKET_SIZE{ 20 };
 std::size_t const CONCURRENT_FIND_PEER_REQUESTS_COUNT{ 3 };
+std::size_t const MAX_FIND_PEER_ATTEMPT_COUNT{ 3 };
 std::size_t const REDUNDANT_SAVE_COUNT{ 3 };
 
 std::chrono::milliseconds const INITIAL_CONTACT_RECEIVE_TIMEOUT{ 1000 };

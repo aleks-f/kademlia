@@ -92,7 +92,8 @@ TEST_F(FindValueTaskTest, can_notify_error_when_unique_peer_fails_to_respond)
 
     // Task asked p1 for a closer peer or the value.
     kd::FindValueRequestBody const fv{ searched_key };
-    EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
+	for (int i = 0; i < kd::MAX_FIND_PEER_ATTEMPT_COUNT; ++i)
+		EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
 
     // Task didn't send any more message.
     EXPECT_TRUE(! tracker_.has_sent_message());
@@ -121,8 +122,11 @@ TEST_F(FindValueTaskTest, can_notify_error_when_all_peers_fail_to_respond)
 
     // Task asked p1 & p2 for a closer peer or the value.
     kd::FindValueRequestBody const fv{ searched_key };
-    EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
-    EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
+	for (int i = 0; i < kd::MAX_FIND_PEER_ATTEMPT_COUNT; ++i)
+	{
+		EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
+		EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
+	}
 
     // Task didn't send any more message.
     EXPECT_TRUE(! tracker_.has_sent_message());

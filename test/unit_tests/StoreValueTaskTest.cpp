@@ -83,14 +83,15 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenUniquePeerFailsToRespond)
     auto p1 = create_and_add_peer("192.168.1.1", kd::id{"b"});
 
     kd::start_store_value_task<data_type>(chosen_key, std::move(data), tracker_, routing_table_, std::ref(*this));
-    io_service_.poll();
+    while (!io_service_.poll());
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 for a closer peer.
     kd::FindPeerRequestBody const fv{chosen_key};
-    EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
+	for (int i = 0; i < kd::MAX_FIND_PEER_ATTEMPT_COUNT; ++i)
+		EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
 
     // Task didn't send any more message.
     EXPECT_TRUE(! tracker_.has_sent_message());
@@ -114,15 +115,18 @@ TEST_F(StoreValueTaskTest, CanNotifyErrorWhenAllPeersFailToRespond)
                                            , tracker_
                                            , routing_table_
                                            , std::ref(*this));
-    io_service_.poll();
+	while (!io_service_.poll());
 
     // Task queried routing table to find closest known peers.
     EXPECT_EQ(1, routing_table_.find_call_count_);
 
     // Task asked p1 & p2 for a closer peer.
     kd::FindPeerRequestBody const fv{chosen_key};
-    EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
-    EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
+	for (int i = 0; i < kd::MAX_FIND_PEER_ATTEMPT_COUNT; ++i)
+	{
+		EXPECT_TRUE(tracker_.has_sent_message(p1.endpoint_, fv));
+		EXPECT_TRUE(tracker_.has_sent_message(p2.endpoint_, fv));
+	}
 
     // Task didn't send any more message.
     EXPECT_TRUE(! tracker_.has_sent_message());

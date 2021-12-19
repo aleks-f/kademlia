@@ -57,7 +57,8 @@
 #include "NotifyPeerTask.h"
 #include "Tracker.h"
 #include "Message.h"
-
+#include "Poco/Mutex.h"
+#include "Poco/ScopedLock.h"
 
 namespace kademlia {
 namespace detail {
@@ -68,14 +69,13 @@ class Engine final
 {
 public:
 	using key_type = std::vector<std::uint8_t>;
-	using data_type = std::vector<std::uint8_t>;
 	using routing_table_type = routing_table<Poco::Net::SocketAddress>;
-	using value_store_type = value_store<id, data_type>;
 
 public:
-	Engine(Poco::Net::SocketProactor& io_service, endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}):
+	Engine(Poco::Net::SocketProactor& io_service, endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}, bool initialized = true):
 			random_engine_(std::random_device{}()),
 			my_id_(new_id == id{} ? id{ random_engine_ } : new_id),
+			_initialized(initialized),
 			network_(io_service,
 				MessageSocketType::ipv4(io_service, ipv4),
 				MessageSocketType::ipv6(io_service, ipv6),
@@ -93,18 +93,17 @@ public:
 
 	Engine(Poco::Net::SocketProactor& io_service, endpoint const& initial_peer,
 		endpoint const& ipv4, endpoint const& ipv6, id const& new_id = id{}):
-			Engine(io_service, ipv4, ipv6, new_id)
+			Engine(io_service, ipv4, ipv6, new_id, false)
 	{
 		LOG_DEBUG(Engine, this) << "Engine bootstrapping using peer '" << initial_peer << "'." << std::endl;
-		bool initialized = false;
-		auto on_initialized = [&initialized]
+		auto on_initialized = [this]
 		{
-			initialized = true;
+			_initialized = true;
 		};
 
 		discover_neighbors(initial_peer, on_initialized);
 
-		while (!initialized)
+		while (!_initialized)
 			io_service.poll();
 	}
 
@@ -112,18 +111,44 @@ public:
 
 	Engine & operator = (Engine const&) = delete;
 
+	bool initialized() const
+	{
+		return _initialized;
+	}
+
+	void start()
+	{
+		network_.start();
+	}
+
 	template<typename HandlerType>
 	void asyncSave(key_type const& key, data_type&& data, HandlerType&& handler)
 	{
-		LOG_DEBUG( engine, this ) << "executing async save of key '" << toString(key) << "'." << std::endl;
+		LOG_DEBUG(Engine, this) << "executing async save of key '" << toString(key) << "'." << std::endl;
+		id valID(key);
+		Poco::Mutex::ScopedLock l(_mutex);
+		value_store_[valID] = data;
 		start_store_value_task(id(key), std::move(data), tracker_, routing_table_, std::forward<HandlerType>(handler));
 	}
 
 	template<typename HandlerType>
 	void asyncLoad(key_type const& key, HandlerType&& handler)
 	{
-		LOG_DEBUG( engine, this ) << "executing async load of key '" << toString( key ) << "'." << std::endl;
+		LOG_DEBUG(Engine, this) << "executing async load of key '" << toString( key ) << "'." << std::endl;
+		id valID(key);
+		Poco::Mutex::ScopedLock l(_mutex);
+		auto it = value_store_.find(valID);
+		if (it != value_store_.end())
+		{
+			handler(std::error_code(), it->second);
+			return;
+		}
 		start_find_value_task< data_type >(id(key), tracker_, routing_table_, std::forward<HandlerType>(handler));
+	}
+
+	const value_store_type& data() const
+	{
+		return value_store_;
 	}
 
 private:
@@ -175,6 +200,7 @@ private:
 					<< failure.message() << ")." << std::endl;
 			return;
 		}
+		Poco::Mutex::ScopedLock l(_mutex);
 		value_store_[request.data_key_hash_] = std::move(request.data_value_);
 	}
 
@@ -230,9 +256,13 @@ private:
 			return;
 		}
 
+		Poco::ScopedLockWithUnlock<Poco::Mutex> l(_mutex);
 		auto found = value_store_.find(request.value_to_find_);
 		if (found == value_store_.end())
+		{
+			l.unlock();
 			send_find_peer_response(sender, h.random_token_, request.value_to_find_);
+		}
 		else
 		{
 			FindValueResponseBody const response{ found->second };
@@ -314,11 +344,13 @@ private:
 private:
 	random_engine_type random_engine_;
 	id my_id_;
+	std::atomic<bool> _initialized;
 	NetworkType network_;
 	TrackerType tracker_;
 	routing_table_type routing_table_;
 	value_store_type value_store_;
 	std::size_t pending_notifications_count_;
+	Poco::Mutex _mutex;
 };
 
 } // namespace detail

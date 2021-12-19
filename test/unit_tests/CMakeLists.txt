@@ -76,6 +76,7 @@ build_test(unit_tests_lib
         EndpointTest.cpp
         MessageTest.cpp
         MessageSerializerTest.cpp
+		IntegrationTest.cpp
         LookupTaskTest.cpp
         StoreValueTaskTest.cpp
         FindValueTaskTest.cpp

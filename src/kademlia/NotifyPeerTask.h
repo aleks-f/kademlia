@@ -58,7 +58,11 @@ public:
 private:
 	template<typename RoutingTableType>
 	NotifyPeerTask(detail::id const & key, TrackerType & tracker, RoutingTableType & routing_table, OnFinishType on_finish):
-		LookupTask(key, routing_table.find(key), routing_table.end()),
+		LookupTask(key,
+			routing_table.find(key),
+			routing_table.end(),
+			tracker.addressV4(),
+			tracker.addressV6()),
 		tracker_(tracker),
 		on_finish_( on_finish )
 	{
@@ -72,7 +76,7 @@ private:
 
 		FindPeerRequestBody const request{ task->get_key() };
 
-		auto const closest_peers = task->select_new_closest_candidates(CONCURRENT_FIND_PEER_REQUESTS_COUNT);
+		auto closest_peers = task->select_new_closest_candidates(CONCURRENT_FIND_PEER_REQUESTS_COUNT);
 
 		LOG_DEBUG(NotifyPeerTask, task.get()) << "sending find Peer to notify "
 				<< closest_peers.size() << " owner buckets." << std::endl;
@@ -127,6 +131,7 @@ private:
 			return;
 		}
 
+		task->add_candidates(response.peers_);
 		// If new candidate have been discovered, notify them.
 		task->add_candidates(response.peers_);
 		try_to_notify_neighbors(task);

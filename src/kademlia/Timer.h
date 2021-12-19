@@ -43,7 +43,7 @@ class Timer final
 {
 public:
 	using clock = std::chrono::steady_clock;
-	using duration = clock::duration;
+	using duration = std::chrono::milliseconds;
 
 public:
 	explicit Timer(Poco::Net::SocketProactor& ioService);
@@ -51,7 +51,7 @@ public:
 	template< typename Callback >
 	void expires_from_now(duration const& timeout, Callback const& on_timer_expired)
 	{
-		auto expiration_time = clock::now() + timeout;
+		auto expiration_time = clock::now() + std::chrono::duration_cast<clock::duration>(timeout);
 
 		// this lambda is a workaround to enforce asio behavior (timer cancellation
 		// is considered a task); it removes all but one scheduled completion handler,

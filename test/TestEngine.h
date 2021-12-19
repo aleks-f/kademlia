@@ -26,9 +26,10 @@
 #include <memory>
 #include "Poco/Net/SocketProactor.h"
 #include "kademlia/Session.h"
-#include <kademlia/endpoint.hpp>
+#include "kademlia/endpoint.hpp"
 #include "kademlia/log.hpp"
 #include "kademlia/buffer.hpp"
+#include "kademlia/value_store.hpp"
 #include "kademlia/Engine.h"
 #include "FakeSocket.h"
 
@@ -57,14 +58,14 @@ public:
 	void asyncSave(std::string const& key, std::string&& data, Callable & callable)
 	{
 		impl::key_type const k{ key.begin(), key.end() };
-		engine_.asyncSave(k, impl::data_type{data.begin(), data.end()}, callable);
+		engine_.asyncSave(k, kademlia::detail::data_type{data.begin(), data.end()}, callable);
 	}
 
 	template< typename Callable >
 	void asyncLoad(std::string const& key, Callable & callable)
 	{
 		impl::key_type const k{ key.begin(), key.end() };
-		auto c = [ callable ](std::error_code const& failure, impl::data_type const& data)
+		auto c = [ callable ](std::error_code const& failure, kademlia::detail::data_type const& data)
 		{
 			callable(failure, std::string{ data.begin(), data.end() });
 		};

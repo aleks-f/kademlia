@@ -24,9 +24,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Timer.h"
-
 #include "kademlia/error_impl.hpp"
-#include "Poco/Clock.h"
 
 using namespace std::chrono;
 using namespace Poco;
@@ -49,6 +47,7 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 		Poco::Mutex::ScopedLock l(_mutex);
 		if (!timeouts_.empty())
 		{
+			LOG_DEBUG(Timer, this) << "\ttimeouts=" << timeouts_.size() << std::endl;
 			// The callbacks to execute are the first
 			// n callbacks with the same keys.
 			auto begin = timeouts_.begin();
@@ -83,7 +82,7 @@ void Timer::schedule_next_tick(time_point const& expiration_time)
 Poco::Timestamp::TimeDiff Timer::getTimeout(time_point const& expiration_time)
 {
 	auto t = duration_cast<microseconds>(expiration_time.time_since_epoch());
-	Poco::Timestamp ts(t.count()-Clock().raw());
+	Poco::Timestamp ts(t.count() - duration_cast<microseconds>(clock().now().time_since_epoch()).count());
 	return ts.epochMicroseconds()/1000;
 }
 

@@ -34,6 +34,7 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include "id.hpp"
 #include "Poco/Hash.h"
 
 
@@ -58,6 +59,10 @@ using value_store = std::unordered_map
         < Key
         , Value
         , value_store_key_hasher< Key > >;
+
+using data_type = std::vector<std::uint8_t>;
+
+using value_store_type = value_store<id, data_type>;
 
 } // namespace detail
 } // namespace kademlia

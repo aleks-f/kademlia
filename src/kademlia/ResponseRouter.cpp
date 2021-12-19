@@ -18,10 +18,14 @@ namespace detail {
 											 buffer::const_iterator i, buffer::const_iterator e)
 	{
 		LOG_DEBUG(ResponseRouter, this) << "dispatching response from " << sender.toString() << std::endl;
+		std::error_code failure;
 		// Try to forward the message to its associated callback.
-		auto failure = response_callbacks_.dispatch_response(sender, h, i, e);
+		{
+			Poco::Mutex::ScopedLock l(_mutex);
+			failure = response_callbacks_.dispatch_response(sender, h, i, e);
+		}
 		if (failure == UNASSOCIATED_MESSAGE_ID)// Unknown or unassociated responses discarded.
-			LOG_DEBUG(ResponseRouter, this) << "dropping unknown response." << std::endl;
+			LOG_DEBUG(ResponseRouter, this) << "dropping unknown response from " << sender.toString() << std::endl;
 	}
 
 } }
