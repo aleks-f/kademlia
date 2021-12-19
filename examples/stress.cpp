@@ -29,9 +29,9 @@ using Session = Kademlia::Session;
 namespace {
 
 
-std::atomic<int> _saved = 0, _loaded = 0;
-std::atomic<int> _savedBytes = 0, _loadedBytes = 0;
-std::atomic<int> _saveTime = 0, _loadTime = 0;
+std::atomic<int> _saved(0), _loaded(0);
+std::atomic<int> _savedBytes(0), _loadedBytes(0);
+std::atomic<int> _saveTime(0), _loadTime(0);
 
 LogStream _logger(Logger::get("kademlia_stress"));
 
