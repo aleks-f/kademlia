@@ -27,6 +27,7 @@
 #include "common.hpp"
 #include "PeerFactory.h"
 #include "kademlia/id.hpp"
+#include "kademlia/constants.hpp"
 #include "kademlia/LookupTask.h"
 #include "gtest/gtest.h"
 #include <vector>
@@ -43,7 +44,7 @@ struct test_task : kd::LookupTask {
     test_task
         (kd::id const& key
         , Iterator i, Iterator e)
-        : LookupTask{ key, i, e }
+        : LookupTask{ key, i, e, SocketAddress("127.0.0.1", 1234), SocketAddress("::1", 1234) }
     { }
 };
 
@@ -101,7 +102,8 @@ TEST(LookupTaskTest, can_select_candidates)
     EXPECT_EQ(kd::id{ "1" }, valid_candidates[ 0 ].id_);
     EXPECT_TRUE(! c.have_all_requests_completed());
 
-    c.flag_candidate_as_invalid(kd::id{ "2" });
+    for (int i = 0; i < kd::MAX_FIND_PEER_ATTEMPT_COUNT; ++i)
+		c.flag_candidate_as_invalid(kd::id{ "2" });
     EXPECT_TRUE(c.have_all_requests_completed());
 
     closest_candidates = c.select_new_closest_candidates(2);

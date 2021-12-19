@@ -58,17 +58,25 @@ public:
 			on_message_received_(on_message_received)
 	{
 		start_message_reception(on_message_received);
-		LOG_DEBUG(Network, this) << "Network created at '" << socket_ipv4_.local_endpoint().toString()
-			<< "' and '" << socket_ipv6_.local_endpoint().toString() << "'." << std::endl;
+		LOG_DEBUG(Network, this) << "Network created at '" << socket_ipv4_.address().toString()
+			<< "' and '" << socket_ipv6_.address().toString() << "'." << std::endl;
 	}
 
 	Network(Network const&) = delete;
 
 	Network& operator = (Network const&) = delete;
 
+	void start()
+	{
+		start_message_reception(on_message_received_);
+		LOG_DEBUG(Network, this) << "started message reception." << std::endl;
+	}
+
 	template<typename Message, typename OnMessageSent>
 	void send(Message&& message, const Poco::Net::SocketAddress& e, OnMessageSent const& on_message_sent)
 	{
+		if (get_socket_for(e).address().toString() == e.toString())
+			std::cout << this << '\t' << get_socket_for(e).address().toString() << " => " << e.toString() << std::endl;
 		get_socket_for(e).async_send(std::move(message), e, on_message_sent);
 	}
 
@@ -76,6 +84,16 @@ public:
 	SocketAddressList resolve_endpoint(Endpoint const& e)
 	{
 		return MessageSocketType::resolve_endpoint(e);
+	}
+
+	Poco::Net::SocketAddress addressV4()
+	{
+		return socket_ipv4_.address();
+	}
+
+	Poco::Net::SocketAddress addressV6()
+	{
+		return socket_ipv6_.address();
 	}
 
 private:
@@ -106,7 +124,8 @@ private:
 				std::cerr << "failure=" << failure.message() << std::endl;
 				throw std::system_error{failure};
 			}
-
+			if (current_subnet.address().toString() == sender.toString())
+				std::cout << this << '\t' << current_subnet.address().toString() << " <= " << sender.toString() << std::endl;
 			on_message_received_(sender, i, e);
 			schedule_receive_on_socket(current_subnet);
 		};

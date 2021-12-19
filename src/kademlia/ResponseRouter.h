@@ -33,6 +33,7 @@
 #include "ResponseCallbacks.h"
 #include "kademlia/Timer.h"
 #include "kademlia/log.hpp"
+#include "Poco/Mutex.h"
 
 
 namespace kademlia {
@@ -57,22 +58,27 @@ public:
 	{
 		auto on_timeout = [ this, on_error, response_id ] ()
 		{
-			// If a callback has been removed, that means
+			// If a callback is removed, that means
 			// the message has never been received
 			// hence report the timeout to the client.
-            if (response_callbacks_.remove_callback( response_id ))
+			Poco::Mutex::ScopedLock l(_mutex);
+			if (response_callbacks_.remove_callback( response_id ))
 				on_error(make_error_code(std::errc::timed_out));
 		};
 
 		// Associate the response id with the
 		// on_response_received callback.
-		response_callbacks_.push_callback(response_id, on_response_received);
+		{
+			Poco::Mutex::ScopedLock l(_mutex);
+			response_callbacks_.push_callback(response_id, on_response_received);
+		}
 		timer_.expires_from_now(callback_ttl, on_timeout);
 	}
 
 private:
 	ResponseCallbacks response_callbacks_;
 	Timer timer_;
+	Poco::Mutex _mutex;
 };
 
 } // namespace detail

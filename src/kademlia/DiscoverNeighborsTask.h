@@ -111,7 +111,6 @@ private:
 					<< int(h.type_) << ")" << std::endl;
 			search_ourselves(task);
 			return;
-
 		};
 
 		FindPeerResponseBody response;

@@ -60,7 +60,7 @@ bool isLogEnabled(std::string const& module);
  *  can be costly, its result is cached in a static variable.
  */
 
-#define KADEMLIA_ENABLE_DEBUG
+
 #ifdef KADEMLIA_ENABLE_DEBUG
 #   define LOG_DEBUG(module, thiz)											\
 	for (bool used = false; ! used; used = true)							\

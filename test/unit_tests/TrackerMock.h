@@ -66,7 +66,6 @@ public:
 		auto const c = sent_messages_.front();
 		sent_messages_.pop();
 		auto const m  = message_serializer_.serialize(message, detail::id{});
-
 		return c.endpoint == endpoint && c.message == m;
 	}
 
@@ -114,6 +113,16 @@ public:
 	void send_response(detail::id const&, ResponseType const& r, EndpointType const& e)
 	{
 		save_sent_message(r, e);
+	}
+
+	Poco::Net::SocketAddress addressV4()
+	{
+		return Poco::Net::SocketAddress();// network_.addressV4();
+	}
+
+	Poco::Net::SocketAddress addressV6()
+	{
+		return Poco::Net::SocketAddress();// network_.addressV6();
 	}
 
 private:

@@ -22,6 +22,7 @@
 #include "Poco/Net/DatagramSocket.h"
 #include "Poco/Net/SocketProactor.h"
 #include "kademlia/endpoint.hpp"
+#include "kademlia/value_store.hpp"
 
 
 namespace Kademlia {
@@ -36,6 +37,7 @@ public:
 	using Endpoint = kademlia::endpoint;
 	using SaveHandlerType = std::function<void (const std::error_code&)>;
 	using LoadHandlerType = std::function<void (const std::error_code&, const DataType& data)>;
+	using ValueStoreType = kademlia::detail::value_store_type;
 
 	static const std::uint16_t DEFAULT_PORT;
 
@@ -45,6 +47,8 @@ public:
 	Session(Endpoint const& initPeer, Endpoint const& ipv4, Endpoint const& ipv6, int ms = 300);
 
 	~Session();
+
+	bool initialized() const;
 
 	void asyncSave(KeyType const& key, DataType&& data, SaveHandlerType&& handler);
 
@@ -63,15 +67,24 @@ public:
 		asyncLoad(KeyType(std::begin(key), std::end(key)), std::move(handler));
 	}
 
+	const ValueStoreType& data() const;
+
 	std::error_code run();
 
 	void abort();
 	std::error_code wait();
 
+	const Poco::Net::SocketProactor& ioService() const
+	{
+		return _ioService;
+	}
+
 private:
 	using RunType = Poco::ActiveMethod<std::error_code, void, Session>;
 	using Result = Poco::ActiveResult<std::error_code>;
 	using ResultPtr = std::unique_ptr<Result>;
+
+	bool tryWaitForIOService(int ms);
 
 	Result& result()
 	{

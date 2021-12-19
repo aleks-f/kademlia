@@ -36,6 +36,7 @@
 
 #include "Peer.h"
 #include "kademlia/log.hpp"
+#include "Poco/Mutex.h"
 
 namespace kademlia {
 namespace detail {
@@ -51,6 +52,8 @@ public:
 	std::vector<Peer> select_new_closest_candidates(std::size_t max_count);
 
 	std::vector<Peer> select_closest_valid_candidates(std::size_t max_count);
+
+	bool has_valid_candidate() const;
 
 	template<typename Peers>
 	void add_candidates(Peers const& peers)
@@ -69,13 +72,22 @@ protected:
 	~LookupTask() = default;
 
 	template<typename Iterator>
-	LookupTask(id const & key, Iterator i, Iterator e)
+	LookupTask(id const & key, Iterator i, Iterator e,
+		const Poco::Net::SocketAddress& addressV4,
+		const Poco::Net::SocketAddress& addressV6)
 		: key_{ key },
 		  in_flight_requests_count_{ 0 },
-		  candidates_{}
+		  candidates_{},
+		_addressV4(addressV4),
+		_addressV6(addressV6)
 	{
 		for (; i != e; ++i)
 			add_candidate(Peer{ i->first, i->second });
+	}
+
+	virtual bool isSelf(Poco::Net::SocketAddress& endpoint)
+	{
+		return (endpoint == _addressV4 || endpoint == _addressV6);
 	}
 
 private:
@@ -88,20 +100,22 @@ private:
 			STATE_CONTACTED,
 			STATE_RESPONDED,
 			STATE_TIMEDOUT,
-		} state_;
+		} state_ = STATE_UNKNOWN;
+		int attempts_ = 0;
 	};
 
 	using candidates_type = std::map<id, candidate>;
 
-private:
 	void add_candidate(Peer const& p);
 
 	candidates_type::iterator find_candidate(id const& candidate_id);
 
-private:
 	id key_;
 	std::size_t in_flight_requests_count_;
 	candidates_type candidates_;
+	Poco::Net::SocketAddress _addressV4;
+	Poco::Net::SocketAddress _addressV6;
+	mutable Poco::Mutex _mutex;
 };
 
 inline std::size_t LookupTask::inFlightRequests() const

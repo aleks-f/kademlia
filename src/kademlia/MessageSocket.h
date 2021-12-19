@@ -178,7 +178,6 @@ public:
 			if (!failure) std::advance(e, bytes_received);
 			callback(failure, current_message_sender_, i, e);
 		};
-
 		_socket.asyncReceiveFrom(reception_buffer_, current_message_sender_, std::move(on_completion));
 	}
 
@@ -195,9 +194,9 @@ public:
 		_socket.asyncSendTo(std::move(message), to, std::move(on_completion));
 	}
 
-	SocketAddress local_endpoint() const
+	SocketAddress address() const
 	{
-		return { _socket.address().host(), _socket.address().port() };
+		return _socket.address();
 	}
 
 private:

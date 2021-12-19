@@ -55,11 +55,6 @@ public:
 	std::error_code dispatch_response(Poco::Net::SocketAddress const& sender, Header const& h
 		, buffer::const_iterator i, buffer::const_iterator e );
 
-	bool has(id const& message_id) const
-	{
-		return callbacks_.find(message_id) != callbacks_.end();
-	}
-
 private:
 	using callbacks = std::map<id, callback>;
 	callbacks callbacks_;

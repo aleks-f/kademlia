@@ -76,6 +76,8 @@ id::id
 
     std::generate( blocks_.begin(), blocks_.end()
                  , std::bind( distribution, std::ref( random_engine ) ) );
+	// an additional effort to prevent duplicates
+	std::shuffle(blocks_.begin(), blocks_.end(), random_engine);
 }
 
 id::id

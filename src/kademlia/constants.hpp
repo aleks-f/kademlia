@@ -35,16 +35,13 @@
 namespace kademlia {
 namespace detail {
 
-// k
+
 extern std::size_t const ROUTING_TABLE_BUCKET_SIZE;
-// a
 extern std::size_t const CONCURRENT_FIND_PEER_REQUESTS_COUNT;
-// c
+extern std::size_t const MAX_FIND_PEER_ATTEMPT_COUNT;
 extern std::size_t const REDUNDANT_SAVE_COUNT;
 
-//
 extern std::chrono::milliseconds const INITIAL_CONTACT_RECEIVE_TIMEOUT;
-//
 extern std::chrono::milliseconds const PEER_LOOKUP_TIMEOUT;
 
 } // namespace detail

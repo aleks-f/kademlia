@@ -108,8 +108,6 @@ TEST(EngineTest, two_engines_can_save_and_load)
 			throw std::runtime_error{ "Unexpected data" };
 	};
 	e2->asyncLoad("key", on_load);
-
-	EXPECT_GT(io_service.poll(), 0);
 }
 
 }

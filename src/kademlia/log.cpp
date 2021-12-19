@@ -119,7 +119,7 @@ struct LogInitializer
 		//enableLogFor("NotifyPeerTask");
 		//enableLogFor("ResponseCallbacks");
 		//enableLogFor("ResponseRouter");
-		enableLogFor("routing_table");
+		//enableLogFor("routing_table");
 		//enableLogFor("Session");
 		//enableLogFor("SessionImpl");
 		//enableLogFor("SocketAdapter");

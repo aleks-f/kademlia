@@ -101,7 +101,9 @@ private:
 		RoutingTableType & routing_table, LoadHandlerType load_handler):
 			LookupTask(searched_key,
 				routing_table.find(searched_key),
-				routing_table.end()),
+				routing_table.end(),
+				tracker.addressV4(),
+				tracker.addressV6()),
 			tracker_(tracker),
 			load_handler_(std::move(load_handler)),
 			is_finished_()
@@ -132,8 +134,7 @@ private:
 	static void try_candidates(std::shared_ptr<FindValueTask> task,
 		std::size_t concurrent_requests_count = CONCURRENT_FIND_PEER_REQUESTS_COUNT)
 	{
-		auto const closest_candidates = task->select_new_closest_candidates
-				(concurrent_requests_count);
+		auto closest_candidates = task->select_new_closest_candidates(concurrent_requests_count);
 
 		FindValueRequestBody const request{ task->get_key() };
 		for (auto const& c : closest_candidates)
