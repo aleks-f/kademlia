@@ -170,18 +170,19 @@ int main(int argc, char** argv)
 		// wait for all load ops to complete
 		while (_loaded < i) Thread::sleep(10);
 
-
+		int j = 0;
+		_loaded = 0;
 		i = 0;
 		for (; i < peers; ++i)
 		{
-			for (int j = 0; j < chunks; ++j)
+			for (; j < chunks; ++j)
 			{
 				std::string k("k");
 				k += std::to_string(j);
 				load(*sessions[i], k);
 			}
 		}
-		while (_loaded < i) Thread::sleep(1);
+		while (_loaded < j) Thread::sleep(10);
 
 		for (auto& pS : sessions)
 		{
