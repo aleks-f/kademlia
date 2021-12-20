@@ -49,17 +49,9 @@ using Session = Kademlia::Session;
 
 namespace {
 
-
-//struct IntegrationTest : k::test::TaskFixture
-//{
-	/*IntegrationTest(): k::test::TaskFixture()
-	{
-		LOG_DEBUG(IntegrationTest, this) << "create IntegrationTest." << std::endl;
-	}*/
-
-	std::atomic<int> _saved = 0, _loaded = 0, _errors = 0;
-	std::atomic<int> _savedBytes = 0, _loadedBytes = 0;
-	std::atomic<int> _saveTime = 0, _loadTime = 0;
+	std::atomic<int> _saved(0), _loaded (0), _errors(0);
+	std::atomic<int> _savedBytes(0), _loadedBytes(0);
+	std::atomic<int> _saveTime(0), _loadTime(0);
 
 	int randomSession(int maxID)
 	{
@@ -134,7 +126,7 @@ namespace {
 		if (failure != k::RUN_ABORTED)
 			std::cerr << failure.message() << std::endl;
 	}
-//};
+
 
 TEST(IntegrationTest, integrationTest)
 {

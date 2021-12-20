@@ -29,9 +29,10 @@ using Session = Kademlia::Session;
 namespace {
 
 
-std::atomic<int> _saved(0), _loaded(0);
-std::atomic<int> _savedBytes(0), _loadedBytes(0);
-std::atomic<int> _saveTime(0), _loadTime(0);
+std::atomic<int> _saved(0), _loaded(0),
+	_saveErrors(0), _loadErrors(0),
+	_savedBytes(0), _loadedBytes(0),
+	_saveTime(0), _loadTime(0);
 
 LogStream _logger(Logger::get("kademlia_stress"));
 
@@ -52,7 +53,10 @@ void load(S& session, std::string const& key)
 	{
 		++_loaded;
 		if (error)
+		{
+			++_loadErrors;
 			_logger.error() << "Failed to load \"" << key << "\", error: " << error.message() << std::endl;
+		}
 		else
 		{
 			Timespan elapsed = Timestamp() - ts;
@@ -77,7 +81,10 @@ void save(S& session, std::string const& key, std::string const& val)
 	{
 		++_saved;
 		if (error)
+		{
+			++_saveErrors;
 			_logger.error() << "Failed to save \"" << key << "\", error: " << error.message() << std::endl;
+		}
 		else
 		{
 			Timespan elapsed = Timestamp() - ts;
@@ -153,7 +160,6 @@ int main(int argc, char** argv)
 		// wait for all save ops to complete
 		while (_saved < i) Thread::sleep(10);
 
-		_loaded = 0;
 		i = 0;
 		for (; i < chunks; ++i)
 		{
@@ -164,17 +170,19 @@ int main(int argc, char** argv)
 		// wait for all load ops to complete
 		while (_loaded < i) Thread::sleep(10);
 
-/*
-		_loaded = 0;
+
 		i = 0;
 		for (; i < peers; ++i)
 		{
-			std::string k("k");
-			k += std::to_string(i);
-			load(*sessions[i], k);
+			for (int j = 0; j < chunks; ++j)
+			{
+				std::string k("k");
+				k += std::to_string(j);
+				load(*sessions[i], k);
+			}
 		}
 		while (_loaded < i) Thread::sleep(1);
-*/
+
 		for (auto& pS : sessions)
 		{
 			abortSession(*pS);
@@ -184,7 +192,8 @@ int main(int argc, char** argv)
 		std::ostringstream ostr;
 		ostr << std::endl << "Summary\n=======\n" << peers << " peers, " <<
 							chunks << " chunks of " << chunkSize << " bytes\n"
-							"saved " << _savedBytes << " bytes, loaded " << _loadedBytes << " bytes\n"
+							"saved " << _savedBytes << " bytes, loaded " << _loadedBytes << " bytes\n"<<
+							_saveErrors << " saving errors, " << _loadErrors << " load errors\n"
 							"Save time: " << float(_saveTime)/1000 << " [ms]\n"
 							"Load time: " << float(_loadTime)/1000 << " [ms]\n"
 							"Total time:" << (float(_saveTime)+float(_loadTime))/1000 << " [ms]" << std::endl;
